@@ -27,5 +27,5 @@ The mesh should load. Materials will be assigned, but will not have color. This 
 The 3DG1 exporter will automatically round all vertex coordinates, though you may also want to manually do this.  
 In the ``Object`` menu in object mode, there is a new option called ``[FastFX] Vertex Operations``.  
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
-``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of the of all vertex coordinates.  
+``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates.  
 If your model becomes greatly distorted, try scaling it up (preferably by a number divisible by 2), apply scale, then round or truncate.  
