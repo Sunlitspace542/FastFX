@@ -210,16 +210,19 @@ def read_3dg1(filepath, context):
             # Read vertices
             for _ in range(vertex_count):
                 line = file.readline().strip()
-                x, y, z = map(int, line.split())
+                while not line:  # Skip blank lines (M2FX compatibility)
+                    line = file.readline().strip()
+                x, y, z = map(float, line.split())  # Parse as float (M2FX compatibility)
                 vertices.append((x, y, z))
 
             # Read polygons
             polygons = []
             material_mapping = {}
             for line in file:
-                if not line:  # End of file reached
-                    break
-                if line.strip() == chr(0x1A):  # EOF marker
+                line = line.strip()
+                if not line:  # Skip blank lines (M2FX compatibility)
+                    continue
+                if line == chr(0x1A):  # EOF marker
                     break
                 parts = line.split()
                 npoints = int(parts[0])
