@@ -8,7 +8,7 @@ bl_info = {
     "version": (1, 0),
     "blender": (3, 0, 0),
     "location": "File > Import-Export > 3DG1",
-    "description": "Import/Export Fundoshi-kun (3DG1) shapes, with additional tools.",
+    "description": "Import/Export Fundoshi-kun (3DG1) format shapes, with additional tools.",
     "category": "Import-Export",
 }
 
@@ -127,6 +127,10 @@ def read_3dg1(filepath, context):
             header = file.readline().strip()
             if header != "3DG1":
                 raise ValueError("Invalid file format: Not a 3DG1 file")
+                return {'CANCELLED'}
+            if header == "3DAN":
+                raise ValueError("Animated 3DG1 files (3DAN) are not supported.")
+                return {'CANCELLED'}
 
             # Read vertex count
             vertex_count = int(file.readline().strip())
