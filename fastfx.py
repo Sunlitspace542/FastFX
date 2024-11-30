@@ -108,10 +108,22 @@ class VertexOperation(bpy.types.Operator):
 # =========================
 # Hex color to RGB color Converter
 # =========================
-def hex_to_rgb(hex_color):
-    """Converts a hex color code to RGB values."""
+def srgb_to_linearrgb(c):
+    if c < 0:
+        return 0
+    elif c < 0.04045:
+        return c / 12.92
+    else:
+        return ((c + 0.055) / 1.055) ** 2.4
+
+def hex_to_rgb(hex_color, alpha=1.0):
+    """Converts a hex color code to Blender-compatible linear RGB values."""
     hex_color = hex_color.lstrip('#')
-    return tuple(int(hex_color[i:i+2], 16) / 255 for i in (0, 2, 4))
+    r = int(hex_color[0:2], 16) / 255.0
+    g = int(hex_color[2:4], 16) / 255.0
+    b = int(hex_color[4:6], 16) / 255.0
+    return (srgb_to_linearrgb(r), srgb_to_linearrgb(g), srgb_to_linearrgb(b), alpha)
+
 
 # Predefined colors for materials (hex values)
 # Based on id_0_c material palette
@@ -232,7 +244,8 @@ def read_3dg1(filepath, context):
                 if bsdf:
                     # Convert hex to RGB and set the material's base color
                     hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white if not defined
-                    bsdf.inputs["Base Color"].default_value = hex_to_rgb(hex_color) + (1,)  # Add alpha value
+                    linear_rgb_color = hex_to_rgb(hex_color)
+                    bsdf.inputs["Base Color"].default_value = linear_rgb_color  # Linear RGB with alpha
                 material_list.append(material)
                 obj.data.materials.append(material)
 
