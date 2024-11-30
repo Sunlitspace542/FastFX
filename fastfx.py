@@ -155,11 +155,11 @@ def read_3dg1(filepath, context):
                     material_mapping[color_index] = f"FX{color_index}"
 
             # Predefined colors for materials (hex values)
-			# From Bisquick's SFView
+            # From Bisquick's SFView
             id_0_c_rgb = {
                 0: "#668774",  # FX0
                 1: "#36533D",  # FX1
-                2: "#36533D",  # FX2
+                2: "#A54124",  # FX2
                 3: "#241687",  # FX3
                 4: "#B88B36",  # FX4
                 5: "#4941AC",  # FX5
