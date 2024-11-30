@@ -158,7 +158,7 @@ def read_3dg1(filepath, context):
             # Based on id_0_c material palette
             # Hex values from Bisquick's SFView
             # Descriptions from CoolK's COLOURS.TXT
-            id_0_c_rgb - {
+            id_0_c_rgb = {
                 0: "#668774",  # FX0 - Solid Dark Grey
                 1: "#36533D",  # FX1 - Solid Darker Grey
                 2: "#A54124",  # FX2 - Shaded Bright Red/Dark Red
