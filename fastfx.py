@@ -19,7 +19,7 @@ bl_info = {
 class Import3DG1(bpy.types.Operator):
     """Import a 3DG1 File"""
     bl_idname = "import_mesh.3dg1"
-    bl_label = "Import 3DG1 (.3dg1)"
+    bl_label = "Import 3DG1/Fundoshi-kun"
     bl_options = {'PRESET', 'UNDO'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
@@ -38,7 +38,7 @@ class Import3DG1(bpy.types.Operator):
 class Export3DG1(bpy.types.Operator):
     """Export to 3DG1 format"""
     bl_idname = "export_mesh.3dg1"
-    bl_label = "Export 3DG1"
+    bl_label = "Import 3DG1/Fundoshi-Kun"
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
@@ -391,10 +391,10 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 # Menu Functions
 # =========================
 def menu_func_import(self, context):
-    self.layout.operator(Import3DG1.bl_idname, text="Import 3DG1 (.3dg1)")
+    self.layout.operator(Import3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
 
 def menu_func_export(self, context):
-    self.layout.operator(Export3DG1.bl_idname, text="Export 3DG1 (.3dg1)")
+    self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
 
 # =========================
 # Registration

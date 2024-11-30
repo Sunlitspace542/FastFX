@@ -1,5 +1,5 @@
 # FastFX
-A Blender plugin for importing/exporting 3DG1 format models for use in Star Fox (2), with additional tools.  
+A Blender plugin for importing/exporting Fundoshi-kun (Modified Videoscape 3DG1) format models for use in Star Fox (2), with additional tools.  
 Designed for Blender 3.x, but it might work in 2.8+.  
 
 # Installation
@@ -15,14 +15,14 @@ You can also look at the ``id_0_c_rgb`` dictionary in ``fastfx.py`` itself for c
 Use the utility menu to apply the proper color palette (see below).  
   
 ## Exporting Models
-Go to ``File -> Export -> Export 3DG1 (.3dg1)`` to export.  
+Go to ``File -> Export -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to export.  
 
 ## Converting to Star Fox BSP Format and Importing into Star Fox
 Instructions on how to prepare the model for importing into Star Fox are a WIP.  
 
 ## Importing 3DG1 Models
 NOTE that this only works if the 3DG1 file is in the format that this plugin exports. 3DG1 models in the format Model to FX outputs are currently not supported.  
-Go to ``File -> Import -> Import 3DG1 (.3dg1)`` to import.  
+Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import.  
 The mesh should appear. The color palette will automatically be applied.
 
 ## Utility Menu
