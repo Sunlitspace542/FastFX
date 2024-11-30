@@ -113,6 +113,65 @@ def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16) / 255 for i in (0, 2, 4))
 
+# Predefined colors for materials (hex values)
+# Based on id_0_c material palette
+# Hex values from Bisquick's SFView
+# Descriptions from CoolK's COLOURS.TXT
+id_0_c_rgb = {
+    0: "#668774",  # FX0 - Solid Dark Grey
+    1: "#36533D",  # FX1 - Solid Darker Grey
+    2: "#A54124",  # FX2 - Shaded Bright Red/Dark Red
+    3: "#241687",  # FX3 - Shaded Blue/Bright Blue
+    4: "#B88B36",  # FX4 - Shaded Bright Orange/Black
+    5: "#4941AC",  # FX5 - Shaded Turquoise/Black
+    6: "#47311C",  # FX6 - Solid Dark Red
+    7: "#1C223D",  # FX7 - Solid Blue
+    8: "#541E8B",  # FX8 - Shaded Red/blue (Purple)
+    9: "#125012",  # FX9 - Shaded Green/Dark Green
+    10: "#182918",  # FX10 - Solid Black
+    11: "#2F3E2F",  # FX11 - Shaded Black/Dark Grey
+    12: "#465346",  # FX12 - Solid Dark Grey
+    13: "#5D695D",  # FX13 - Shaded Dark Grey/Darker Grey
+    14: "#747E74",  # FX14 - Solid Darker Grey
+    15: "#8B948B",  # FX15 - Shaded Darker Grey/Brighter Grey
+    16: "#A2A9A2",  # FX16 - Solid Brighter Grey
+    17: "#B9BEB9",  # FX17 - Shaded Brighter Grey/Bright Grey
+    18: "#D0D4D0",  # FX18 - Solid Bright Grey
+    19: "#E7E9E7",  # FX19 - Shaded Bright Grey/White
+    20: "#FFFFFF",  # FX20 - Solid White
+    21: "#8B1008",  # FX21 - Solid Dark Red (identical to 6)
+    22: "#B02D18",  # FX22 - Shaded Bright Red/Dark Red (identical to 2)
+    23: "#D54A29",  # FX23 - Solid Bright Red
+    24: "#E17B35",  # FX24 - Shaded Bright Red/Orange
+    25: "#EEAC41",  # FX25 - Solid Orange
+    26: "#F6C555",  # FX26 - Shaded Bright Orange/Orange
+    27: "#FFDE6A",  # FX27 - Solid Bright Orange
+    28: "#2910AC",  # FX28 - Solid Blue
+    29: "#412DC5",  # FX29 - Shaded Blue/Dark Turquoise
+    30: "#5A4ADE",  # FX30 - Solid Dark Turquoise
+    31: "#6A77EE",  # FX31 - Shaded Bright Blue/Dark Turquoise
+    32: "#7BA4FF",  # FX32 - Solid Bright Blue
+    33: "#97C9FF",  # FX33 - Shaded Turquoise/Dark Turquoise
+    34: "#B4EEFF",  # FX34 - Solid Turquoise
+    35: "#835A83",  # FX35 - Shaded Dark Red/Bright Blue
+    36: "#A87794",  # FX36 - Shaded Bright Red/Bright Blue
+    37: "#B4A8A0",  # FX37 - Shaded Bright Orange/Bright Blue
+    38: "#BDC1B4",  # FX38 - Shaded Orange/Bright Blue
+    39: "#209325",  # FX39 - Shaded Dark Green/Dark Grey
+    40: "#00C500",  # FX40 - Solid Dark Green
+    41: "#6AD56A",  # FX41 - Shaded Dark Green/Bright Turquoise
+    42: "#182918",  # FX42 - Flashing (White/Turquoise/Bright Red/Green)
+    43: "#D54A29",  # FX43 - Jet Fire (Bright Orange/Orange/Bright Red/Red)
+    44: "#2910AC",  # FX44 - Blaster  (Bright Turquoise/Turquoise/Bright Blue/Blue)
+    45: "#739483",  # FX45 - Flashing (White/Light Grey/Grey/Dark Grey)
+    46: "#739483",  # FX46 - Flashing (Orange/Yellow/Turquoise/White)
+    47: "#000000",  # FX47 - Invisible
+    48: "#FFFFFF",  # FX48 - Asteroid texture
+    49: "#FFFFFF",  # FX49 - "Wire" texture
+    50: "#FFFFFF",  # FX50 ^
+    51: "#FFFFFF",  # FX51 ^
+    52: "#F6FFFF",  # FX52 - Fading   (Solid Red/Orange/Turquoise/Blue)
+}
 
 # =========================
 # 3DG1 Importer
@@ -157,66 +216,6 @@ def read_3dg1(filepath, context):
                 polygons.append((indices, color_index))
                 if color_index not in material_mapping:
                     material_mapping[color_index] = f"FX{color_index}"
-
-            # Predefined colors for materials (hex values)
-            # Based on id_0_c material palette
-            # Hex values from Bisquick's SFView
-            # Descriptions from CoolK's COLOURS.TXT
-            id_0_c_rgb = {
-                0: "#668774",  # FX0 - Solid Dark Grey
-                1: "#36533D",  # FX1 - Solid Darker Grey
-                2: "#A54124",  # FX2 - Shaded Bright Red/Dark Red
-                3: "#241687",  # FX3 - Shaded Blue/Bright Blue
-                4: "#B88B36",  # FX4 - Shaded Bright Orange/Black
-                5: "#4941AC",  # FX5 - Shaded Turquoise/Black
-                6: "#47311C",  # FX6 - Solid Dark Red
-                7: "#1C223D",  # FX7 - Solid Blue
-                8: "#541E8B",  # FX8 - Shaded Red/blue (Purple)
-                9: "#125012",  # FX9 - Shaded Green/Dark Green
-                10: "#182918",  # FX10 - Solid Black
-                11: "#2F3E2F",  # FX11 - Shaded Black/Dark Grey
-                12: "#465346",  # FX12 - Solid Dark Grey
-                13: "#5D695D",  # FX13 - Shaded Dark Grey/Darker Grey
-                14: "#747E74",  # FX14 - Solid Darker Grey
-                15: "#8B948B",  # FX15 - Shaded Darker Grey/Brighter Grey
-                16: "#A2A9A2",  # FX16 - Solid Brighter Grey
-                17: "#B9BEB9",  # FX17 - Shaded Brighter Grey/Bright Grey
-                18: "#D0D4D0",  # FX18 - Solid Bright Grey
-                19: "#E7E9E7",  # FX19 - Shaded Bright Grey/White
-                20: "#FFFFFF",  # FX20 - Solid White
-                21: "#8B1008",  # FX21 - Solid Dark Red (identical to 6)
-                22: "#B02D18",  # FX22 - Shaded Bright Red/Dark Red (identical to 2)
-                23: "#D54A29",  # FX23 - Solid Bright Red
-                24: "#E17B35",  # FX24 - Shaded Bright Red/Orange
-                25: "#EEAC41",  # FX25 - Solid Orange
-                26: "#F6C555",  # FX26 - Shaded Bright Orange/Orange
-                27: "#FFDE6A",  # FX27 - Solid Bright Orange
-                28: "#2910AC",  # FX28 - Solid Blue
-                29: "#412DC5",  # FX29 - Shaded Blue/Dark Turquoise
-                30: "#5A4ADE",  # FX30 - Solid Dark Turquoise
-                31: "#6A77EE",  # FX31 - Shaded Bright Blue/Dark Turquoise
-                32: "#7BA4FF",  # FX32 - Solid Bright Blue
-                33: "#97C9FF",  # FX33 - Shaded Turquoise/Dark Turquoise
-                34: "#B4EEFF",  # FX34 - Solid Turquoise
-                35: "#835A83",  # FX35 - Shaded Dark Red/Bright Blue
-                36: "#A87794",  # FX36 - Shaded Bright Red/Bright Blue
-                37: "#B4A8A0",  # FX37 - Shaded Bright Orange/Bright Blue
-                38: "#BDC1B4",  # FX38 - Shaded Orange/Bright Blue
-                39: "#209325",  # FX39 - Shaded Dark Green/Dark Grey
-                40: "#00C500",  # FX40 - Solid Dark Green
-                41: "#6AD56A",  # FX41 - Shaded Dark Green/Bright Turquoise
-                42: "#182918",  # FX42 - Flashing (White/Turquoise/Bright Red/Green)
-                43: "#D54A29",  # FX43 - Jet Fire (Bright Orange/Orange/Bright Red/Red)
-                44: "#2910AC",  # FX44 - Blaster  (Bright Turquoise/Turquoise/Bright Blue/Blue)
-                45: "#739483",  # FX45 - Flashing (White/Light Grey/Grey/Dark Grey)
-                46: "#739483",  # FX46 - Flashing (Orange/Yellow/Turquoise/White)
-                47: "#000000",  # FX47 - Invisible
-                48: "#FFFFFF",  # FX48 - Asteroid texture
-                49: "#FFFFFF",  # FX49 - "Wire" texture
-                50: "#FFFFFF",  # FX50 ^
-                51: "#FFFFFF",  # FX51 ^
-                52: "#F6FFFF",  # FX52 - Fading   (Solid Red/Orange/Turquoise/Blue)
-            }
 
             # Create a new mesh in Blender
             mesh = bpy.data.meshes.new(base_name)
