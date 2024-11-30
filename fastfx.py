@@ -105,6 +105,14 @@ class VertexOperation(bpy.types.Operator):
 
         return {'FINISHED'}
 
+# =========================
+# Hex to RGB Conversion Logic
+# =========================
+def hex_to_rgb(hex_color):
+    """Converts a hex color code to RGB values."""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) / 255 for i in (0, 2, 4))
+
 
 # =========================
 # Import Logic
@@ -219,8 +227,7 @@ def read_3dg1(filepath, context):
                 if bsdf:
                     # Convert hex to RGB and set the material's base color
                     hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white if not defined
-                    r, g, b = [int(hex_color[i:i + 2], 16) / 255.0 for i in (1, 3, 5)]
-                    bsdf.inputs['Base Color'].default_value = (r, g, b, 1.0)  # RGBA with full opacity
+                    bsdf.inputs["Base Color"].default_value = hex_to_rgb(hex_color) + (1,)  # Add alpha value
                 material_list.append(material)
                 obj.data.materials.append(material)
 
