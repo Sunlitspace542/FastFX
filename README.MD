@@ -11,6 +11,7 @@ Locate and open ``fastfx.py``. a plugin called FastFX should appear in the windo
 ## Creating Models
 Make a model in Blender. The 3DG1 format can only accept whole numbers for vertex positions, so it is recommended you enable snapping to the nearest increment in Blender.  
 Materials must be named in the format ``FX#``, where ``#`` is the color index of that material. See ``Color Reference.png`` for a chart of colors and their IDs.  
+Colored edges are also supported. use ``FE#`` instead of ``FX#`` as the material name. That face will be converted to edges when exporting.  
 You can also look at the ``id_0_c_rgb`` dictionary in ``fastfx.py`` itself for color descriptions.  
 Use the utility menu to apply the proper color palette (see below).  
   
@@ -30,7 +31,7 @@ The mesh should appear. The color palette will be applied automatically.
 
 ## Utility Menu
 FastFX adds a tab on the right hand side of the screen called ``FastFX`` with extra utilities.  
-``Apply Material Palette`` applies the ``id_0_c`` color palette to all materials following the proper ``FX#`` naming convention.  
+``Apply Material Palette`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention.  
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
 ``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates.  
 
@@ -41,6 +42,6 @@ If your model becomes greatly distorted, try scaling it up (preferably by a numb
 
 # Things this can't do
 - Sorting faces on export - Star Fox's renderer does not have a Z-buffer, and while FastFX does appear to do a slightly better job at face sorting compared to Model to FX (a similar tool), it still isn't great.  
-- Stray edges (The 3DG1 importer can read models with colored stray edges, but they will not be colored and can only be seen in edit mode. Blender does not let you assign a material to an edge, so exporting stray edges may not work out very well)  
+- Import stray edges with colors (The 3DG1 importer can read models with colored stray edges, but the color information will be lost and they can only be seen in edit mode.)  
 - Import/Export straight from/to Star Fox BSP format - SHAPED.EXE (Argonaut DOS tool) is still needed to get the 3DG1 into the format Star Fox (2) can actually use.  
 - Animation  

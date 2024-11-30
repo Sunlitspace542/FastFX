@@ -276,10 +276,9 @@ def write_3dg1(filepath, obj):
     with open(filepath, "w") as file:
         # Collect unique vertices and map them to indices
         unique_vertices = {}
-        vertex_indices = []
-        color_indices = []
-        polygons = []
         vertex_count = 0
+        polygons = []
+        edges = []  # Store edges for colored lines
 
         # Write 3DG1 header
         file.write("3DG1\n")
@@ -287,49 +286,79 @@ def write_3dg1(filepath, obj):
         # Process the mesh data
         mesh = obj.data
         mesh.calc_loop_triangles()
-        
+
         for poly in mesh.polygons:
             material_index = poly.material_index
             material = obj.material_slots[material_index].material
             
-            if material and material.name.startswith("FX"):
-                try:
-                    color_index = int(material.name[2:])  # Extract color index from material name
-                except ValueError:
-                    color_index = 0  # Default color index if parsing fails
-            else:
-                color_index = 0  # Default color index if material doesn't match
+            if material:
+                # Check if the material represents an edge (FE#)
+                if material.name.startswith("FE"):
+                    try:
+                        edge_color_index = int(material.name[2:])  # Extract color index for edges
+                    except ValueError:
+                        edge_color_index = 0  # Default to 0 if parsing fails
 
-            poly_vertices = []
-            for loop_index in poly.loop_indices:
-                vertex = mesh.vertices[mesh.loops[loop_index].vertex_index]
-                co = tuple([round(v) for v in vertex.co])
-                
-                # Map unique vertices
-                if co not in unique_vertices:
-                    unique_vertices[co] = vertex_count
-                    vertex_count += 1
-                
-                poly_vertices.append(unique_vertices[co])
-            
-            polygons.append((poly_vertices, color_index))
-        
+                    # Convert the face to edges
+                    for i in range(len(poly.vertices)):
+                        v1 = poly.vertices[i]
+                        v2 = poly.vertices[(i + 1) % len(poly.vertices)]  # Wrap around to create a closed edge
+                        co1 = tuple([round(v) for v in mesh.vertices[v1].co])
+                        co2 = tuple([round(v) for v in mesh.vertices[v2].co])
+
+                        # Map unique vertices
+                        if co1 not in unique_vertices:
+                            unique_vertices[co1] = vertex_count
+                            vertex_count += 1
+                        if co2 not in unique_vertices:
+                            unique_vertices[co2] = vertex_count
+                            vertex_count += 1
+
+                        # Add the edge with its color index
+                        edges.append((unique_vertices[co1], unique_vertices[co2], edge_color_index))
+
+                # Otherwise, handle it as a polygon
+                elif material.name.startswith("FX"):
+                    try:
+                        color_index = int(material.name[2:])  # Extract color index for polygons
+                    except ValueError:
+                        color_index = 0  # Default to 0 if parsing fails
+
+                    poly_vertices = []
+                    for loop_index in poly.loop_indices:
+                        vertex = mesh.vertices[mesh.loops[loop_index].vertex_index]
+                        co = tuple([round(v) for v in vertex.co])
+
+                        # Map unique vertices
+                        if co not in unique_vertices:
+                            unique_vertices[co] = vertex_count
+                            vertex_count += 1
+
+                        poly_vertices.append(unique_vertices[co])
+
+                    polygons.append((poly_vertices, color_index))
+
         # Write vertex count
         file.write(f"{len(unique_vertices)}\n")
-        
+
         # Write vertices
         for vertex in unique_vertices:
             file.write(f"{vertex[0]} {vertex[1]} {vertex[2]}\n")
-        
+
         # Write polygons
         for poly_vertices, color_index in polygons:
             file.write(f"{len(poly_vertices)} ")
             file.write(" ".join(map(str, poly_vertices)) + " ")
             file.write(f"{color_index}\n")
-        
+
+        # Write edges
+        for v1, v2, color_index in edges:
+            file.write(f"2 {v1} {v2} {color_index}\n")
+
         # End-of-file marker
         file.write(chr(0x1A))
-        return {'FINISHED'}
+
+    return {'FINISHED'}
 
 # =========================
 # FastFX Menu Tab
@@ -351,7 +380,7 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
 
         for material_slot in obj.material_slots:
             material = material_slot.material
-            if material and material.name.startswith("FX"):
+            if material and (material.name.startswith("FX") or material.name.startswith("FE")):
                 try:
                     color_index = int(material.name[2:])
                     hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white
