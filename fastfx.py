@@ -328,20 +328,61 @@ def write_3dg1(filepath, obj):
         file.write(chr(0x1A))
         return {'FINISHED'}
 
+# =========================
+# FastFX Menu Tab
+# =========================
+class OBJECT_OT_apply_material_colors(bpy.types.Operator):
+    """Apply colors based on material names (FX#)"""
+    bl_idname = "object.apply_material_colors"
+    bl_label = "Apply Material Colors"
+
+    def execute(self, context):
+        obj = context.object
+        if not obj or obj.type != 'MESH':
+            self.report({'WARNING'}, "No mesh object selected")
+            return {'CANCELLED'}
+
+        if not obj.data.materials:
+            self.report({'WARNING'}, "No materials found on selected object")
+            return {'CANCELLED'}
+
+        for material_slot in obj.material_slots:
+            material = material_slot.material
+            if material and material.name.startswith("FX"):
+                try:
+                    color_index = int(material.name[2:])
+                    hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white
+                    rgb = hex_to_rgb(hex_color)
+                    material.use_nodes = True
+                    bsdf = material.node_tree.nodes.get("Principled BSDF")
+                    if bsdf:
+                        linear_rgb_color = hex_to_rgb(hex_color)
+                        bsdf.inputs["Base Color"].default_value = linear_rgb_color  # Linear RGB with alpha
+                except ValueError:
+                    self.report({'WARNING'}, f"Material '{material.name}' has invalid FX# format")
+                    continue
+
+        self.report({'INFO'}, "Colors applied to materials")
+        return {'FINISHED'}
 
 # =========================
-# Vertex Operations Menu
+# FastFX Menu Tab Layout
 # =========================
-class VertexMenu(bpy.types.Menu):
-    """Menu for vertex operations"""
-    bl_label = "[FastFX] Vertex Operations"
-    bl_idname = "OBJECT_MT_vertex_operations"
+class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
+    """Tools for 3DG1 format"""
+    bl_label = "FastFX"
+    bl_idname = "VIEW3D_PT_fastfx_tools"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "FastFX"
 
     def draw(self, context):
         layout = self.layout
+        layout.label(text="Material Utilities")
+        layout.operator("object.apply_material_colors")
+        layout.label(text="Vertex Operations")
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
-
 
 # =========================
 # Menu Functions
@@ -349,14 +390,8 @@ class VertexMenu(bpy.types.Menu):
 def menu_func_import(self, context):
     self.layout.operator(Import3DG1.bl_idname, text="Import 3DG1 (.3dg1)")
 
-
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="Export 3DG1 (.3dg1)")
-
-
-def menu_func_vertex_operations(self, context):
-    self.layout.menu(VertexMenu.bl_idname, text="[FastFX] Vertex Operations")
-
 
 # =========================
 # Registration
@@ -365,21 +400,20 @@ def register():
     bpy.utils.register_class(Import3DG1)
     bpy.utils.register_class(Export3DG1)
     bpy.utils.register_class(VertexOperation)
-    bpy.utils.register_class(VertexMenu)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
-    bpy.types.VIEW3D_MT_object.append(menu_func_vertex_operations)
+    bpy.utils.register_class(OBJECT_OT_apply_material_colors)
+    bpy.utils.register_class(VIEW3D_PT_fastfx_tools)
 
 
 def unregister():
     bpy.utils.unregister_class(Import3DG1)
     bpy.utils.unregister_class(Export3DG1)
     bpy.utils.unregister_class(VertexOperation)
-    bpy.utils.unregister_class(VertexMenu)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
-    bpy.types.VIEW3D_MT_object.remove(menu_func_vertex_operations)
-
+    bpy.utils.unregister_class(OBJECT_OT_apply_material_colors)
+    bpy.utils.unregister_class(VIEW3D_PT_fastfx_tools)
 
 if __name__ == "__main__":
     register()
