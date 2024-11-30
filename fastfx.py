@@ -143,16 +143,81 @@ def read_3dg1(filepath, context):
                 if color_index not in material_mapping:
                     material_mapping[color_index] = f"FX{color_index}"
 
+            # Predefined colors for materials (hex values)
+			# From CoolK's COLOURS.TXT
+            id_0_c_rgb = {
+                0: "#E7E7E7",  # FX0
+                1: "#AAAAAA",  # FX1
+                2: "#BA392A",  # FX2
+                3: "#5144D4",  # FX3
+                4: "#D8A950",  # FX4
+                5: "#190646",  # FX5
+                6: "#801009",  # FX6
+                7: "#2411A3",  # FX7
+                8: "#7C11A3",  # FX8
+                9: "#2F9E28",  # FX9
+                10: "#192419",  # FX10
+                11: "#223022",  # FX11
+                12: "#334933",  # FX12
+                13: "#415D41",  # FX13
+                14: "#4F724F",  # FX14
+                15: "#99B2A4",  # FX15
+                16: "#A4B4A4",  # FX16
+                17: "#B1C1B1",  # FX17
+                18: "#D0E2D2",  # FX18
+                19: "#DDEAE1",  # FX19
+                20: "#FFFFFF",  # FX20
+                21: "#801009",  # FX21
+                22: "#D54437",  # FX22
+                23: "#D14025",  # FX23
+                24: "#C75821",  # FX24
+                25: "#EDA33A",  # FX25
+                26: "#FFA624",  # FX26
+                27: "#FFD961",  # FX27
+                28: "#2411A3",  # FX28
+                29: "#2813B5",  # FX29
+                30: "#5041DA",  # FX30
+                31: "#7D82FF",  # FX31
+                32: "#709AFF",  # FX32
+                33: "#2BBCAE",  # FX33
+                34: "#3ED9C9",  # FX34
+                35: "#61216C",  # FX35
+                36: "#782985",  # FX36
+                37: "#8D5694",  # FX37
+                38: "#B094A4",  # FX38
+                39: "#2D4F3D",  # FX39
+                40: "#1A2E23",  # FX40
+                41: "#24405A",  # FX41
+                42: "#A6C0FF",  # FX42
+                43: "#D14025",  # FX43
+                44: "#AEEBFF",  # FX44
+                45: "#D0E2D4",  # FX45
+                46: "#D0E2FF",  # FX46
+                47: "#010101",  # FX47
+                48: "#5E5010",  # FX48
+                49: "#FF2D25",  # FX49
+                50: "#FFFFFF",  # FX50
+                51: "#FFFFFF",  # FX51
+                52: "#952D25",  # FX52
+            }
+
             # Create a new mesh in Blender
             mesh = bpy.data.meshes.new("Imported3DG1")
             mesh.from_pydata(vertices, [], [poly[0] for poly in polygons])
             obj = bpy.data.objects.new("Imported3DG1", mesh)
             context.collection.objects.link(obj)
 
-            # Create materials and add them to the object
+            # Create materials and assign predefined colors
             material_list = []
             for color_index, material_name in sorted(material_mapping.items()):
                 material = bpy.data.materials.get(material_name) or bpy.data.materials.new(name=material_name)
+                material.use_nodes = True
+                bsdf = material.node_tree.nodes.get("Principled BSDF")
+                if bsdf:
+                    # Convert hex to RGB and set the material's base color
+                    hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white if not defined
+                    r, g, b = [int(hex_color[i:i + 2], 16) / 255.0 for i in (1, 3, 5)]
+                    bsdf.inputs['Base Color'].default_value = (r, g, b, 1.0)  # RGBA with full opacity
                 material_list.append(material)
                 obj.data.materials.append(material)
 
