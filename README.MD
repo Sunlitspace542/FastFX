@@ -21,9 +21,11 @@ Go to ``File -> Export -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to export.
 Instructions on how to prepare the model for importing into Star Fox are a WIP.  
 
 ## Importing 3DG1 Models
-NOTE that this only works if the 3DG1 file is in the format that this plugin exports. 3DG1 models in the format Model to FX outputs are currently not supported.  
+Currently, this plugin only supports importing 2 variants of the 3DG1 format:  
+- Fundoshi-kun - point coordinates are integers  
+- Model to FX - point coordinates are floats, has extra spacing in between lines in the face list  
 Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import.  
-The mesh should appear. The color palette will automatically be applied.
+The mesh should appear. The color palette will be applied automatically.  
 
 ## Utility Menu
 FastFX adds a tab on the right hand side of the screen called ``FastFX`` with extra utilities.  
