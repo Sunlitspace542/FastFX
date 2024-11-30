@@ -314,6 +314,7 @@ def write_3dg1(filepath, obj):
         
         # End-of-file marker
         file.write(chr(0x1A))
+        return {'FINISHED'}
 
 
 # =========================
