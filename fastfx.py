@@ -111,6 +111,9 @@ class VertexOperation(bpy.types.Operator):
 # =========================
 def read_3dg1(filepath, context):
     try:
+        # Extract the base name of the file (without extension) to use as object and mesh name
+        base_name = os.path.splitext(os.path.basename(filepath))[0]
+
         with open(filepath, 'r') as file:
             # Read and validate header
             header = file.readline().strip()
@@ -202,9 +205,9 @@ def read_3dg1(filepath, context):
             }
 
             # Create a new mesh in Blender
-            mesh = bpy.data.meshes.new("Imported3DG1")
+            mesh = bpy.data.meshes.new(base_name)
             mesh.from_pydata(vertices, [], [poly[0] for poly in polygons])
-            obj = bpy.data.objects.new("Imported3DG1", mesh)
+            obj = bpy.data.objects.new(base_name, mesh)
             context.collection.objects.link(obj)
 
             # Create materials and assign predefined colors
