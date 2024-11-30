@@ -26,8 +26,8 @@ Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import.
 The mesh should appear. The color palette will automatically be applied.
 
 ## Utility Menu
-FastFX adds a tab on the right hand side of the screen called ``FastFX``. with extra utilities.  
-``Apply Material Colors`` applies the ``id_0_c`` color palette to all materials following the proper ``FX#`` naming convention.  
+FastFX adds a tab on the right hand side of the screen called ``FastFX`` with extra utilities.  
+``Apply Material Palette`` applies the ``id_0_c`` color palette to all materials following the proper ``FX#`` naming convention.  
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
 ``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates.  
 

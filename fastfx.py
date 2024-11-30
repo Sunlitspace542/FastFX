@@ -337,7 +337,7 @@ def write_3dg1(filepath, obj):
 class OBJECT_OT_apply_material_colors(bpy.types.Operator):
     """Apply colors based on material names (FX#)"""
     bl_idname = "object.apply_material_colors"
-    bl_label = "Apply Material Colors"
+    bl_label = "Apply Material Palette"
 
     def execute(self, context):
         obj = context.object
@@ -365,7 +365,7 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
                     self.report({'WARNING'}, f"Material '{material.name}' has invalid FX# format")
                     continue
 
-        self.report({'INFO'}, "Colors applied to materials")
+        self.report({'INFO'}, "Palette applied to materials")
         return {'FINISHED'}
 
 # =========================
@@ -381,7 +381,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Material Utilities")
+        layout.label(text="Color Palette")
         layout.operator("object.apply_material_colors")
         layout.label(text="Vertex Operations")
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
