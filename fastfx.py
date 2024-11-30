@@ -59,7 +59,7 @@ class Export3DG1(bpy.types.Operator):
 
 
 # =========================
-# Vertex Operations
+# Vertex Operations Logic
 # =========================
 class VertexOperation(bpy.types.Operator):
     """Perform vertex operations"""
@@ -106,7 +106,7 @@ class VertexOperation(bpy.types.Operator):
         return {'FINISHED'}
 
 # =========================
-# Hex to RGB Conversion Logic
+# Hex color to RGB color Converter
 # =========================
 def hex_to_rgb(hex_color):
     """Converts a hex color code to RGB values."""
@@ -115,7 +115,7 @@ def hex_to_rgb(hex_color):
 
 
 # =========================
-# Import Logic
+# 3DG1 Importer
 # =========================
 def read_3dg1(filepath, context):
     try:
@@ -250,7 +250,7 @@ def read_3dg1(filepath, context):
         return {'CANCELLED'}
 
 # =========================
-# Export Logic
+# 3DG1 Exporter
 # =========================
 def write_3dg1(filepath, obj):
     # Open the file for writing
@@ -313,7 +313,7 @@ def write_3dg1(filepath, obj):
 
 
 # =========================
-# Custom Menu
+# Vertex Operations Menu
 # =========================
 class VertexMenu(bpy.types.Menu):
     """Menu for vertex operations"""
