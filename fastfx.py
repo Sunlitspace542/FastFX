@@ -355,6 +355,10 @@ def write_3dg1(filepath, obj):
         # Sort edges by midpoint distance from origin
         edges.sort(key=lambda e: distance_from_origin(e[3]))
 
+        # Reverse the order so farthest elements are written last
+        polygons.reverse()
+        edges.reverse()
+
         # Write vertex count
         file.write(f"{len(unique_vertices)}\n")
 
