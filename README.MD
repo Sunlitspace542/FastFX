@@ -12,6 +12,7 @@ Locate and open ``fastfx.py``. a plugin called FastFX should appear in the windo
 Make a model in Blender. The 3DG1 format can only accept whole numbers for vertex positions, so it is recommended you enable snapping to the nearest increment in Blender.  
 Materials must be named in the format ``FX#``, where ``#`` is the color index of that material. See ``Color Reference.png`` for a chart of colors and their IDs.  
 Colored edges are also supported. use ``FE#`` instead of ``FX#`` as the material name. That face will be converted to edges when exporting.  
+If you are going to make a model composed entirely of edges, you must make a dummy face (a small triangle will work). Assign color 47 to it to make it transparent. If you do not do this, the model will crash the game.  
 You can also look at the ``id_0_c_rgb`` dictionary in ``fastfx.py`` itself for color descriptions.  
 Use the utility menu to apply the proper color palette (see below).  
   
@@ -42,6 +43,6 @@ If your model becomes greatly distorted, try scaling it up (preferably by a numb
 
 # Things this can't do
 - Sorting faces on export - Star Fox's renderer does not have a Z-buffer, and while FastFX does appear to do a slightly better job at face sorting compared to Model to FX (a similar tool), it still isn't great.  
-- Import stray edges with colors (The 3DG1 importer can read models with colored stray edges, but the color information will be lost and they can only be seen in edit mode.)  
+- Import stray edges with colors - (The 3DG1 importer can read models with colored stray edges, but it's hard to see what material is assigned to a given edge.)  
 - Import/Export straight from/to Star Fox BSP format - SHAPED.EXE (Argonaut DOS tool) is still needed to get the 3DG1 into the format Star Fox (2) can actually use.  
 - Animation  
