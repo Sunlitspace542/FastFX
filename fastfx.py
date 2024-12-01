@@ -272,6 +272,11 @@ def read_3dg1(filepath, context):
 # 3DG1 Exporter
 # =========================
 def write_3dg1(filepath, obj):
+
+    # Gets distance from origin
+    def distance_from_origin(point):
+        return math.sqrt(point[0]**2 + point[1]**2 + point[2]**2)
+
     # Open the file for writing
     with open(filepath, "w") as file:
         # Collect unique vertices and map them to indices
@@ -314,8 +319,9 @@ def write_3dg1(filepath, obj):
                             unique_vertices[co2] = vertex_count
                             vertex_count += 1
 
-                        # Add the edge with its color index
-                        edges.append((unique_vertices[co1], unique_vertices[co2], edge_color_index))
+                        # Calculate the midpoint for sorting
+                        midpoint = tuple((c1 + c2) / 2 for c1, c2 in zip(co1, co2))
+                        edges.append((unique_vertices[co1], unique_vertices[co2], edge_color_index, midpoint))
 
                 # Otherwise, handle it as a polygon
                 elif material.name.startswith("FX"):
@@ -336,7 +342,18 @@ def write_3dg1(filepath, obj):
 
                         poly_vertices.append(unique_vertices[co])
 
-                    polygons.append((poly_vertices, color_index))
+                    # Calculate the centroid for sorting
+                    centroid = tuple(
+                        sum(mesh.vertices[v].co[i] for v in poly.vertices) / len(poly.vertices)
+                        for i in range(3)
+                    )
+                    polygons.append((poly_vertices, color_index, centroid))
+
+        # Sort polygons by centroid distance from origin
+        polygons.sort(key=lambda p: distance_from_origin(p[2]))
+
+        # Sort edges by midpoint distance from origin
+        edges.sort(key=lambda e: distance_from_origin(e[3]))
 
         # Write vertex count
         file.write(f"{len(unique_vertices)}\n")
@@ -346,19 +363,20 @@ def write_3dg1(filepath, obj):
             file.write(f"{vertex[0]} {vertex[1]} {vertex[2]}\n")
 
         # Write polygons
-        for poly_vertices, color_index in polygons:
+        for poly_vertices, color_index, _ in polygons:
             file.write(f"{len(poly_vertices)} ")
             file.write(" ".join(map(str, poly_vertices)) + " ")
             file.write(f"{color_index}\n")
 
         # Write edges
-        for v1, v2, color_index in edges:
+        for v1, v2, color_index, _ in edges:
             file.write(f"2 {v1} {v2} {color_index}\n")
 
         # End-of-file marker
         file.write(chr(0x1A))
 
     return {'FINISHED'}
+
 
 # =========================
 # FastFX Menu Tab
