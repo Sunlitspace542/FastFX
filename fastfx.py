@@ -276,8 +276,10 @@ def write_3dg1(filepath, obj):
     with open(filepath, "w") as file:
         # Collect unique vertices and map them to indices
         unique_vertices = {}
-        vertex_count = 0
+        vertex_indices = []
+        color_indices = []
         polygons = []
+        vertex_count = 0
 
         # Write 3DG1 header
         file.write("3DG1\n")
@@ -285,11 +287,11 @@ def write_3dg1(filepath, obj):
         # Process the mesh data
         mesh = obj.data
         mesh.calc_loop_triangles()
-
+        
         for poly in mesh.polygons:
             material_index = poly.material_index
             material = obj.material_slots[material_index].material
-
+            
             if material and material.name.startswith("FX"):
                 try:
                     color_index = int(material.name[2:])  # Extract color index from material name
@@ -298,50 +300,36 @@ def write_3dg1(filepath, obj):
             else:
                 color_index = 0  # Default color index if material doesn't match
 
-            # Collect the face's vertices
             poly_vertices = []
             for loop_index in poly.loop_indices:
                 vertex = mesh.vertices[mesh.loops[loop_index].vertex_index]
                 co = tuple([round(v) for v in vertex.co])
-
+                
                 # Map unique vertices
                 if co not in unique_vertices:
                     unique_vertices[co] = vertex_count
                     vertex_count += 1
-
+                
                 poly_vertices.append(unique_vertices[co])
-
-            # Calculate the face centroid
-            centroid = tuple(
-                sum(mesh.vertices[mesh.loops[loop_index].vertex_index].co[i] for loop_index in poly.loop_indices) / len(poly.loop_indices)
-                for i in range(3)
-            )
-            # Compute distance from the origin
-            distance = math.sqrt(centroid[0] ** 2 + centroid[1] ** 2 + centroid[2] ** 2)
-
-            # Append the polygon with its distance
-            polygons.append((poly_vertices, color_index, distance))
-
-        # Sort polygons by distance from the origin
-        polygons.sort(key=lambda p: p[2])  # Sort by the distance value
-
+            
+            polygons.append((poly_vertices, color_index))
+        
         # Write vertex count
         file.write(f"{len(unique_vertices)}\n")
-
+        
         # Write vertices
         for vertex in unique_vertices:
             file.write(f"{vertex[0]} {vertex[1]} {vertex[2]}\n")
-
+        
         # Write polygons
-        for poly_vertices, color_index, _ in polygons:  # Ignore the distance value when writing
+        for poly_vertices, color_index in polygons:
             file.write(f"{len(poly_vertices)} ")
             file.write(" ".join(map(str, poly_vertices)) + " ")
             file.write(f"{color_index}\n")
-
+        
         # End-of-file marker
         file.write(chr(0x1A))
-
-    return {'FINISHED'}
+        return {'FINISHED'}
 
 # =========================
 # FastFX Menu Tab
