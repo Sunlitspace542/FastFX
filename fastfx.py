@@ -1248,7 +1248,7 @@ def super_fx_node_group():
 
     #input Carry Over
     super_fx.inputs.new('NodeSocketFloatFactor', "Carry Over")
-    super_fx.inputs[12].default_value = 0.0
+    super_fx.inputs[12].default_value = 1.0
     super_fx.inputs[12].min_value = 0.0
     super_fx.inputs[12].max_value = 1.0
     super_fx.inputs[12].attribute_domain = 'POINT'
