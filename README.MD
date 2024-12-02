@@ -37,7 +37,7 @@ The mesh should appear. The color palette will be applied automatically.
 
 ## Utility Menu
 FastFX adds a tab on the right hand side of the screen called ``FastFX`` with extra utilities.  
-``Create Super FX node group`` creates the node group needed for the Super FX material. You only need to click this once per project.  
+``Create Super FX node group`` creates the node group needed for the Super FX material. You only need to click this once per .blend file.  
 ``Apply Material Palette (Fancy)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using the Super FX material.  
 ``Apply Material Palette (Simple)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using simple flat colors.  
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
