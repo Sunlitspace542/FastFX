@@ -2,6 +2,11 @@
 A Blender plugin for importing/exporting Fundoshi-kun (Modified Videoscape 3DG1) format models for use in Star Fox (2), with additional tools.  
 Designed for Blender 3.x, but it might work in 2.8+.  
 
+# Credits
+Super FX material: Euclidium98  
+Color documentation: CoolK  
+Simple color palette data from SFView by Bisquick  
+
 # Installation
 Download the ``fastfx.py`` file from this repo. In Blender, go to ``Edit -> Preferences -> Add-ons -> Install...``  
 Locate and open ``fastfx.py``. a plugin called FastFX should appear in the window. Click the checkbox to enable it.  
@@ -32,7 +37,9 @@ The mesh should appear. The color palette will be applied automatically.
 
 ## Utility Menu
 FastFX adds a tab on the right hand side of the screen called ``FastFX`` with extra utilities.  
-``Apply Material Palette`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention.  
+``Create Super FX node group`` creates the node group needed for the Super FX material. You only need to click this once per project.  
+``Apply Material Palette (Fancy)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using the Super FX material.  
+``Apply Material Palette (Simple)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention.  
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
 ``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates.  
 
