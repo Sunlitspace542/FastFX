@@ -1923,16 +1923,38 @@ class OBJECT_OT_apply_material_colors_simple(bpy.types.Operator):
             material = material_slot.material
             if material and (material.name.startswith("FX") or material.name.startswith("FE")):
                 try:
+                    # Extract color index and retrieve the color
                     color_index = int(material.name[2:])
                     hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white
-                    rgb = hex_to_rgb(hex_color)
+
+                    # Convert HEX to linear RGB for Blender
+                    linear_rgb_color = hex_to_rgb(hex_color)
+
+                    # Ensure the material uses nodes
                     material.use_nodes = True
-                    bsdf = material.node_tree.nodes.get("Principled BSDF")
-                    if bsdf:
-                        linear_rgb_color = hex_to_rgb(hex_color)
-                        bsdf.inputs["Base Color"].default_value = linear_rgb_color  # Linear RGB with alpha
+                    node_tree = material.node_tree
+
+                    # Clear existing nodes
+                    nodes = node_tree.nodes
+                    links = node_tree.links
+                    nodes.clear()
+
+                    # Add a new Principled BSDF node
+                    bsdf_node = nodes.new(type="ShaderNodeBsdfPrincipled")
+                    bsdf_node.location = (0, 0)
+
+                    # Set the Base Color
+                    bsdf_node.inputs["Base Color"].default_value = linear_rgb_color
+
+                    # Add a Material Output node
+                    output_node = nodes.new(type="ShaderNodeOutputMaterial")
+                    output_node.location = (300, 0)
+
+                    # Connect the BSDF to the Surface input of the Material Output
+                    links.new(bsdf_node.outputs["BSDF"], output_node.inputs["Surface"])
+
                 except ValueError:
-                    self.report({'WARNING'}, f"Material '{material.name}' has invalid FX# format")
+                    self.report({'WARNING'}, f"Material '{material.name}' has invalid FX# or FE# format")
                     continue
 
         self.report({'INFO'}, "Palette applied to materials")
