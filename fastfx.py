@@ -239,12 +239,14 @@ id_0_c_components_rgb = {
         "Colour 2": "#BDEFFF",
         "Colour 3": "#6351DE",
         "Colour 4": "#2928BD",
+        "Carry Over": "1.0"
     },
     9: {
         "Colour 1": "#008E00",
         "Colour 2": "#847173",
         "Colour 3": "#6B3839",
         "Colour 4": "#391010",
+        "Carry Over": "1.0"
     },
     10: { #Mostly COLNORM colors begin
         "Colour 1": "#391010",
@@ -1826,7 +1828,7 @@ class OBJECT_OT_create_super_fx(bpy.types.Operator):
 # FastFX Menu Tab -  Palette assignment (fancy)
 # =========================
 class OBJECT_OT_apply_material_colors(bpy.types.Operator):
-    """Apply colors based on material names (FX#)"""
+    """Apply colors and additional settings based on material names (FX#)"""
     bl_idname = "object.apply_material_colors"
     bl_label = "Apply Material Palette (Fancy)"
 
@@ -1851,10 +1853,10 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
                 try:
                     # Extract color index from the material name
                     color_index = int(material.name[2:])
-                    colors = id_0_c_components_rgb.get(color_index)
+                    settings = id_0_c_components_rgb.get(color_index)
 
-                    if not colors:
-                        self.report({'WARNING'}, f"No color data for material '{material.name}'")
+                    if not settings:
+                        self.report({'WARNING'}, f"No settings found for material '{material.name}'")
                         continue
 
                     # Ensure the material uses nodes
@@ -1878,9 +1880,18 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
                     links.new(super_fx.outputs["Emission"], output_node.inputs["Surface"])
 
                     # Assign colors to the Super FX node group inputs
-                    for input_name, hex_color in colors.items():
-                        if input_name in super_fx.inputs:
-                            super_fx.inputs[input_name].default_value = hex_to_rgb(hex_color)
+                    for input_name, value in settings.items():
+                        if input_name.startswith("Colour"):
+                            # Process color inputs
+                            if input_name in super_fx.inputs:
+                                super_fx.inputs[input_name].default_value = hex_to_rgb(value)
+                        else:
+                            # Handle other material settings
+                            if input_name == "Carry Over":
+                                try:
+                                    super_fx.inputs[input_name].default_value = float(value)
+                                except ValueError:
+                                    self.report({'WARNING'}, f"Invalid value for '{input_name}' in material '{material.name}'")
 
                 except ValueError:
                     self.report({'WARNING'}, f"Material '{material.name}' has invalid FX# or FE# format")
@@ -1888,6 +1899,7 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
 
         self.report({'INFO'}, "Palette applied to materials")
         return {'FINISHED'}
+
 
 # =========================
 # FastFX Menu Tab -  Palette assignment (simple)
