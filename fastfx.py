@@ -105,6 +105,140 @@ class VertexOperation(bpy.types.Operator):
         return {'FINISHED'}
 
 # =========================
+# Colbox importer operator
+# =========================
+class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
+    """Import Collision Boxes from Clipboard"""
+    bl_idname = "object.import_colboxes_clipboard"
+    bl_label = "Import Collision Boxes (Clipboard)"
+
+    def execute(self, context):
+        return import_colboxes_from_clipboard()
+
+# =========================
+# Colbox exporter operator
+# =========================
+class OBJECT_OT_export_colboxes(bpy.types.Operator):
+    """Export Collision Boxes to Clipboard"""
+    bl_idname = "object.export_colboxes"
+    bl_label = "Export Collision Boxes (currently broken)"
+
+    def execute(self, context):
+        return export_colboxes(context)
+
+# =========================
+# Colbox exporter
+# =========================
+def export_colboxes(context):
+    colbox_data = []
+
+    for obj in context.selected_objects:
+        if obj.type != 'MESH':
+            continue
+
+        # Fetch custom collision box properties
+        label = obj.get("colbox_label", obj.name)
+        linked_label = obj.get("colbox_linked_label", "0")
+        offset = obj.get("colbox_offset", [0, 0, 0])
+        rotation = obj.get("colbox_rotation", "norot")
+        dimensions = obj.get("colbox_dimensions", [1, 1, 1])
+        flags_set = obj.get("colbox_flags_set", "0")
+        flags_clear = obj.get("colbox_flags_clear", "0")
+        scale = obj.get("colbox_scale", 1)
+
+        # Invert Y (Blender Z)
+        offset[2] = offset[2] * -1
+
+        # Swap Y and Z axes back for export
+        offset[1], offset[2] = offset[2], offset[1]
+        dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
+
+        # Create collision box string
+        colbox_str = f"{label}\tcolbox\t{linked_label}," \
+                     f"{offset[0]},{offset[1]},{offset[2]}," \
+                     f"{rotation}," \
+                     f"{dimensions[0]},{dimensions[1]},{dimensions[2]}," \
+                     f"{flags_set},{flags_clear},{scale}"
+        colbox_data.append(colbox_str)
+
+    # Copy all collision boxes to the clipboard
+    print(colbox_data)
+    return {'FINISHED'}
+
+# =========================
+# Colbox importer
+# =========================
+def import_colboxes_from_clipboard():
+    clipboard_content = bpy.context.window_manager.clipboard
+    lines = clipboard_content.splitlines()
+
+    for line in lines:
+        if not line.strip():
+            continue  # Skip empty lines
+
+        # Parse the colbox definition
+        parts = line.split("\t")
+        if len(parts) != 3 or parts[1] != "colbox":
+            print(f"Invalid colbox line: {line}")
+            continue
+
+        label = parts[0]
+        colbox_data = parts[2].split(",")
+
+        # Extract individual fields
+        linked_label = colbox_data[0]
+        offset = list(map(int, colbox_data[1:4]))
+        rotation = colbox_data[4]
+        dimensions = list(map(int, colbox_data[5:8]))
+        flags_set = colbox_data[8]
+        flags_clear = colbox_data[9]
+        scale = int(colbox_data[10]) if len(colbox_data) > 10 else 0  # Default to 0 if scale is missing
+
+        # Invert Y (Blender Z)
+        offset[1] = offset[1] * -1
+
+        # Swap Y and Z axes for Blender
+        offset[1], offset[2] = offset[2], offset[1]
+        dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
+
+        # Find or create an object for the colbox
+        obj = bpy.data.objects.get(label) or bpy.data.objects.new(label, None)
+        bpy.context.collection.objects.link(obj)
+
+        # Set the object type to EMPTY and its display type to CUBE
+        obj.empty_display_type = 'CUBE'
+
+        # Size the empty to match the dimensions
+        obj.empty_display_size = max(dimensions)  # Use the largest dimension for uniform scaling
+        obj.scale = (dimensions[0] / obj.empty_display_size, 
+                     dimensions[1] / obj.empty_display_size, 
+                     dimensions[2] / obj.empty_display_size)
+
+        # Adjust location based on offset and scale
+        scaled_offset = [o * (2 ** scale) for o in offset]
+        obj.location = scaled_offset
+
+        # Invert Z again so the properties are correct for manual exporting
+        offset[2] = offset[2] * -1
+
+        # Swap Y and Z axes back for same reason
+        offset[1], offset[2] = offset[2], offset[1]
+        dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
+
+        # Store colbox data in the object
+        obj["colbox_label"] = label
+        obj["colbox_linked_label"] = linked_label
+        obj["colbox_offset"] = offset
+        obj["colbox_rotation"] = rotation
+        obj["colbox_dimensions"] = dimensions
+        obj["colbox_flags_set"] = flags_set
+        obj["colbox_flags_clear"] = flags_clear
+        obj["colbox_scale"] = scale
+
+    print("Collision boxes imported successfully!")
+    return {'FINISHED'}
+
+# =========================
 # Hex color to RGB color Converter
 # =========================
 def srgb_to_linearrgb(c):
@@ -239,242 +373,280 @@ id_0_c_components_rgb = {
         "Colour 2": "#BDEFFF",
         "Colour 3": "#6351DE",
         "Colour 4": "#2928BD",
-        "Carry Over": "1.0"
+        "Carry Over": "1.0",
     },
     9: {
         "Colour 1": "#008E00",
         "Colour 2": "#847173",
         "Colour 3": "#6B3839",
         "Colour 4": "#391010",
-        "Carry Over": "1.0"
+        "Carry Over": "1.0",
     },
     10: { #Mostly COLNORM colors begin
         "Colour 1": "#391010",
         "Colour 2": "#391010",
         "Colour 3": "#391010",
         "Colour 4": "#391010",
+        "Carry Over": "1.0",
     },
     11: { # shaded/dithered solid colors go tile color 1(2x), tile color 2 (2x)
         "Colour 1": "#391010",
         "Colour 2": "#391010",
         "Colour 3": "#6B3839",
         "Colour 4": "#6B3839",
+        "Carry Over": "1.0",
     },
     12: {
         "Colour 1": "#6B3839",
         "Colour 2": "#6B3839",
         "Colour 3": "#6B3839",
         "Colour 4": "#6B3839",
+        "Carry Over": "1.0",
     },
     13: {
         "Colour 1": "#847173",
         "Colour 2": "#847173",
         "Colour 3": "#6B3839",
         "Colour 4": "#6B3839",
+        "Carry Over": "1.0",
     },
     14: {
         "Colour 1": "#847173",
         "Colour 2": "#847173",
         "Colour 3": "#847173",
         "Colour 4": "#847173",
+        "Carry Over": "1.0",
     },
     15: {
         "Colour 1": "#A59E9C",
         "Colour 2": "#A59E9C",
         "Colour 3": "#847173",
         "Colour 4": "#847173",
+        "Carry Over": "1.0",
     },
     16: {
         "Colour 1": "#A59E9C",
         "Colour 2": "#A59E9C",
         "Colour 3": "#A59E9C",
         "Colour 4": "#A59E9C",
+        "Carry Over": "1.0",
     },
     17: {
         "Colour 1": "#C6CFD6",
         "Colour 2": "#C6CFD6",
         "Colour 3": "#A59E9C",
         "Colour 4": "#A59E9C",
+        "Carry Over": "1.0",
     },
     18: {
         "Colour 1": "#C6CFD6",
         "Colour 2": "#C6CFD6",
         "Colour 3": "#C6CFD6",
         "Colour 4": "#C6CFD6",
+        "Carry Over": "1.0",
     },
     19: {
         "Colour 1": "#F7FFFF",
         "Colour 2": "#F7FFFF",
         "Colour 3": "#C6CFD6",
         "Colour 4": "#C6CFD6",
+        "Carry Over": "1.0",
     },
     20: {
         "Colour 1": "#F7FFFF",
         "Colour 2": "#F7FFFF",
         "Colour 3": "#F7FFFF",
         "Colour 4": "#F7FFFF",
+        "Carry Over": "1.0",
     },
     21: {
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#AD2800",
         "Colour 4": "#AD2800",
+        "Carry Over": "1.0",
     },
     22: {
         "Colour 1": "#F76121",
         "Colour 2": "#F76121",
         "Colour 3": "#AD2800",
         "Colour 4": "#AD2800",
+        "Carry Over": "1.0",
     },
     23: {
         "Colour 1": "#F76121",
         "Colour 2": "#F76121",
         "Colour 3": "#F76121",
         "Colour 4": "#F76121",
+        "Carry Over": "1.0",
     },
     24: {
         "Colour 1": "#F76121",
         "Colour 2": "#F76121",
         "Colour 3": "#FFB631",
         "Colour 4": "#FFB631",
+        "Carry Over": "1.0",
     },
     25: {
         "Colour 1": "#FFB631",
         "Colour 2": "#FFB631",
         "Colour 3": "#FFB631",
         "Colour 4": "#FFB631",
+        "Carry Over": "1.0",
     },
     26: {
         "Colour 1": "#FFDF5A",
         "Colour 2": "#FFDF5A",
         "Colour 3": "#FFB631",
         "Colour 4": "#FFB631",
+        "Carry Over": "1.0",
     },
     27: {
         "Colour 1": "#FFDF5A",
         "Colour 2": "#FFDF5A",
         "Colour 3": "#FFDF5A",
         "Colour 4": "#FFDF5A",
+        "Carry Over": "1.0",
     },
     28: {
         "Colour 1": "#2928BD",
         "Colour 2": "#2928BD",
         "Colour 3": "#2928BD",
         "Colour 4": "#2928BD",
+        "Carry Over": "1.0",
     },
     29: {
         "Colour 1": "#6351DE",
         "Colour 2": "#6351DE",
         "Colour 3": "#2928BD",
         "Colour 4": "#2928BD",
+        "Carry Over": "1.0",
     },
     30: {
         "Colour 1": "#6351DE",
         "Colour 2": "#6351DE",
         "Colour 3": "#6351DE",
         "Colour 4": "#6351DE",
+        "Carry Over": "1.0",
     },
     31: {
         "Colour 1": "#8CBEEF",
         "Colour 2": "#8CBEEF",
         "Colour 3": "#6351DE",
         "Colour 4": "#6351DE",
+        "Carry Over": "1.0",
     },
     32: {
         "Colour 1": "#8CBEEF",
         "Colour 2": "#8CBEEF",
         "Colour 3": "#8CBEEF",
         "Colour 4": "#8CBEEF",
+        "Carry Over": "1.0",
     },
     33: {
         "Colour 1": "#8CBEEF",
         "Colour 2": "#8CBEEF",
         "Colour 3": "#BDEFFF",
         "Colour 4": "#BDEFFF",
+        "Carry Over": "1.0",
     },
     34: {
         "Colour 1": "#BDEFFF",
         "Colour 2": "#BDEFFF",
         "Colour 3": "#BDEFFF",
         "Colour 4": "#BDEFFF",
+        "Carry Over": "1.0",
     },
     35: {
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#6351DE",
         "Colour 4": "#6351DE",
+        "Carry Over": "1.0",
     },
     36: {
         "Colour 1": "#F76121",
         "Colour 2": "#F76121",
         "Colour 3": "#6351DE",
         "Colour 4": "#6351DE",
+        "Carry Over": "1.0",
     },
     37: {
         "Colour 1": "#6351DE",
         "Colour 2": "#6351DE",
         "Colour 3": "#FFB631",
         "Colour 4": "#FFB631",
+        "Carry Over": "1.0",
     },
     38: {
         "Colour 1": "#FFDF5A",
         "Colour 2": "#FFDF5A",
         "Colour 3": "#6351DE",
         "Colour 4": "#6351DE",
+        "Carry Over": "1.0",
     },
     39: {
         "Colour 1": "#00C700",
         "Colour 2": "#00C700",
         "Colour 3": "#6B3839",
         "Colour 4": "#6B3839",
+        "Carry Over": "1.0",
     },
     40: {
         "Colour 1": "#00C700",
         "Colour 2": "#00C700",
         "Colour 3": "#00C700",
         "Colour 4": "#00C700",
+        "Carry Over": "1.0",
     },
     41: {
         "Colour 1": "#00C700",
         "Colour 2": "#00C700",
         "Colour 3": "#C6CFD6",
         "Colour 4": "#C6CFD6",
+        "Carry Over": "1.0",
     },
     42: {
         "Colour 1": "#00C700",
         "Colour 2": "#00C700",
         "Colour 3": "#00C700",
         "Colour 4": "#00C700",
+        "Carry Over": "1.0",
     },
     43: { #flashes
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#AD2800",
         "Colour 4": "#AD2800",
+        "Carry Over": "1.0",
     },
     44: { #flashes
         "Colour 1": "#2928BD",
         "Colour 2": "#2928BD",
         "Colour 3": "#2928BD",
         "Colour 4": "#2928BD",
+        "Carry Over": "1.0",
     },
     45: { #flashes
         "Colour 1": "#847173",
         "Colour 2": "#847173",
         "Colour 3": "#847173",
         "Colour 4": "#847173",
+        "Carry Over": "1.0",
     },
     46: {
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#FFB631",
         "Colour 4": "#FFB631",
+        "Carry Over": "1.0",
     },
     47: {
         "Colour 1": "#000000",
         "Colour 2": "#000000",
         "Colour 3": "#000000",
         "Colour 4": "#000000",
+        "Carry Over": "1.0",
     },
     48: { # texture
         "Colour 1": "#FFFFFF",
@@ -483,28 +655,29 @@ id_0_c_components_rgb = {
         "Colour 4": "#FFFFFF",
     },
     49: { # texture
-        "Colour 1": "#A59E9C",
-        "Colour 2": "#847173",
-        "Colour 3": "#6B3839",
-        "Colour 4": "#391010",
+        "Colour 1": "#FFFFFF",
+        "Colour 2": "#FFFFFF",
+        "Colour 3": "#FFFFFF",
+        "Colour 4": "#FFFFFF",
     },
     50: { # texture
-        "Colour 1": "#A59E9C",
-        "Colour 2": "#847173",
-        "Colour 3": "#6B3839",
-        "Colour 4": "#391010",
+        "Colour 1": "#FFFFFF",
+        "Colour 2": "#FFFFFF",
+        "Colour 3": "#FFFFFF",
+        "Colour 4": "#FFFFFF",
     },
     51: { # texture
-        "Colour 1": "#A59E9C",
-        "Colour 2": "#847173",
-        "Colour 3": "#6B3839",
-        "Colour 4": "#391010",
+        "Colour 1": "#FFFFFF",
+        "Colour 2": "#FFFFFF",
+        "Colour 3": "#FFFFFF",
+        "Colour 4": "#FFFFFF",
     },
     52: {
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#AD2800",
         "Colour 4": "#AD2800",
+        "Carry Over": "1.0",
     },
 }
 
@@ -1982,6 +2155,10 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.label(text="Vertex Operations")
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
+        layout.label(text="Collision Box tools")
+        layout.operator("object.import_colboxes_clipboard")
+        layout.operator("object.export_colboxes")
+
 
 # =========================
 # Menu Functions
@@ -2005,6 +2182,8 @@ def register():
     bpy.utils.register_class(OBJECT_OT_apply_material_colors_simple)
     bpy.utils.register_class(VIEW3D_PT_fastfx_tools)
     bpy.utils.register_class(OBJECT_OT_create_super_fx)
+    bpy.utils.register_class(OBJECT_OT_import_colboxes_clipboard)
+    bpy.utils.register_class(OBJECT_OT_export_colboxes)
 
 def unregister():
     bpy.utils.unregister_class(Import3DG1)
@@ -2016,6 +2195,8 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_apply_material_colors_simple)
     bpy.utils.unregister_class(VIEW3D_PT_fastfx_tools)
     bpy.utils.unregister_class(OBJECT_OT_create_super_fx)
+    bpy.utils.unregister_class(OBJECT_OT_import_colboxes_clipboard)
+    bpy.utils.unregister_class(OBJECT_OT_export_colboxes)
 
 if __name__ == "__main__":
     register()
