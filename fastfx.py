@@ -280,9 +280,8 @@ def update_colbox(obj):
                  dimensions[1] / obj.empty_display_size,
                  dimensions[2] / obj.empty_display_size)
 
-    # Apply scaled offset for location
-    scaled_offset = [o * (2 ** scale) for o in offset]
-    obj.location = scaled_offset
+    # Apply offset to location
+    obj.location = offset
 
     # Adjust offset: invert Y and swap Y/Z for Blender
     offset[2] = offset[2] * -1
@@ -340,6 +339,96 @@ def update_colbox_offset(obj):
     obj["colbox_offset"] = location
 
     print(f"Collision box '{obj.name}' offset updated to {location}!")
+
+# =========================
+# Generate a colbox for a selected mesh
+# =========================
+class OBJECT_OT_generate_colbox(bpy.types.Operator):
+    """Generate a collision box that fits the selected mesh"""
+    bl_idname = "object.generate_colbox"
+    bl_label = "Generate Colbox for Mesh"
+
+    def execute(self, context):
+        obj = context.active_object
+        if not obj or obj.type != 'MESH':
+            self.report({'WARNING'}, "No mesh object selected")
+            return {'CANCELLED'}
+
+        generate_colbox_from_mesh(obj)
+        self.report({'INFO'}, f"Collision box created for '{obj.name}'")
+        return {'FINISHED'}
+
+
+def generate_colbox_from_mesh(obj):
+    """
+    Generate a collision box that is scaled to fit the given mesh object.
+    The colbox position and dimensions are rounded to whole integers.
+    """
+    if not obj or obj.type != 'MESH':
+        print("Selected object is not a mesh.")
+        return
+
+    # Calculate the bounding box dimensions and position
+    min_corner = [int(round(coord)) for coord in obj.bound_box[0]]
+    max_corner = [int(round(coord)) for coord in obj.bound_box[6]]
+    
+    dimensions = [
+        max_corner[0] - min_corner[0],
+        max_corner[1] - min_corner[1],
+        max_corner[2] - min_corner[2],
+    ]
+    
+    center_position = [
+        int(round((min_corner[0] + max_corner[0]) / 2)),
+        int(round((min_corner[1] + max_corner[1]) / 2)),
+        int(round((min_corner[2] + max_corner[2]) / 2)),
+    ]
+
+    # Halve dimensions to fit around object
+    dimensions[0] = math.trunc(dimensions[0]/2)
+    dimensions[1] = math.trunc(dimensions[1]/2)
+    dimensions[2] = math.trunc(dimensions[2]/2)
+
+    # Swap Y and Z for Blender's coordinate system
+    center_position[1], center_position[2] = center_position[2], center_position[1]
+    dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
+
+    # Create the colbox
+    colbox_label = f"{obj.name}_col"
+    colbox = bpy.data.objects.new(colbox_label, None)
+    bpy.context.collection.objects.link(colbox)
+
+    # Set the colbox as an empty object with a cube display
+    colbox.empty_display_type = 'CUBE'
+
+    # Set the dimensions and location
+    colbox.empty_display_size = max(dimensions)
+    colbox.scale = (
+        dimensions[0] / colbox.empty_display_size,
+        dimensions[1] / colbox.empty_display_size,
+        dimensions[2] / colbox.empty_display_size,
+    )
+    colbox.location = center_position
+
+    # Swap Y and Z for target coordinate system
+    center_position[1], center_position[2] = center_position[2], center_position[1]
+    dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
+
+    # Assign colbox properties
+    colbox["colbox_label"] = colbox_label
+    colbox["colbox_linked_label"] = "0"
+    colbox["colbox_offset"] = center_position
+    colbox["colbox_rotation"] = "norot"
+    colbox["colbox_dimensions"] = dimensions
+    colbox["colbox_flags_set"] = "HF1"
+    colbox["colbox_flags_clear"] = "0"
+    colbox["colbox_scale"] = 0  # Default scale
+
+    update_colbox_offset(colbox)
+
+    print(f"Collision box '{colbox_label}' created for mesh '{obj.name}'.")
+    return colbox
+
 
 # =========================
 # Hex color to RGB color Converter
@@ -2101,7 +2190,7 @@ class OBJECT_OT_create_super_fx(bpy.types.Operator):
 
 
 # =========================
-# FastFX Menu Tab -  Palette assignment (fancy)
+# FastFX Menu Panel -  Palette assignment (fancy)
 # =========================
 class OBJECT_OT_apply_material_colors(bpy.types.Operator):
     """Apply colors and additional settings based on material names (FX#)"""
@@ -2178,7 +2267,7 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
 
 
 # =========================
-# FastFX Menu Tab -  Palette assignment (simple)
+# FastFX Menu Panel -  Palette assignment (simple)
 # =========================
 class OBJECT_OT_apply_material_colors_simple(bpy.types.Operator):
     """Apply colors based on material names (FX#)"""
@@ -2238,7 +2327,7 @@ class OBJECT_OT_apply_material_colors_simple(bpy.types.Operator):
 
 
 # =========================
-# FastFX Menu Tab Layout
+# FastFX Menu Panel Layout
 # =========================
 class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
     """Tools for 3DG1 format"""
@@ -2263,6 +2352,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.operator("object.export_colboxes")
         layout.operator("object.update_colboxes")
         layout.operator("object.update_colbox_offsets")
+        layout.operator("object.generate_colbox")
 
 
 # =========================
@@ -2291,6 +2381,7 @@ def register():
     bpy.utils.register_class(OBJECT_OT_export_colboxes)
     bpy.utils.register_class(OBJECT_OT_update_colboxes)
     bpy.utils.register_class(OBJECT_OT_update_colbox_offsets)
+    bpy.utils.register_class(OBJECT_OT_generate_colbox)
 
 def unregister():
     bpy.utils.unregister_class(Import3DG1)
@@ -2306,6 +2397,7 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_export_colboxes)
     bpy.utils.unregister_class(OBJECT_OT_update_colboxes)
     bpy.utils.unregister_class(OBJECT_OT_update_colbox_offsets)
+    bpy.utils.unregister_class(OBJECT_OT_generate_colbox)
 
 if __name__ == "__main__":
     register()
