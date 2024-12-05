@@ -121,7 +121,7 @@ class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
 class OBJECT_OT_export_colboxes(bpy.types.Operator):
     """Export Collision Boxes to Clipboard"""
     bl_idname = "object.export_colboxes"
-    bl_label = "Export Colboxes to clipboard"
+    bl_label = "Export Colboxes to Clipboard"
 
     def execute(self, context):
         return export_colboxes(context)
