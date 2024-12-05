@@ -110,7 +110,7 @@ class VertexOperation(bpy.types.Operator):
 class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
     """Import Collision Boxes from Clipboard"""
     bl_idname = "object.import_colboxes_clipboard"
-    bl_label = "Import Collision Boxes from Clipboard"
+    bl_label = "Import Colboxes from Clipboard"
 
     def execute(self, context):
         return import_colboxes_from_clipboard()
@@ -121,7 +121,7 @@ class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
 class OBJECT_OT_export_colboxes(bpy.types.Operator):
     """Export Collision Boxes to Clipboard"""
     bl_idname = "object.export_colboxes"
-    bl_label = "Export Collision Boxes to clipboard"
+    bl_label = "Export Colboxes to clipboard"
 
     def execute(self, context):
         return export_colboxes(context)
@@ -231,6 +231,115 @@ def import_colboxes_from_clipboard():
 
     print("Collision boxes imported successfully!")
     return {'FINISHED'}
+
+# =========================
+# Update colbox visual from its properties
+# =========================
+class OBJECT_OT_update_colboxes(bpy.types.Operator):
+    """Update collision box visuals based on its properties"""
+    bl_idname = "object.update_colboxes"
+    bl_label = "Update Colboxes From Properties"
+
+    def execute(self, context):
+        updated_count = 0
+        for obj in context.selected_objects:
+            if "colbox_label" in obj:
+                update_colbox(obj)
+                updated_count += 1
+
+        self.report({'INFO'}, f"Updated {updated_count} collision boxes")
+        return {'FINISHED'}
+
+def update_colbox(obj):
+    """
+    Updates the visual and transformation properties of a collision box based on its stored properties.
+    """
+    if not obj or "colbox_label" not in obj:
+        print(f"Object '{obj.name}' is not a valid collision box.")
+        return
+
+    # Fetch stored properties
+    label = obj.get("colbox_label", obj.name)
+    linked_label = obj.get("colbox_linked_label", "0")
+    offset = obj.get("colbox_offset", [0, 0, 0])
+    rotation = obj.get("colbox_rotation", "norot")
+    dimensions = obj.get("colbox_dimensions", [1, 1, 1])
+    scale = obj.get("colbox_scale", 0)
+
+    # Adjust offset: invert Y and swap Y/Z for Blender
+    offset[1] = offset[1] * -1
+    offset[1], offset[2] = offset[2], offset[1]
+
+    # Adjust dimensions: swap Y/Z for Blender
+    dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
+
+    # Update the EMPTY's visual size and location
+    obj.empty_display_type = 'CUBE'
+    obj.empty_display_size = max(dimensions)  # Use the largest dimension for consistent scaling
+    obj.scale = (dimensions[0] / obj.empty_display_size,
+                 dimensions[1] / obj.empty_display_size,
+                 dimensions[2] / obj.empty_display_size)
+
+    # Apply scaled offset for location
+    scaled_offset = [o * (2 ** scale) for o in offset]
+    obj.location = scaled_offset
+
+    # Adjust offset: invert Y and swap Y/Z for Blender
+    offset[2] = offset[2] * -1
+    offset[1], offset[2] = offset[2], offset[1]
+
+    # Adjust dimensions: swap Y/Z for Blender
+    dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
+
+    # Store colbox data in the object
+    obj["colbox_dimensions"] = dimensions
+    obj["colbox_scale"] = scale
+
+    print(f"Collision box '{label}' updated successfully!")
+
+# =========================
+# Update colbox position based on its visual position
+# =========================
+class OBJECT_OT_update_colbox_offsets(bpy.types.Operator):
+    """Update colbox offsets based on the current position of selected objects"""
+    bl_idname = "object.update_colbox_offsets"
+    bl_label = "Update Colbox Positions"
+
+    def execute(self, context):
+        updated_count = 0
+        for obj in context.selected_objects:
+            if "colbox_label" in obj:
+                update_colbox_offset(obj)
+                updated_count += 1
+
+        self.report({'INFO'}, f"Updated offsets for {updated_count} collision boxes")
+        return {'FINISHED'}
+
+
+def update_colbox_offset(obj):
+    """
+    Updates the colbox_offset property based on the current position of the object in the scene.
+    """
+    if not obj or "colbox_label" not in obj:
+        print(f"Object '{obj.name}' is not a valid collision box.")
+        return
+
+    # Get the current location of the object
+    location = list(obj.location)
+
+    # Adjust for Blender's coordinate system: swap Y/Z, invert Y
+    location[2] = location[2] * -1  # Invert Z (Blender's Z = target's Y)
+    location[1], location[2] = location[2], location[1]  # Swap Y and Z
+
+    # Colbox coordinates must be whole numbers
+    location[0] = math.trunc(location[0])
+    location[1] = math.trunc(location[1])
+    location[2] = math.trunc(location[2])
+
+    # Update the colbox_offset property
+    obj["colbox_offset"] = location
+
+    print(f"Collision box '{obj.name}' offset updated to {location}!")
 
 # =========================
 # Hex color to RGB color Converter
@@ -2149,9 +2258,11 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.label(text="Vertex Operations")
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
-        layout.label(text="Collision Box tools")
+        layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")
+        layout.operator("object.update_colboxes")
+        layout.operator("object.update_colbox_offsets")
 
 
 # =========================
@@ -2178,6 +2289,8 @@ def register():
     bpy.utils.register_class(OBJECT_OT_create_super_fx)
     bpy.utils.register_class(OBJECT_OT_import_colboxes_clipboard)
     bpy.utils.register_class(OBJECT_OT_export_colboxes)
+    bpy.utils.register_class(OBJECT_OT_update_colboxes)
+    bpy.utils.register_class(OBJECT_OT_update_colbox_offsets)
 
 def unregister():
     bpy.utils.unregister_class(Import3DG1)
@@ -2191,6 +2304,8 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_create_super_fx)
     bpy.utils.unregister_class(OBJECT_OT_import_colboxes_clipboard)
     bpy.utils.unregister_class(OBJECT_OT_export_colboxes)
+    bpy.utils.unregister_class(OBJECT_OT_update_colboxes)
+    bpy.utils.unregister_class(OBJECT_OT_update_colbox_offsets)
 
 if __name__ == "__main__":
     register()
