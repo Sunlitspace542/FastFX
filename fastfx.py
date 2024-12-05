@@ -146,13 +146,6 @@ def export_colboxes(context):
         flags_clear = obj.get("colbox_flags_clear", "0")
         scale = obj.get("colbox_scale", 1)
 
-        # Invert Y (Blender Z)
-        offset[2] = offset[2] * -1
-
-        # Swap Y and Z axes back for export
-        offset[1], offset[2] = offset[2], offset[1]
-        dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
-
         # Create collision box string
         colbox_str = f"{label}\tcolbox\t{linked_label}," \
                      f"{offset[0]},{offset[1]},{offset[2]}," \
