@@ -110,7 +110,7 @@ class VertexOperation(bpy.types.Operator):
 class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
     """Import Collision Boxes from Clipboard"""
     bl_idname = "object.import_colboxes_clipboard"
-    bl_label = "Import Collision Boxes (Clipboard)"
+    bl_label = "Import Collision Boxes from Clipboard"
 
     def execute(self, context):
         return import_colboxes_from_clipboard()
@@ -121,7 +121,7 @@ class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
 class OBJECT_OT_export_colboxes(bpy.types.Operator):
     """Export Collision Boxes to Clipboard"""
     bl_idname = "object.export_colboxes"
-    bl_label = "Export Collision Boxes (currently broken)"
+    bl_label = "Export Collision Boxes to clipboard"
 
     def execute(self, context):
         return export_colboxes(context)
@@ -133,7 +133,7 @@ def export_colboxes(context):
     colbox_data = []
 
     for obj in context.selected_objects:
-        if obj.type != 'MESH':
+        if obj.type != 'EMPTY':
             continue
 
         # Fetch custom collision box properties
@@ -162,7 +162,8 @@ def export_colboxes(context):
         colbox_data.append(colbox_str)
 
     # Copy all collision boxes to the clipboard
-    print(colbox_data)
+    bpy.context.window_manager.clipboard = "\n".join(colbox_data)
+    print("Collision boxes exported successfully!")
     return {'FINISHED'}
 
 # =========================
