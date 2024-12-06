@@ -35,12 +35,15 @@ Go to ``File -> Export -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to export.
 ## Converting to Star Fox BSP Format and Importing into Star Fox
 Instructions on how to prepare the model for importing into Star Fox coming soon.  
 
-## Importing 3DG1 Models
-Currently, this plugin only supports importing 2 variants of the 3DG1 format:  
+## Importing Shapes
+Currently, this plugin only supports importing 3 formats:  
+2 variants of the 3DG1 format:  
 - Fundoshi-kun - point coordinates are integers  
 - Model to FX - point coordinates are floats, has extra spacing in between lines in the face list  
+- Star Fox ASM BSP format
   
-Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import.  
+Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import a 3DG1 format shape.  
+Go to ``File -> Import -> Star Fox ASM BSP (.asm)`` to import a Star Fox ASM BSP format shape.  
 The mesh should appear. The simple material palette will be applied automatically.  
 
 # Collision Boxes

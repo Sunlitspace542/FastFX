@@ -1072,92 +1072,125 @@ def write_3dg1(filepath, obj):
     return {'FINISHED'}
 
 
-# =========================
-# ASM BSP Importer Operator
-# =========================
 class ImportBSPOperator(bpy.types.Operator, ImportHelper):
-    """Import BSP File"""
+    """Import Star Fox ASM BSP File"""
     bl_idname = "import_mesh.bsp"
-    bl_label = "Import BSP File"
+    bl_label = "Import Star Fox ASM BSP File"
     bl_options = {'PRESET', 'UNDO'}
 
-    # Filter to show only text files in the file browser
+    # Filter to show only asm files in the file browser
     filename_ext = ".asm"
     filter_glob: bpy.props.StringProperty(default="*.asm", options={'HIDDEN'})
 
     def execute(self, context):
         file_path = self.filepath
-        self.import_bsp(file_path)
+        try:
+            self.import_bsp(file_path)
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to import BSP file: {e}")
+            return {'CANCELLED'}
         return {'FINISHED'}
 
-# =========================
-# ASM BSP Importer
-# =========================
     def import_bsp(self, file_path):
-        with open(file_path, 'r') as f:
-            bsp_data = f.read()
-        
         points = []
         faces = []
+        material_indices = []
+        material_map = {}
 
         is_point_section = False
         is_face_section = False
         invert_x = False
 
-        for line in bsp_data.splitlines():
-            stripped_line = line.strip()
+        try:
+            with open(file_path, 'r') as f:
+                bsp_data = f.read()
 
-            # Check if we are entering a points section
-            if stripped_line.startswith("Pointsb") or stripped_line.startswith("PointsXb") or stripped_line.startswith("Pointsw") or stripped_line.startswith("PointsXw"):
-                is_point_section = True
-                is_face_section = False
-                invert_x = stripped_line.startswith("PointsXb") or stripped_line.startswith("PointsXw")
-                continue
-            
-            # Check if we are entering a faces section
-            if "Face" in stripped_line:
-                is_point_section = False
-                is_face_section = True
-                continue
+            for line in bsp_data.splitlines():
+                stripped_line = line.strip()
 
-            # Handle points
-            if is_point_section and (stripped_line.startswith("pb") or stripped_line.startswith("pw")):
-                # Remove comments from the line (anything after ';')
-                line_without_comments = stripped_line.split(";")[0].strip()
-
-                # Ensure the line still contains valid point data
-                if not line_without_comments:
+                # Check if we are entering a points section
+                if stripped_line.startswith(("Pointsb", "PointsXb", "Pointsw", "PointsXw")):
+                    is_point_section = True
+                    is_face_section = False
+                    invert_x = stripped_line.startswith("PointsXb") or stripped_line.startswith("PointsXw")
                     continue
 
-                # Parse point coordinates
-                _, coords = line_without_comments.split("\t", 1)
-                x, y, z = map(int, coords.split(","))
+                # Check if we are entering a faces section
+                if stripped_line.endswith("Faces"):
+                    is_point_section = False
+                    is_face_section = True
+                    continue
 
-                # Invert Y
-                y = -y
+                # Handle points
+                if is_point_section and (stripped_line.startswith("pb") or stripped_line.startswith("pw")):
+                    line_without_comments = stripped_line.split(";")[0].strip()
 
-                # Add the point and handle duplicates if needed
-                points.append((x, y, z))
-                if invert_x:
-                    points.append((-x, y, z))
-            
-            # Handle faces
-            if is_face_section and stripped_line.startswith("Face"):
-                parts = stripped_line.split(",")
-                face_count = int(parts[0][4:])  # Number of points in the face
-                point_indices = list(map(int, parts[-face_count:]))
-                faces.append(point_indices)
+                    if not line_without_comments:
+                        continue
 
-        # Create the mesh and object
-        mesh_name = os.path.basename(file_path).split('.')[0]
-        mesh = bpy.data.meshes.new(mesh_name)
-        obj = bpy.data.objects.new(mesh_name, mesh)
-        bpy.context.collection.objects.link(obj)
+                    _, coords = line_without_comments.split("\t", 1)
+                    x, y, z = map(int, coords.split(","))
 
-        # Set mesh data
-        mesh.from_pydata(points, [], faces)
-        mesh.update()
-        self.report({'INFO'}, f"Mesh '{mesh_name}' created with {len(points)} points and {len(faces)} faces.")
+                    y = -y  # Invert Y
+
+                    points.append((x, y, z))
+                    if invert_x:
+                        points.append((-x, y, z))
+
+                # Handle faces
+                if is_face_section and stripped_line.startswith("Face"):
+                    parts = stripped_line.split("\t")
+                    face_data = parts[1]
+                    face_parts = face_data.split(",")
+
+                    material_index = int(face_parts[0])  # Material index
+                    num_points = int(stripped_line[4])  # "FaceX", X = number of points
+                    point_indices = list(map(int, face_parts[-num_points:]))
+
+                    # Invert the winding order of the face for normal inversion
+                    point_indices.reverse()  # Reverse the order of indices
+
+                    material_name = f"FX{material_index}"
+                    if material_name not in material_map:
+                        material = bpy.data.materials.get(material_name) or bpy.data.materials.new(name=material_name)
+                        material.use_nodes = True
+                        bsdf = material.node_tree.nodes.get("Principled BSDF")
+                        if bsdf:
+                            # Convert hex to RGB and set the material's base color
+                            hex_color = id_0_c_rgb.get(material_index, "#FFFFFF")  # Default to white
+                            linear_rgb_color = hex_to_rgb(hex_color)
+                            bsdf.inputs["Base Color"].default_value = linear_rgb_color
+                        material_map[material_name] = len(material_map)
+
+                    faces.append(tuple(point_indices))
+                    material_indices.append(material_map[material_name])
+
+            # Create the mesh and object
+            mesh_name = os.path.basename(file_path).split('.')[0]
+            mesh = bpy.data.meshes.new(mesh_name)
+            obj = bpy.data.objects.new(mesh_name, mesh)
+            bpy.context.collection.objects.link(obj)
+
+            mesh.from_pydata(points, [], faces)
+            mesh.update()
+
+            # Assign materials to the mesh
+            for material_name, material_index in material_map.items():
+                material = bpy.data.materials.get(material_name)
+                if material:
+                    mesh.materials.append(material)
+
+            for i, polygon in enumerate(mesh.polygons):
+                polygon.material_index = material_indices[i]
+
+            # Rotate the object by 90 degrees around the X-axis (compensate for 3DG1 coordinate inversion)
+            obj.rotation_euler[0] = math.radians(90)  # X-axis rotation
+
+            self.report({'INFO'}, f"Mesh '{mesh_name}' created with {len(points)} points and {len(faces)} faces.")
+        except Exception as e:
+            raise RuntimeError(f"Error processing BSP file: {e}")
+
+
 
 # =========================
 # Super FX Material
@@ -2448,7 +2481,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 # =========================
 def menu_func_import(self, context):
     self.layout.operator(Import3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
-    self.layout.operator(ImportBSPOperator.bl_idname, text="BSP Import (.asm)")
+    self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP (.asm)")
 
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
