@@ -25,7 +25,7 @@ Use the utility menu to apply the proper color palette (see below).
 Go to ``File -> Export -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to export.  
 
 ## Converting to Star Fox BSP Format and Importing into Star Fox
-Instructions on how to prepare the model for importing into Star Fox are a WIP.  
+Instructions on how to prepare the model for importing into Star Fox coming soon.  
 
 ## Importing 3DG1 Models
 Currently, this plugin only supports importing 2 variants of the 3DG1 format:  
@@ -35,13 +35,71 @@ Currently, this plugin only supports importing 2 variants of the 3DG1 format:
 Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import.  
 The mesh should appear. The color palette will be applied automatically.  
 
-## Utility Menu
-FastFX adds a tab on the right hand side of the screen called ``FastFX`` with extra utilities.  
+# Collision Boxes
+## Importing
+Collision boxes have to be in a very specific sanitized format. Remove any extra tabs and manually evaluate any expressions if importing from source.  
+For example, properly sanitized and formatted colbox definitions for the player would look like:
+```
+playerB_col	colbox	playerLW_col,0,0,0,norot,10,10,20,HF1,0,0
+playerLW_col	colbox	playerRW_col,-33,13,0,rotz,5,5,10,HF2,0
+playerRW_col	colbox	0,33,13,0,rotz,5,5,10,HF3,0
+```
+
+## Editing
+A colbox's properties can be accessed from the item panel -> Properties. It is laid out like this:
+```
+dimensions (x, y, z)
+flags to clear (can be HF1 - HF8 or 0 for none)
+flags to set (can be HF1 - HF8 or 0 for none)
+assembler label for the colbox
+label of next colbox to link to this one (if this is the only box or there are no further boxes, enter 0)
+offset (x, y, z)
+rotation allowed for this colbox (can be rotx, roty, rotz, or norot for no rotation)
+scale (shifts dimension and offset fields left by this number when assembled) - this is kept for compatibility with the original assembler macro, it is recommended you scale your colboxes properly in Blender so you never have to touch this. Best kept at 0.
+```
+
+The easiest way to create a new colbox is to select your mesh and click ``Generate Colbox for Mesh`` to generate a colbox that fits.  
+For meshes that need more than one colbox (e.g things like arches, rings, etc.) you can add a cube, move it and scale it in edit mode to where you want a collision area on your shape, click ``Generate Colbox for Mesh``, and remove the cube. Modify the empty name/colbox property fields as needed afterwards.  
+Make sure to link the boxes together using the linked label field in the properties.  
+You can also manually edit the properties of a colbox empty and apply them by clicking ``Update Colboxes From Properties`` to update the empty to reflect the property changes. Further, you can reposition a colbox empty in Blender and update the coordinates in the empty's properties by clicking ``Update Colbox Positions``.  
+
+## Exporting
+Select the colboxes you wish to export, and click ``Export Colboxes to Clipboard`` in the FastFX panel.  
+You can then paste them into ``COLBOXES.ASM`` and make them global labels in ``COLBOXES.EXT``.  
+When exporting multiple linked colboxes, make sure they're in order from first to last when adding them into the source or the assembler may throw an error.  
+for example:
+```
+pillar_col1	colbox	pillar_col2,0,-138,-13,norot,10,80,10,HF1,0,0
+pillar_col2	colbox	0,0,-138,-13,norot,10,80,10,HF1,0,0
+```
+
+## Utility Panel
+FastFX adds a panel on the right hand side of the screen called ``FastFX`` with extra utilities.  
+
+### Color Palette (Fancy):
 ``Create Super FX node group`` creates the node group needed for the Super FX material. You only need to click this once per .blend file.  
-``Apply Material Palette (Fancy)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using the Super FX material.  
+  
+``Apply Material Palette (Fancy)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using the Super FX material. The node group must exist first.  
+  
 ``Apply Material Palette (Simple)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using simple flat colors.  
+  
+
+### Vertex Operations
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
+  
 ``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates.  
+
+### Collision Box Tools
+``Import Colboxes From Clipboard`` imports colbox definitions from the clipboard.  
+  
+``Export Colboxes to Clipboard`` copies colbox definitions to the clipboard.  
+  
+``Update Colboxes From Properties`` updates the empty representing a colbox to match its properties.  
+  
+``Update Colbox Positions`` updates the position properties of the selected colboxes based on the position of the empties.  
+  
+``Generate Colbox for Mesh`` generates a colbox that fits the selected mesh.  
+
 
 The 3DG1 exporter will automatically round all vertex coordinates, though you may also want to manually do this.  
 In the ``Object`` menu in object mode, there is a new option called ``[FastFX] Vertex Operations``.  

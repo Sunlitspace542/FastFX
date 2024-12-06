@@ -1142,7 +1142,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                     points.append((-x, y, z))
             
             # Handle faces
-            if is_face_section and stripped_line.startswith("Face") and not stripped_line.startswith("Faces"):
+            if is_face_section and stripped_line.startswith("Face"):
                 parts = stripped_line.split(",")
                 face_count = int(parts[0][4:])  # Number of points in the face
                 point_indices = list(map(int, parts[-face_count:]))
