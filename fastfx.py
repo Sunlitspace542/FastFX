@@ -109,9 +109,9 @@ class VertexOperation(bpy.types.Operator):
 # Colbox importer operator
 # =========================
 class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
-    """Import Collision Boxes from Clipboard"""
+    """Import Collision Boxes From Clipboard"""
     bl_idname = "object.import_colboxes_clipboard"
-    bl_label = "Import Colboxes from Clipboard"
+    bl_label = "Import Colboxes From Clipboard"
 
     def execute(self, context):
         return import_colboxes_from_clipboard()
