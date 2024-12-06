@@ -89,12 +89,13 @@ FastFX adds a panel on the right hand side of the screen called ``FastFX`` with 
 ### Vertex Operations
 
 The 3DG1 exporter will automatically round all vertex coordinates, though you may also want to manually do this.  
-If your model becomes greatly distorted, try scaling it up (preferably by a number divisible by 2), and/or apply scale, then round or truncate.  
 The operations available are:  
-
+  
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
   
 ``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates.  
+  
+If your model becomes greatly distorted, try scaling it up (preferably by a number divisible by 2), and/or apply scale, then round or truncate.  
 
 ### Collision Box Tools
 ``Import Colboxes From Clipboard`` imports colbox definitions from the clipboard.  
