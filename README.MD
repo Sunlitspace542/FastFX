@@ -46,17 +46,23 @@ playerRW_col	colbox	0,33,13,0,rotz,5,5,10,HF3,0
 ```
 
 ## Editing
+```diff  
+- CAUTION!
+There is a chance Blender may crash when generating colboxes. Save often.
+You have been warned.
+```
+
 A colbox's properties can be accessed from the item panel -> Properties. It is laid out like this:
-```
-dimensions (x, y, z)
-flags to clear (can be HF1 - HF8 or 0 for none)
-flags to set (can be HF1 - HF8 or 0 for none)
-assembler label for the colbox
-label of next colbox to link to this one (if this is the only box or there are no further boxes, enter 0)
-offset (x, y, z)
-rotation allowed for this colbox (can be rotx, roty, rotz, or norot for no rotation)
-scale (shifts dimension and offset fields left by this number when assembled) - this is kept for compatibility with the original assembler macro, it is recommended you scale your colboxes properly in Blender so you never have to touch this. Best kept at 0.
-```
+
+- dimensions (x, y, z)
+- flags to clear (can be HF1 - HF8 or 0 for none)
+- flags to set (can be HF1 - HF8 or 0 for none)
+- assembler label for the colbox
+- label of next colbox to link to this one (if this is the only box or there are no further boxes, enter 0)
+- offset (x, y, z)
+- rotation allowed for this colbox (can be rotx, roty, rotz, or norot for no rotation)
+- scale (shifts dimension and offset fields left by this number when assembled) - this is kept for compatibility with the original assembler macro, it is recommended you scale your colboxes properly in Blender so you never have to touch this. Best kept at 0.
+  
 
 The easiest way to create a new colbox is to select your mesh and click ``Generate Colbox for Mesh`` to generate a colbox that fits.  
   
