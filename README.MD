@@ -97,6 +97,8 @@ FastFX adds a panel on the right hand side of the screen called ``FastFX`` with 
   
 ``Apply Material Palette (Fancy)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using the Super FX material. The node group must exist first.  
   
+
+### Color Palette (Simple):
 ``Apply Material Palette (Simple)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using simple flat colors.  
   
 
