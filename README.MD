@@ -87,6 +87,11 @@ FastFX adds a panel on the right hand side of the screen called ``FastFX`` with 
   
 
 ### Vertex Operations
+
+The 3DG1 exporter will automatically round all vertex coordinates, though you may also want to manually do this.  
+If your model becomes greatly distorted, try scaling it up (preferably by a number divisible by 2), and/or apply scale, then round or truncate.  
+The operations available are:  
+
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
   
 ``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates.  
@@ -101,12 +106,6 @@ FastFX adds a panel on the right hand side of the screen called ``FastFX`` with 
 ``Update Colbox Positions`` updates the position properties of the selected colboxes based on the position of the empties.  
   
 ``Generate Colbox for Mesh`` generates a colbox that fits the selected mesh.  
-
-
-The 3DG1 exporter will automatically round all vertex coordinates, though you may also want to manually do this.  
-In the ``Object`` menu in object mode, there is a new option called ``[FastFX] Vertex Operations``.  
-
-If your model becomes greatly distorted, try scaling it up (preferably by a number divisible by 2), and/or apply scale, then round or truncate.  
 
 # Things this can't do/extra notes
 - Sorting faces on export - Star Fox's renderer does not have a Z-buffer. FastFX pre-sorts faces on export based on their distance from the origin. It's pretty good, but there is a chance you may still need to manually sort faces in the 3DG1/BSP afterwards. Remember that whatever comes last in the list is drawn first.  
