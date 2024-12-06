@@ -2,6 +2,7 @@ import bpy, mathutils
 import bmesh
 import os
 import math
+from bpy_extras.io_utils import ImportHelper
 
 bl_info = {
     "name": "FastFX",
@@ -1070,6 +1071,93 @@ def write_3dg1(filepath, obj):
 
     return {'FINISHED'}
 
+
+# =========================
+# ASM BSP Importer Operator
+# =========================
+class ImportBSPOperator(bpy.types.Operator, ImportHelper):
+    """Import BSP File"""
+    bl_idname = "import_mesh.bsp"
+    bl_label = "Import BSP File"
+    bl_options = {'PRESET', 'UNDO'}
+
+    # Filter to show only text files in the file browser
+    filename_ext = ".asm"
+    filter_glob: bpy.props.StringProperty(default="*.asm", options={'HIDDEN'})
+
+    def execute(self, context):
+        file_path = self.filepath
+        self.import_bsp(file_path)
+        return {'FINISHED'}
+
+# =========================
+# ASM BSP Importer
+# =========================
+    def import_bsp(self, file_path):
+        with open(file_path, 'r') as f:
+            bsp_data = f.read()
+        
+        points = []
+        faces = []
+
+        is_point_section = False
+        is_face_section = False
+        invert_x = False
+
+        for line in bsp_data.splitlines():
+            stripped_line = line.strip()
+
+            # Check if we are entering a points section
+            if stripped_line.startswith("Pointsb") or stripped_line.startswith("PointsXb") or stripped_line.startswith("Pointsw") or stripped_line.startswith("PointsXw"):
+                is_point_section = True
+                is_face_section = False
+                invert_x = stripped_line.startswith("PointsXb") or stripped_line.startswith("PointsXw")
+                continue
+            
+            # Check if we are entering a faces section
+            if "Face" in stripped_line:
+                is_point_section = False
+                is_face_section = True
+                continue
+
+            # Handle points
+            if is_point_section and (stripped_line.startswith("pb") or stripped_line.startswith("pw")):
+                # Remove comments from the line (anything after ';')
+                line_without_comments = stripped_line.split(";")[0].strip()
+
+                # Ensure the line still contains valid point data
+                if not line_without_comments:
+                    continue
+
+                # Parse point coordinates
+                _, coords = line_without_comments.split("\t", 1)
+                x, y, z = map(int, coords.split(","))
+
+                # Invert Y
+                y = -y
+
+                # Add the point and handle duplicates if needed
+                points.append((x, y, z))
+                if invert_x:
+                    points.append((-x, y, z))
+            
+            # Handle faces
+            if is_face_section and stripped_line.startswith("Face") and not stripped_line.startswith("Faces"):
+                parts = stripped_line.split(",")
+                face_count = int(parts[0][4:])  # Number of points in the face
+                point_indices = list(map(int, parts[-face_count:]))
+                faces.append(point_indices)
+
+        # Create the mesh and object
+        mesh_name = os.path.basename(file_path).split('.')[0]
+        mesh = bpy.data.meshes.new(mesh_name)
+        obj = bpy.data.objects.new(mesh_name, mesh)
+        bpy.context.collection.objects.link(obj)
+
+        # Set mesh data
+        mesh.from_pydata(points, [], faces)
+        mesh.update()
+        self.report({'INFO'}, f"Mesh '{mesh_name}' created with {len(points)} points and {len(faces)} faces.")
 
 # =========================
 # Super FX Material
@@ -2360,6 +2448,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 # =========================
 def menu_func_import(self, context):
     self.layout.operator(Import3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
+    self.layout.operator(ImportBSPOperator.bl_idname, text="BSP Import (.asm)")
 
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
@@ -2382,6 +2471,7 @@ def register():
     bpy.utils.register_class(OBJECT_OT_update_colboxes)
     bpy.utils.register_class(OBJECT_OT_update_colbox_offsets)
     bpy.utils.register_class(OBJECT_OT_generate_colbox)
+    bpy.utils.register_class(ImportBSPOperator)
 
 def unregister():
     bpy.utils.unregister_class(Import3DG1)
@@ -2398,6 +2488,7 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_update_colboxes)
     bpy.utils.unregister_class(OBJECT_OT_update_colbox_offsets)
     bpy.utils.unregister_class(OBJECT_OT_generate_colbox)
+    bpy.utils.unregister_class(ImportBSPOperator)
 
 if __name__ == "__main__":
     register()
