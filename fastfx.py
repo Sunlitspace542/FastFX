@@ -114,7 +114,9 @@ class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
     bl_label = "Import Colboxes From Clipboard"
 
     def execute(self, context):
-        return import_colboxes_from_clipboard()
+        import_colboxes_from_clipboard()
+        self.report({'INFO'}, f"Collision box(es) imported successfully!")
+        return {'FINISHED'}
 
 # =========================
 # Colbox exporter operator
@@ -125,7 +127,9 @@ class OBJECT_OT_export_colboxes(bpy.types.Operator):
     bl_label = "Export Colboxes to Clipboard"
 
     def execute(self, context):
-        return export_colboxes(context)
+        export_colboxes(context)
+        self.report({'INFO'}, f"Collision box(es) exported successfully!")
+        return {'FINISHED'}
 
 # =========================
 # Colbox exporter
@@ -157,7 +161,6 @@ def export_colboxes(context):
 
     # Copy all collision boxes to the clipboard
     bpy.context.window_manager.clipboard = "\n".join(colbox_data)
-    print("Collision boxes exported successfully!")
     return {'FINISHED'}
 
 # =========================
@@ -230,7 +233,6 @@ def import_colboxes_from_clipboard():
         obj["colbox_flags_clear"] = flags_clear
         obj["colbox_scale"] = scale
 
-    print("Collision boxes imported successfully!")
     return {'FINISHED'}
 
 # =========================
