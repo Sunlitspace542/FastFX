@@ -58,8 +58,8 @@ playerRW_col	colbox	0,33,13,0,rotz,5,5,10,HF3,0
 
 ## Editing
 ```diff  
-- CAUTION!
-There is a chance Blender may crash when generating colboxes. Save often.
+-CAUTION!-
+There is a chance Blender may crash when using "Generate Colbox for Mesh". Save often.
 You have been warned.
 ```
 
