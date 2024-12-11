@@ -895,9 +895,6 @@ def read_3dg1(filepath, context):
             if header not in {"3DG1", "3DGI"}:
                 raise ValueError("Invalid file format: Not a 3DG1 file")
                 return {'CANCELLED'}
-            if header == "3DAN":
-                raise ValueError("Animated 3DG1 files (3DAN) are not supported.")
-                return {'CANCELLED'}
 
             # Read vertex count
             vertex_count = int(file.readline().strip())
@@ -1236,8 +1233,9 @@ class Import3DANOperator(bpy.types.Operator):
         if not lines[0].strip() in {"3DAN", "3DGI"}:
             self.report({'ERROR'}, "Invalid file format")
             return
+        else:
+            is_animated = True
 
-        is_animated = lines[0].strip() == "3DAN"
         point_count = int(lines[1].strip())
         frame_count = int(lines[2].strip()) if is_animated else 1
         
