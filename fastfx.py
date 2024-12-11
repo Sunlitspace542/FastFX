@@ -3,6 +3,7 @@ import bmesh
 import os
 import math
 from bpy_extras.io_utils import ImportHelper
+import struct
 
 bl_info = {
     "name": "FastFX",
@@ -891,7 +892,7 @@ def read_3dg1(filepath, context):
         with open(filepath, 'r') as file:
             # Read and validate header
             header = file.readline().strip()
-            if header != "3DG1":
+            if header not in {"3DG1", "3DGI"}:
                 raise ValueError("Invalid file format: Not a 3DG1 file")
                 return {'CANCELLED'}
             if header == "3DAN":
@@ -1076,7 +1077,6 @@ def write_3dg1(filepath, obj):
 
     return {'FINISHED'}
 
-
 class ImportBSPOperator(bpy.types.Operator, ImportHelper):
     """Import Star Fox ASM BSP/GZS File"""
     bl_idname = "import_mesh.bsp"
@@ -1204,7 +1204,189 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
         except Exception as e:
             raise RuntimeError(f"Error processing BSP file: {e}")
 
+# ==================
+# 3DAN Importer
+# ==================
+class Import3DANOperator(bpy.types.Operator):
+    """Import 3DAN File"""
+    bl_idname = "import_mesh.3dan"
+    bl_label = "Import 3DAN File"
+    bl_options = {'UNDO'}
 
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+
+    # Filter to show only supported files in the file browser
+    filter_glob: bpy.props.StringProperty(default="*.anm", options={'HIDDEN'})
+
+    def execute(self, context):
+        self.import_3dan(self.filepath, context)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+    def import_3dan(self, filepath, context):
+        # Extract the base name of the file (without extension) to use as object and mesh name
+        base_name = os.path.splitext(os.path.basename(filepath))[0]
+
+        with open(filepath, 'r') as file:
+            lines = file.readlines()
+        
+        if not lines[0].strip() in {"3DAN", "3DGI"}:
+            self.report({'ERROR'}, "Invalid file format")
+            return
+
+        is_animated = lines[0].strip() == "3DAN"
+        point_count = int(lines[1].strip())
+        frame_count = int(lines[2].strip()) if is_animated else 1
+        
+        # Parse points
+        points = [[] for _ in range(frame_count)]
+        index = 3
+        for frame in range(frame_count):
+            for _ in range(point_count):
+                x, y, z = map(int, lines[index].strip().split())
+                points[frame].append((x, y, z))
+                index += 1
+
+        # Parse polygons
+        polygons = []
+        while index < len(lines):
+            line = lines[index].strip()
+            if not line:
+                continue
+            if line == chr(0x1A):  # EOF marker
+                break
+            parts = list(map(int, line.split()))
+            npoints = parts[0]
+            poly_points = parts[1:npoints+1]
+            color_index = parts[npoints+1]
+            polygons.append((poly_points, color_index))
+            index += 1
+        
+        # Create Blender objects
+        for frame, frame_points in enumerate(points):
+            mesh = bpy.data.meshes.new(f"Frame{frame}")
+            obj = bpy.data.objects.new(f"Frame{frame}", mesh)
+            context.collection.objects.link(obj)
+
+            # Rotate the object by 90 degrees around the X-axis (compensate for 3DG1 coordinate inversion)
+            obj.rotation_euler[0] = math.radians(90)  # X-axis rotation
+
+            mesh.from_pydata(frame_points, [], [poly[0] for poly in polygons])
+            mesh.update()
+
+            # Assign colors as materials
+            for poly, (_, color_index) in zip(mesh.polygons, polygons):
+                # Create a material name based on the color index
+                mat_name = f"FX{color_index}"
+                
+                # Check if the material already exists; otherwise, create it
+                material = bpy.data.materials.get(mat_name) or bpy.data.materials.new(name=mat_name)
+                material.use_nodes = True  # Enable nodes to customize material properties
+                
+                # Access the Principled BSDF node and set the material color
+                bsdf = material.node_tree.nodes.get("Principled BSDF")
+                if bsdf:
+                    hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Use a default color (white) if index is not mapped
+                    linear_rgb_color = hex_to_rgb(hex_color)  # Convert the hex color to linear RGB
+                    bsdf.inputs["Base Color"].default_value = linear_rgb_color  # Set color with alpha
+                
+                # Append the material to the mesh object
+                if obj.data.materials.find(material.name) == -1:
+                    obj.data.materials.append(material)
+                
+                # Assign the material to the polygon
+                poly.material_index = obj.data.materials.find(material.name)
+
+
+        self.report({'INFO'}, "3DAN file imported successfully")
+
+# ================
+# 3DAN Exporter
+# ================
+def write_3dan(filepath, meshes, frame_number):
+    """
+    Writes the 3DAN file format.
+
+    :param filepath: The output file path.
+    :param meshes: List of Blender mesh objects.
+    :param frame_number: Total number of frames.
+    """
+    with open(filepath, "w") as f:
+        # Header
+        f.write("3DAN\n")
+        f.write(f"{len(meshes[0].vertices)}\n")  # Total unique points (assume consistent vertex count)
+        f.write(f"{frame_number}\n")  # Number of animation frames
+
+        # Write point data per frame
+        for frame_index in range(frame_number):
+            mesh = meshes[frame_index]
+            for vertex in mesh.vertices:
+                # Convert vertex coordinates to integers
+                x, y, z = (int(round(coord)) for coord in vertex.co)
+                f.write(f"{x} {y} {z}\n")
+
+        # Write polygon data (from the first frame's mesh)
+        base_mesh = meshes[0]
+        for poly in base_mesh.polygons:
+            npoints = len(poly.vertices)
+            f.write(f"{npoints} ")
+            f.write(" ".join(map(str, poly.vertices)))
+
+            # Extract color index from material name (if it follows FX# format)
+            mat_index = poly.material_index
+            material = base_mesh.materials[mat_index] if mat_index < len(base_mesh.materials) else None
+            color_index = 0  # Default color index if no material is found or improperly named
+            if material and material.name.startswith("FX"):
+                try:
+                    color_index = int(material.name[2:])  # Extract number after 'FX'
+                except ValueError:
+                    pass  # Leave color_index as 0 if extraction fails
+
+            f.write(f" {color_index}\n")
+
+        # End marker (0x1a character)
+        f.write(chr(0x1a))
+
+
+class Export3DAN(bpy.types.Operator):
+    """Export to 3DAN Format"""
+    bl_idname = "export_scene.3dan"
+    bl_label = "Export 3DAN"
+    bl_options = {'PRESET'}
+
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+
+    filter_glob: bpy.props.StringProperty(default="*.anm", options={'HIDDEN'})
+
+    def execute(self, context):
+        filepath = self.filepath
+        objects = context.scene.objects
+
+        # Collect meshes for frames
+        frame_meshes = []
+        for obj in objects:
+            if obj.type == "MESH":
+                frame_meshes.append(obj.data)
+
+        if len(frame_meshes) < 1:
+            self.report({'ERROR'}, "No meshes found for export.")
+            return {'CANCELLED'}
+
+        # Assume the number of meshes corresponds to the number of frames
+        frame_number = len(frame_meshes)
+
+        # Export to 3DAN
+        write_3dan(filepath, frame_meshes, frame_number)
+
+        self.report({'INFO'}, f"Exported {frame_number} frames to {filepath}")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 # =========================
 # Super FX Material
@@ -2496,9 +2678,11 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 def menu_func_import(self, context):
     self.layout.operator(Import3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
     self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm)")
+    self.layout.operator(Import3DANOperator.bl_idname, text="3DAN File (.anm)")
 
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
+    self.layout.operator(Export3DAN.bl_idname, text="Animated Fundoshi-kun/3DAN (.anm)")
 
 # =========================
 # Registration
@@ -2519,6 +2703,8 @@ def register():
     bpy.utils.register_class(OBJECT_OT_update_colbox_offsets)
     bpy.utils.register_class(OBJECT_OT_generate_colbox)
     bpy.utils.register_class(ImportBSPOperator)
+    bpy.utils.register_class(Import3DANOperator)
+    bpy.utils.register_class(Export3DAN)
 
 def unregister():
     bpy.utils.unregister_class(Import3DG1)
@@ -2536,6 +2722,8 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_update_colbox_offsets)
     bpy.utils.unregister_class(OBJECT_OT_generate_colbox)
     bpy.utils.unregister_class(ImportBSPOperator)
+    bpy.utils.unregister_class(Import3DANOperator)
+    bpy.utils.unregister_class(Export3DAN)
 
 if __name__ == "__main__":
     register()
