@@ -1126,6 +1126,10 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                     continue
 
                 # Handle points
+                # Make sure the shape itself isn't named "Points"
+                if is_point_section and stripped_line.startswith("ShapeHdr"):
+                    is_point_section = False
+
                 if is_point_section and (stripped_line.startswith("pb") or stripped_line.startswith("pw")):
                     line_without_comments = stripped_line.split(";")[0].strip()
 
@@ -1142,6 +1146,10 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                         points.append((-x, y, z))
 
                 # Handle faces
+                # Make sure the shape itself isn't named "Faces"
+                if is_face_section and stripped_line.startswith("ShapeHdr"):
+                    is_face_section = False
+
                 if is_face_section and stripped_line.startswith("Face"):
                     parts = stripped_line.split("\t")
                     face_data = parts[1]
