@@ -24,6 +24,9 @@ class Import3DG1(bpy.types.Operator):
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 
+    # Filter to show only supported files in the file browser
+    filter_glob: bpy.props.StringProperty(default="*.txt;*.3dg1;*.obj", options={'HIDDEN'})
+
     def execute(self, context):
         return read_3dg1(self.filepath, context)
 
@@ -1080,9 +1083,8 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
     bl_label = "Import Star Fox ASM BSP/GZS File"
     bl_options = {'PRESET', 'UNDO'}
 
-    # Filter to show only asm files in the file browser
-    filename_ext = ".asm"
-    filter_glob: bpy.props.StringProperty(default="*.asm", options={'HIDDEN'})
+    # Filter to show only asm/bsp files in the file browser
+    filter_glob: bpy.props.StringProperty(default="*.asm;*.bsp", options={'HIDDEN'})
 
     def execute(self, context):
         file_path = self.filepath
