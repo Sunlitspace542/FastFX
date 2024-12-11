@@ -1118,7 +1118,9 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                     continue
 
                 # Check if we are entering a faces section
-                if stripped_line.endswith("Faces") or stripped_line.startswith("Faces"):
+                # If it starts with "Faces\t", it's a GZS format file
+                # If it ends with "Faces", it's a BSP format file
+                if stripped_line.endswith("Faces") or stripped_line.startswith("Faces\t"):
                     is_point_section = False
                     is_face_section = True
                     continue
