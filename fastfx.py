@@ -1075,9 +1075,9 @@ def write_3dg1(filepath, obj):
 
 
 class ImportBSPOperator(bpy.types.Operator, ImportHelper):
-    """Import Star Fox ASM BSP File"""
+    """Import Star Fox ASM BSP/GZS File"""
     bl_idname = "import_mesh.bsp"
-    bl_label = "Import Star Fox ASM BSP File"
+    bl_label = "Import Star Fox ASM BSP/GZS File"
     bl_options = {'PRESET', 'UNDO'}
 
     # Filter to show only asm files in the file browser
@@ -1089,7 +1089,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
         try:
             self.import_bsp(file_path)
         except Exception as e:
-            self.report({'ERROR'}, f"Failed to import BSP file: {e}")
+            self.report({'ERROR'}, f"Failed to import BSP/GZS file: {e}")
             return {'CANCELLED'}
         return {'FINISHED'}
 
@@ -1118,7 +1118,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                     continue
 
                 # Check if we are entering a faces section
-                if stripped_line.endswith("Faces"):
+                if stripped_line.endswith("Faces") or stripped_line.startswith("Faces"):
                     is_point_section = False
                     is_face_section = True
                     continue
@@ -2483,7 +2483,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 # =========================
 def menu_func_import(self, context):
     self.layout.operator(Import3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
-    self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP (.asm)")
+    self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm)")
 
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
