@@ -456,7 +456,9 @@ def hex_to_rgb(hex_color, alpha=1.0):
     b = int(hex_color[4:6], 16) / 255.0
     return (srgb_to_linearrgb(r), srgb_to_linearrgb(g), srgb_to_linearrgb(b), alpha)
 
-
+# =========================
+# Simple Color Palette Dictionary
+# =========================
 # Predefined colors for materials when a shape is imported (hex values)
 # Based on id_0_c material palette
 # Hex values from Bisquick's SFView
@@ -517,6 +519,9 @@ id_0_c_rgb = {
     52: "#F6FFFF",  # FX52 - Fading   (Solid Red/Orange/Turquoise/Blue)
 }
 
+# =========================
+# Super FX Material Color Palette Dictionary
+# =========================
 # Super FX Material color palette
 id_0_c_components_rgb = {
     0: { # COLLITE COLORS BEGIN
@@ -1074,6 +1079,9 @@ def write_3dg1(filepath, obj):
 
     return {'FINISHED'}
 
+# =========================
+# ASM BSP/GZS Importer Operator
+# =========================
 class ImportBSPOperator(bpy.types.Operator, ImportHelper):
     """Import Star Fox ASM BSP/GZS File"""
     bl_idname = "import_mesh.bsp"
@@ -1092,6 +1100,9 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
             return {'CANCELLED'}
         return {'FINISHED'}
 
+# =========================
+# ASM BSP/GZS Importer
+# =========================
     def import_bsp(self, file_path):
         points = []
         faces = []
@@ -1201,9 +1212,9 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
         except Exception as e:
             raise RuntimeError(f"Error processing BSP file: {e}")
 
-# ==================
+# =========================
 # 3DAN Importer
-# ==================
+# =========================
 class Import3DANOperator(bpy.types.Operator):
     """Import 3DAN/3DGI File"""
     bl_idname = "import_mesh.3dan"
@@ -1301,9 +1312,9 @@ class Import3DANOperator(bpy.types.Operator):
 
         self.report({'INFO'}, "3DAN file imported successfully")
 
-# ================
+# =========================
 # 3DAN Exporter
-# ================
+# =========================
 def write_3dan(filepath, meshes, frame_number):
     """
     Writes the 3DAN file format.
@@ -1348,7 +1359,9 @@ def write_3dan(filepath, meshes, frame_number):
         # End marker (0x1a character)
         f.write(chr(0x1a))
 
-
+# =========================
+# 3DAN Exporter Operator
+# =========================
 class Export3DAN(bpy.types.Operator):
     """Export to 3DAN Format"""
     bl_idname = "export_scene.3dan"
