@@ -48,7 +48,7 @@ Go to ``File -> Export -> 3DAN/3DGI/Animated Fundoshi-kun (.anm)`` to export the
 Instructions on how to prepare the model for importing into Star Fox coming soon.  
 
 ## Importing Shapes
-Currently, this plugin only supports importing 3 formats:  
+Currently, this plugin only supports importing 5 formats:  
 - 3DG1 - Fundoshi-kun - point coordinates are integers  
 - 3DG1 - Model to FX - point coordinates are floats, has extra spacing in between lines in the face list  
 - 3DAN/3DGI - Animated Fundoshi-kun
