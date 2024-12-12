@@ -1205,9 +1205,9 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
 # 3DAN Importer
 # ==================
 class Import3DANOperator(bpy.types.Operator):
-    """Import 3DAN File"""
+    """Import 3DAN/3DGI File"""
     bl_idname = "import_mesh.3dan"
-    bl_label = "Import 3DAN File"
+    bl_label = "Import 3DAN/3DGI File"
     bl_options = {'UNDO'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
@@ -2676,11 +2676,11 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 def menu_func_import(self, context):
     self.layout.operator(Import3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
     self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm)")
-    self.layout.operator(Import3DANOperator.bl_idname, text="3DAN File (.anm)")
+    self.layout.operator(Import3DANOperator.bl_idname, text="3DG1/3DGI/Animated Fundoshi-kun (.anm)")
 
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
-    self.layout.operator(Export3DAN.bl_idname, text="Animated Fundoshi-kun/3DAN (.anm)")
+    self.layout.operator(Export3DAN.bl_idname, text="3DG1/3DGI/Animated Fundoshi-kun (.anm)")
 
 # =========================
 # Registration
