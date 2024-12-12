@@ -37,7 +37,7 @@ Animations in Star Fox are a lot like stop motion. The format logs the changes i
 Here's how to do this:  
 First, create a model and export it as 3DG1 so the faces are pre-sorted, as the animation exporter **will not** sort faces.  
 Create a new Blender document and import that 3DG1. Rename it to ``Frame0`` for the first frame.  
-Second, press Shift+D, then Enter to duplicate it. Rename this one to ``Frame2``. Go into edit mode and reposition the vertices for that frame.  
+Second, press Shift+D, then Enter to duplicate it. Rename this one to ``Frame1``. Go into edit mode and reposition the vertices for that frame.  
 Third, Duplicate that frame, rename it so it is one greater than the previous, make your changes to the vertices, and repeat until you have all your frames.  
 
 ## Exporting Animations
