@@ -5,7 +5,7 @@ Designed for Blender 3.x, but it might work in 2.8+.
 # Credits
 Super FX material: Euclidium98  
 Color documentation: CoolK  
-Simple color palette data from SFView by Bisquick  
+Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxView) by Bisquick  
 
 # Features
 - 3DG1 format importer/exporter
