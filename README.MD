@@ -32,6 +32,18 @@ Use the utility menu to apply the proper color palette (see below).
 ## Exporting 3DG1 Models
 Go to ``File -> Export -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to export.  
 
+## Creating Animations
+Animations in Star Fox are a lot like stop motion. The format logs the changes in vertices for each frame.  
+Here's how to do this:  
+First, create a model and export it as 3DG1 so the faces are pre-sorted, as the animation exporter **will not** sort faces.  
+Create a new Blender document and import that 3DG1. Rename it to ``Frame0`` for the first frame.  
+Second, press Shift+D to duplicate it. Rename this one to ``Frame2``. Go into edit mode and reposition the vertices for that frame.  
+Third, Duplicate that frame, rename it so it is one greater than the previous, make your changes to the vertices, and repeat until you have all your frames.  
+
+## Exporting Animations
+Select all the frame objects in Blender. They should all be in order from Frame 0 to whatever your last frame is. Usually Blender will sort the object list for you.  
+Go to ``File -> Export -> 3DAN/3DGI/Animated Fundoshi-kun (.anm)`` to export the animation to a .anm file in 3DAN/3DGI format.  
+
 ## Converting to Star Fox BSP Format and Importing into Star Fox
 Instructions on how to prepare the model for importing into Star Fox coming soon.  
 
@@ -40,13 +52,13 @@ Currently, this plugin only supports importing 3 formats:
 - 3DG1 - Fundoshi-kun - point coordinates are integers  
 - 3DG1 - Model to FX - point coordinates are floats, has extra spacing in between lines in the face list  
 - 3DAN/3DGI - Animated Fundoshi-kun
-- Star Fox ASM BSP format  
-- Star Fox ASM GZS format  
+- Star Fox ASM BSP format (inert only, no animation)  
+- Star Fox ASM GZS format (inert only, no animation)  
   
 Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import a 3DG1 format shape.  
 Go to ``File -> Import -> Star Fox ASM BSP/GZS (.asm/.bsp)`` to import a Star Fox ASM BSP format shape.  
 Go to ``File -> Import -> 3DG1/3DGI/Animated Fundoshi-kun (.anm)"`` to import a 3DGI/3DAN format shape.
-The mesh should appear. The simple material palette will be applied automatically.  
+The mesh (or meshes if it's an animated shape) should appear. The simple material palette will be applied automatically.  
 
 # Collision Boxes
 ## Importing
