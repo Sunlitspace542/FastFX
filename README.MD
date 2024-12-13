@@ -35,7 +35,7 @@ Go to ``File -> Export -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to export.
 ## Creating Animations
 ```diff  
 -IMPORTANT!-
-SHAPED.EXE (the tool used to convert 3DG1/3DAN to BSP) only supports up to 16 frames of animation.
+SHAPED.EXE (the tool used to convert 3DG1/3DAN to BSP) only supports up to 16 frames of animation (15 if counting from 0).
 There is currently no other tool that can convert to this format, so be aware of the limitations.
 ```
 Animations in Star Fox are a lot like stop motion. The format logs the changes in vertices for each frame.  
