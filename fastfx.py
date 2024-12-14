@@ -15,7 +15,7 @@ bl_info = {
 }
 
 # =========================
-# Import Operator
+# 3DG1 Import Operator
 # =========================
 class Import3DG1(bpy.types.Operator):
     """Import a 3DG1 File"""
@@ -37,7 +37,7 @@ class Import3DG1(bpy.types.Operator):
 
 
 # =========================
-# Export Operator
+# 3DG1 Export Operator
 # =========================
 class Export3DG1(bpy.types.Operator):
     """Export to 3DG1 format"""
