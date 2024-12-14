@@ -934,6 +934,7 @@ def read_3dg1(filepath, context):
             # Read polygons
             polygons = []
             material_mapping = {}
+            is_hex_color_format = False  # Detect if we are using hex colors
             for line in file:
                 line = line.strip()
                 if not line:  # Skip blank lines (M2FX compatibility)
@@ -943,7 +944,20 @@ def read_3dg1(filepath, context):
                 parts = line.split()
                 npoints = int(parts[0])
                 indices = list(map(int, parts[1:npoints + 1]))
-                color_index = int(parts[npoints + 1])
+
+                # Determine if it's a hex color format
+                if len(parts) > npoints + 1:
+                    color_value = parts[npoints + 1]
+                    if color_value.startswith("0x"):  # Hex color in BGR format
+                        is_hex_color_format = True
+                        color_bgr = int(color_value, 16)
+                        # Convert BGR to RGB
+                        color_index = ((color_bgr & 0xFF) << 16) | (color_bgr & 0xFF00) | ((color_bgr >> 16) & 0xFF)
+                    else:
+                        color_index = int(color_value)
+                else:
+                    color_index = 0  # Default to 0 if no color index or color value is present
+
                 polygons.append((indices, color_index))
                 if color_index not in material_mapping:
                     material_mapping[color_index] = f"FX{color_index}"
@@ -961,8 +975,12 @@ def read_3dg1(filepath, context):
                 material.use_nodes = True
                 bsdf = material.node_tree.nodes.get("Principled BSDF")
                 if bsdf:
-                    # Convert hex to RGB and set the material's base color
-                    hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white if not defined
+                    if is_hex_color_format:
+                        # Use color_index directly as it represents RGB for the hex color format
+                        hex_color = f"#{color_index:06X}"
+                    else:
+                        # Use the id_0_c_rgb dictionary for standard color indices
+                        hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white if not defined
                     linear_rgb_color = hex_to_rgb(hex_color)
                     bsdf.inputs["Base Color"].default_value = linear_rgb_color  # Linear RGB with alpha
                 material_list.append(material)
