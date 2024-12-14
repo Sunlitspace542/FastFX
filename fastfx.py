@@ -1323,22 +1323,25 @@ def write_3dan(filepath, meshes, frame_number):
     :param meshes: List of Blender mesh objects.
     :param frame_number: Total number of frames.
     """
+    # Sort meshes by name to ensure frames are in the correct order
+    sorted_meshes = sorted(meshes, key=lambda mesh: mesh.name)
+
     with open(filepath, "w") as f:
         # Header
         f.write("3DAN\n")
-        f.write(f"{len(meshes[0].vertices)}\n")  # Total unique points (assume consistent vertex count)
+        f.write(f"{len(sorted_meshes[0].vertices)}\n")  # Total unique points (assume consistent vertex count)
         f.write(f"{frame_number}\n")  # Number of animation frames
 
         # Write point data per frame
         for frame_index in range(frame_number):
-            mesh = meshes[frame_index]
+            mesh = sorted_meshes[frame_index]
             for vertex in mesh.vertices:
                 # Convert vertex coordinates to integers
                 x, y, z = (int(round(coord)) for coord in vertex.co)
                 f.write(f"{x} {y} {z}\n")
 
         # Write polygon data (from the first frame's mesh)
-        base_mesh = meshes[0]
+        base_mesh = sorted_meshes[0]
         for poly in base_mesh.polygons:
             npoints = len(poly.vertices)
             f.write(f"{npoints} ")
@@ -1358,6 +1361,7 @@ def write_3dan(filepath, meshes, frame_number):
 
         # End marker (0x1a character)
         f.write(chr(0x1a))
+
 
 # =========================
 # 3DAN Exporter Operator
