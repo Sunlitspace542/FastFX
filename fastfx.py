@@ -46,21 +46,39 @@ class Export3DG1(bpy.types.Operator):
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    sort_mode: bpy.props.EnumProperty(
+        name="Sort Mode",
+        description="Choose how to sort faces and edges in the exported file",
+        items=[
+            ('distance', "Distance from Origin", "Sort by distance from the origin"),
+            ('material', "Material Order", "Sort by material order. Last material is drawn first."),
+            ('none', "No Sorting", "No sorting; use Blender's internal order")
+        ],
+        default='distance'
+    )
 
     def execute(self, context):
         obj = context.object
         if obj is None or obj.type != 'MESH':
             self.report({'ERROR'}, "Selected object is not a mesh")
             return {'CANCELLED'}
-        
-        write_3dg1(self.filepath, obj)
-        self.report({'INFO'}, f"Exported to {self.filepath}")
+
+        write_3dg1(self.filepath, obj, self.sort_mode)
+        self.report({'INFO'}, f"Exported to {self.filepath} with sorting mode: {self.sort_mode}")
         return {'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+    def draw(self, context):
+        layout = self.layout
+
+        # Add custom help text
+        layout.label(text="3DG1/Fundoshi-Kun Export Options", icon='INFO')
+
+        # Add dropdown for sort mode
+        layout.prop(self, "sort_mode", text="Sort Mode")
 
 # =========================
 # Vertex Operations Logic
@@ -969,7 +987,14 @@ def read_3dg1(filepath, context):
 # =========================
 # 3DG1 Exporter
 # =========================
-def write_3dg1(filepath, obj):
+def write_3dg1(filepath, obj, sort_mode="distance"):
+    """
+    Exports a mesh object to 3DG1 format with customizable sorting modes.
+    
+    :param filepath: Path to write the 3DG1 file.
+    :param obj: Blender mesh object to export.
+    :param sort_mode: Sorting mode ("distance", "material", "none").
+    """
 
     # Gets distance from origin
     def distance_from_origin(point):
@@ -993,7 +1018,7 @@ def write_3dg1(filepath, obj):
         for poly in mesh.polygons:
             material_index = poly.material_index
             material = obj.material_slots[material_index].material
-            
+
             if material:
                 # Check if the material represents an edge (FE#)
                 if material.name.startswith("FE"):
@@ -1045,17 +1070,20 @@ def write_3dg1(filepath, obj):
                         sum(mesh.vertices[v].co[i] for v in poly.vertices) / len(poly.vertices)
                         for i in range(3)
                     )
-                    polygons.append((poly_vertices, color_index, centroid))
+                    polygons.append((poly_vertices, color_index, centroid, material_index))
 
-        # Sort polygons by centroid distance from origin
-        polygons.sort(key=lambda p: distance_from_origin(p[2]))
+        # Apply sorting based on the selected mode
+        if sort_mode == "distance":
+            polygons.sort(key=lambda p: distance_from_origin(p[2]))  # Sort polygons by centroid distance from origin
+            edges.sort(key=lambda e: distance_from_origin(e[3]))  # Sort edges by midpoint distance from origin
+        elif sort_mode == "material":
+            polygons.sort(key=lambda p: p[3])  # Sort by material index
+        # If sort_mode is "none", no sorting is applied
 
-        # Sort edges by midpoint distance from origin
-        edges.sort(key=lambda e: distance_from_origin(e[3]))
-
-        # Reverse the order so farthest elements are written last
-        polygons.reverse()
-        edges.reverse()
+        if sort_mode == "distance":
+            # Reverse the order so farthest elements are written last
+            polygons.reverse()
+            edges.reverse()
 
         # Write vertex count
         file.write(f"{len(unique_vertices)}\n")
@@ -1065,7 +1093,7 @@ def write_3dg1(filepath, obj):
             file.write(f"{vertex[0]} {vertex[1]} {vertex[2]}\n")
 
         # Write polygons
-        for poly_vertices, color_index, _ in polygons:
+        for poly_vertices, color_index, _, _ in polygons:
             file.write(f"{len(poly_vertices)} ")
             file.write(" ".join(map(str, poly_vertices)) + " ")
             file.write(f"{color_index}\n")
