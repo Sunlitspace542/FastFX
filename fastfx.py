@@ -1135,7 +1135,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
     bl_options = {'PRESET', 'UNDO'}
 
     # Filter to show only asm/bsp files in the file browser
-    filter_glob: bpy.props.StringProperty(default="*.asm;*.bsp", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.asm;*.bsp;*.gzs", options={'HIDDEN'})
 
     def execute(self, context):
         file_path = self.filepath
