@@ -1152,7 +1152,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
     def import_bsp(self, file_path):
         points = []
         faces = []
-        material_indices = []
+        face_data = []  # Store faces with original order and material indices
         material_map = {}
 
         is_point_section = False
@@ -1188,15 +1188,14 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
 
                 if is_point_section and (stripped_line.startswith("pb") or stripped_line.startswith("pw")):
                     line_without_comments = stripped_line.split(";")[0].strip()
-
                     if not line_without_comments:
                         continue
 
                     _, coords = line_without_comments.split("\t", 1)
                     x, y, z = map(int, coords.split(","))
 
-                    y = -y  # Invert Y
-                    x = -x  # Invert X
+                    # Invert X and Y coordinates
+                    x, y = -x, -y
 
                     points.append((x, y, z))
                     if invert_x:
@@ -1209,10 +1208,11 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
 
                 if is_face_section and stripped_line.startswith("Face"):
                     parts = stripped_line.split("\t")
-                    face_data = parts[1]
-                    face_parts = face_data.split(",")
+                    face_data_str = parts[1]
+                    face_parts = face_data_str.split(",")
 
                     material_index = int(face_parts[0])  # Material index
+                    original_face_number = int(face_parts[1])  # Original face number
                     num_points = int(stripped_line[4])  # "FaceX", X = number of points
                     point_indices = list(map(int, face_parts[-num_points:]))
 
@@ -1228,8 +1228,13 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                             bsdf.inputs["Base Color"].default_value = linear_rgb_color
                         material_map[material_name] = len(material_map)
 
-                    faces.append(tuple(point_indices))
-                    material_indices.append(material_map[material_name])
+                    # Store face data along with its original order
+                    face_data.append((original_face_number, tuple(point_indices), material_map[material_name]))
+
+            # Sort faces by their original order
+            face_data.sort(key=lambda x: x[0])  # Sort by original_face_number
+            faces = [face[1] for face in face_data]  # Extract reordered point indices
+            material_indices = [face[2] for face in face_data]  # Extract reordered material indices
 
             # Create the mesh and object
             mesh_name = os.path.basename(file_path).split('.')[0]
