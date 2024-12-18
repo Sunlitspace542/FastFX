@@ -1196,6 +1196,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                     x, y, z = map(int, coords.split(","))
 
                     y = -y  # Invert Y
+                    x = -x  # Invert X
 
                     points.append((x, y, z))
                     if invert_x:
@@ -1214,9 +1215,6 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                     material_index = int(face_parts[0])  # Material index
                     num_points = int(stripped_line[4])  # "FaceX", X = number of points
                     point_indices = list(map(int, face_parts[-num_points:]))
-
-                    # Invert the winding order of the face for normal inversion
-                    point_indices.reverse()  # Reverse the order of indices
 
                     material_name = f"FX{material_index}"
                     if material_name not in material_map:
