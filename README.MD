@@ -31,6 +31,11 @@ Use the utility menu to apply the proper color palette (see below).
   
 ## Exporting 3DG1 Models
 Go to ``File -> Export -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to export.  
+There is a drop-down in the export dialog for selecting which method of face sorting to use.  
+Face sorting breakdown:  
+- Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting and is recommended for best results.  
+- Material Order: sorts faces by the order of the material list in Blender. This is how M2FX handles sorting faces.  
+- No Sorting: No sorting operations are performed. Blender's internal hierarchy is used for the face order.  
 
 ## Creating Animations
 ```diff  
