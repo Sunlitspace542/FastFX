@@ -172,5 +172,5 @@ If your model becomes greatly distorted, try scaling it up (preferably by a numb
 # Things this can't do/extra notes
 - Sorting faces on export - Star Fox's renderer does not have a Z-buffer. FastFX pre-sorts faces on export based on their distance from the origin. It's pretty good, but there is a chance you may still need to manually sort faces in the 3DG1/BSP afterwards. Remember that whatever comes last in the list is drawn first.  
 - Import stray edges with colors - (The 3DG1 importer can read models with colored stray edges, but it's hard to see what material is assigned to a given edge.)  
-- Import/Export straight from/to Star Fox BSP format - SHAPED.EXE (Argonaut DOS tool) is still needed to get the 3DG1 into the format Star Fox (2) can actually use.  
+- Import/Export straight from/to Star Fox BSP format - SHAPED.EXE (Argonaut DOS tool) is still needed to get the 3DG1 into the format Star Fox (2) can actually use. Reverse engineering and documentation of the BSP format is a work in progress.  
 - Animation - 3DAN support is planned but not yet implemented in any capacity.  
