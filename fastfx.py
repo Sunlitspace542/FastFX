@@ -214,6 +214,9 @@ def import_colboxes_from_clipboard():
         flags_clear = colbox_data[9]
         scale = int(colbox_data[10]) if len(colbox_data) > 10 else 0  # Default to 0 if scale is missing
 
+        # Invert X (Blender Z)
+        offset[0] = offset[0] * -1
+
         # Invert Y (Blender Z)
         offset[1] = offset[1] * -1
 
@@ -237,6 +240,9 @@ def import_colboxes_from_clipboard():
         # Adjust location based on offset and scale
         scaled_offset = [o * (2 ** scale) for o in offset]
         obj.location = scaled_offset
+
+        # Invert X again so the properties are correct for manual exporting
+        offset[0] = offset[0] * -1
 
         # Invert Z again so the properties are correct for manual exporting
         offset[2] = offset[2] * -1
