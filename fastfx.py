@@ -414,10 +414,6 @@ def generate_colbox_from_mesh(obj):
     dimensions[1] = math.trunc(dimensions[1]/2)
     dimensions[2] = math.trunc(dimensions[2]/2)
 
-    # Swap Y and Z for Blender's coordinate system
-    center_position[1], center_position[2] = center_position[2], center_position[1]
-    dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
-
     # Create the colbox
     colbox_label = f"{obj.name}_col"
     colbox = bpy.data.objects.new(colbox_label, None)
@@ -434,10 +430,6 @@ def generate_colbox_from_mesh(obj):
         dimensions[2] / colbox.empty_display_size,
     )
     colbox.location = center_position
-
-    # Swap Y and Z for target coordinate system
-    center_position[1], center_position[2] = center_position[2], center_position[1]
-    dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
 
     # Assign colbox properties
     colbox["colbox_label"] = colbox_label
@@ -929,7 +921,7 @@ def read_3dg1(filepath, context):
                 while not line:  # Skip blank lines (M2FX compatibility)
                     line = file.readline().strip()
                 x, y, z = map(float, line.split())  # Parse as float (M2FX compatibility)
-                vertices.append((x, y, z))
+                vertices.append((x, -z, y)) # Translate from 3DG1/3DAN coordinate system to Blender's (Z is up/down)
 
             # Read polygons
             polygons = []
@@ -990,9 +982,6 @@ def read_3dg1(filepath, context):
             for poly, (_, color_index) in zip(mesh.polygons, polygons):
                 material_index = sorted(material_mapping.keys()).index(color_index)
                 poly.material_index = material_index
-
-            # Rotate the object by 90 degrees around the X-axis (compensate for 3DG1 coordinate inversion)
-            obj.rotation_euler[0] = math.radians(90)  # X-axis rotation
 
         return {'FINISHED'}
 
@@ -1108,7 +1097,7 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
 
         # Write vertices
         for vertex in unique_vertices:
-            file.write(f"{vertex[0]} {vertex[1]} {vertex[2]}\n")
+            file.write(f"{vertex[0]} {vertex[2]} {-(vertex[1])}\n") # translate back to the 3DG1/3DAN coordinate system (Y is up/down)
 
         # Write polygons
         for poly_vertices, color_index, _, _ in polygons:
@@ -1197,9 +1186,9 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                     # Invert X and Y coordinates
                     x, y = -x, -y
 
-                    points.append((x, y, z))
+                    points.append((x, -z, y)) # Translate from Star Fox coordinate system to Blender's (Z is up/down)
                     if invert_x:
-                        points.append((-x, y, z))
+                        points.append((-x, -z, y)) # Translate from Star Fox coordinate system to Blender's (Z is up/down)
 
                 # Handle faces
                 # Make sure the shape itself isn't named "Faces"
@@ -1254,9 +1243,6 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
             for i, polygon in enumerate(mesh.polygons):
                 polygon.material_index = material_indices[i]
 
-            # Rotate the object by 90 degrees around the X-axis (compensate for 3DG1 coordinate inversion)
-            obj.rotation_euler[0] = math.radians(90)  # X-axis rotation
-
             self.report({'INFO'}, f"Mesh '{mesh_name}' created with {len(points)} points and {len(faces)} faces.")
         except Exception as e:
             raise RuntimeError(f"Error processing BSP file: {e}")
@@ -1305,7 +1291,7 @@ class Import3DANOperator(bpy.types.Operator):
         for frame in range(frame_count):
             for _ in range(point_count):
                 x, y, z = map(int, lines[index].strip().split())
-                points[frame].append((x, y, z))
+                points[frame].append((x, -z, y)) # Translate from 3DG1/3DAN coordinate system to Blender's (Z is up/down)
                 index += 1
 
         # Parse polygons
@@ -1328,9 +1314,6 @@ class Import3DANOperator(bpy.types.Operator):
             mesh = bpy.data.meshes.new(f"Frame{frame}")
             obj = bpy.data.objects.new(f"Frame{frame}", mesh)
             context.collection.objects.link(obj)
-
-            # Rotate the object by 90 degrees around the X-axis (compensate for 3DG1 coordinate inversion)
-            obj.rotation_euler[0] = math.radians(90)  # X-axis rotation
 
             mesh.from_pydata(frame_points, [], [poly[0] for poly in polygons])
             mesh.update()
@@ -1387,7 +1370,7 @@ def write_3dan(filepath, meshes, frame_number):
             for vertex in mesh.vertices:
                 # Convert vertex coordinates to integers
                 x, y, z = (int(round(coord)) for coord in vertex.co)
-                f.write(f"{x} {y} {z}\n")
+                f.write(f"{x} {z} {-(y)}\n") # translate back to the 3DG1/3DAN coordinate system (Y is up/down)
 
         # Write polygon data (from the first frame's mesh)
         base_mesh = sorted_meshes[0]
