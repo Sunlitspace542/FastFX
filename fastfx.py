@@ -297,7 +297,8 @@ def update_colbox(obj):
     dimensions = obj.get("colbox_dimensions", [1, 1, 1])
     scale = obj.get("colbox_scale", 0)
 
-    # Adjust offset: invert Y and swap Y/Z for Blender
+    # Adjust offset: invert X/Y and swap Y/Z for Blender
+    offset[0] = offset[0] * -1
     offset[1] = offset[1] * -1
     offset[1], offset[2] = offset[2], offset[1]
 
@@ -315,6 +316,7 @@ def update_colbox(obj):
     obj.location = offset
 
     # Adjust offset: invert Y and swap Y/Z for Blender
+    offset[0] = offset[0] * -1
     offset[2] = offset[2] * -1
     offset[1], offset[2] = offset[2], offset[1]
 
