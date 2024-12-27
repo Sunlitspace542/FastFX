@@ -357,9 +357,10 @@ def update_colbox_offset(obj):
     # Get the current location of the object
     location = list(obj.location)
 
-    # Adjust for Blender's coordinate system: swap Y/Z, invert Y
+    # Adjust for Blender's coordinate system: swap Y/Z, invert Y/X
     location[2] = location[2] * -1  # Invert Z (Blender's Z = target's Y)
     location[1], location[2] = location[2], location[1]  # Swap Y and Z
+    location[0] = -location[0] # X invert
 
     # Colbox coordinates must be whole numbers
     location[0] = math.trunc(location[0])
@@ -405,8 +406,8 @@ def generate_colbox_from_mesh(obj):
     
     dimensions = [
         max_corner[0] - min_corner[0],
-        max_corner[1] - min_corner[1],
         max_corner[2] - min_corner[2],
+        max_corner[1] - min_corner[1],
     ]
     
     center_position = [
@@ -448,6 +449,7 @@ def generate_colbox_from_mesh(obj):
     colbox["colbox_scale"] = 0  # Default scale
 
     update_colbox_offset(colbox)
+    update_colbox(colbox)
 
     print(f"Collision box '{colbox_label}' created for mesh '{obj.name}'.")
     return colbox
