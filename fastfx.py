@@ -1357,33 +1357,33 @@ class Import3DANOperator(bpy.types.Operator):
 # =========================
 # 3DAN Exporter
 # =========================
-def write_3dan(filepath, meshes, frame_number):
+def write_3dan(filepath, objects, frame_number):
     """
     Writes the 3DAN file format.
 
     :param filepath: The output file path.
-    :param meshes: List of Blender mesh objects.
+    :param objects: List of Blender objects (with meshes) representing animation frames.
     :param frame_number: Total number of frames.
     """
-    # Sort meshes by name to ensure frames are in the correct order
-    sorted_meshes = sorted(meshes, key=lambda mesh: mesh.name)
+    # Sort objects by name to ensure frames are in the correct order
+    sorted_objects = sorted(objects, key=lambda obj: obj.name)
 
     with open(filepath, "w") as f:
         # Header
         f.write("3DAN\n")
-        f.write(f"{len(sorted_meshes[0].vertices)}\n")  # Total unique points (assume consistent vertex count)
+        f.write(f"{len(sorted_objects[0].data.vertices)}\n")  # Total unique points (assume consistent vertex count)
         f.write(f"{frame_number}\n")  # Number of animation frames
 
         # Write point data per frame
         for frame_index in range(frame_number):
-            mesh = sorted_meshes[frame_index]
+            mesh = sorted_objects[frame_index].data
             for vertex in mesh.vertices:
                 # Convert vertex coordinates to integers
                 x, y, z = (int(round(coord)) for coord in vertex.co)
-                f.write(f"{x} {z} {-(y)}\n") # translate back to the 3DG1/3DAN coordinate system (Y is up/down)
+                f.write(f"{x} {z} {-(y)}\n")  # Translate back to the 3DG1/3DAN coordinate system (Y is up/down)
 
         # Write polygon data (from the first frame's mesh)
-        base_mesh = sorted_meshes[0]
+        base_mesh = sorted_objects[0].data
         for poly in base_mesh.polygons:
             npoints = len(poly.vertices)
             f.write(f"{npoints} ")
@@ -1404,7 +1404,6 @@ def write_3dan(filepath, meshes, frame_number):
         # End marker (0x1a character)
         f.write(chr(0x1a))
 
-
 # =========================
 # 3DAN Exporter Operator
 # =========================
@@ -1422,21 +1421,18 @@ class Export3DAN(bpy.types.Operator):
         filepath = self.filepath
         objects = context.scene.objects
 
-        # Collect meshes for frames
-        frame_meshes = []
-        for obj in objects:
-            if obj.type == "MESH":
-                frame_meshes.append(obj.data)
+        # Collect objects for frames
+        frame_objects = [obj for obj in objects if obj.type == "MESH"]
 
-        if len(frame_meshes) < 1:
-            self.report({'ERROR'}, "No meshes found for export.")
+        if len(frame_objects) < 1:
+            self.report({'ERROR'}, "No objects found for export.")
             return {'CANCELLED'}
 
-        # Assume the number of meshes corresponds to the number of frames
-        frame_number = len(frame_meshes)
+        # Assume the number of objects corresponds to the number of frames
+        frame_number = len(frame_objects)
 
         # Export to 3DAN
-        write_3dan(filepath, frame_meshes, frame_number)
+        write_3dan(filepath, frame_objects, frame_number)
 
         self.report({'INFO'}, f"Exported {frame_number} frames to {filepath}")
         return {'FINISHED'}
