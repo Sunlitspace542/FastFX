@@ -109,7 +109,7 @@ Use the .txt extension for 3DG1 format shapes and the .anm extension for 3DAN fo
 6. We need to edit the output a bit for it to be usable in-game. Open the output ASM file and look for a line that looks something like this:  
 ``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,80,36,14,80,80,,0,0,0,0,<MYSHIP_4>``  
 This is the shape header.  
-Add ``id_0_c`` in between the two commas at the end (this refers to the color/texture palette), and remove the first number after the 5 zeroes and replace this with a valid colbox label, e.g ``playerB_col```, or ``0`` for no colbox.  
+Add ``id_0_c`` in between the two commas at the end (this refers to the color/texture palette), and remove the first number after the 5 zeroes and replace this with a valid colbox label, e.g ``playerB_col``, or ``0`` for no colbox.  
 Your shape header should now look like this:  
 ``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,playerB_col,36,14,80,80,id_0_c,0,0,0,0,<MYSHIP_4>``
 Save the file.  
