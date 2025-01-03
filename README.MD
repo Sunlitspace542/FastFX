@@ -75,7 +75,10 @@ Go to ``File -> Export -> 3DAN/3DGI/Animated Fundoshi-kun (.anm)`` to export the
 ## Method 1: Via FastFX
 ```diff  
 -WARNING!-
-FastFX currently only supports exporting static models to BSP format without BSP trees. There is no support yet for exporting animations in this format. It is recommended you use SHAPED for models that have any faces that would overlap without a proper face order. For simpler shapes however, FastFX's exporter is perfectly usable.
+FastFX currently only supports exporting static models to BSP format without BSP trees.
+There is no support yet for exporting animations in this format.
+It is recommended you use SHAPED for models that have any faces that would overlap without a proper face order.
+For simpler shapes however, FastFX's exporter is perfectly usable.
 ```
 Go to ``File -> Export -> Star Fox ASM BSP (treeless) (.asm/.bsp)`` to export.  
 There are no face sorting options at the moment due to a lack of support for BSP tree generation.  
