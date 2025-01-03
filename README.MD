@@ -1,5 +1,5 @@
 # FastFX
-A Blender plugin for importing/exporting Fundoshi-kun (Modified Videoscape 3DG1) format shapes for use in Star Fox (2), with additional tools.  
+A Blender plugin for importing/exporting Fundoshi-kun (Modified Videoscape 3DG1) and ASM BSP/GZS format shapes for use in Star Fox (2), with additional tools.  
 Designed for Blender 3.x, but it might work in 2.8+.  
 
 # Credits
