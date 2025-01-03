@@ -1580,7 +1580,7 @@ def export_to_format(filepath, obj, is_gzs):
 class ExportToBSP(bpy.types.Operator):
     """Export to BSP Format"""
     bl_idname = "export_mesh.bsp"
-    bl_label = "Export to BSP Format"
+    bl_label = "Export Treeless ASM BSP"
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
@@ -1604,7 +1604,7 @@ class ExportToBSP(bpy.types.Operator):
 class ExportToGZS(bpy.types.Operator):
     """Export to GZS Format"""
     bl_idname = "export_mesh.gzs"
-    bl_label = "Export to GZS Format"
+    bl_label = "Export ASM GZS"
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
@@ -2917,7 +2917,7 @@ def menu_func_import(self, context):
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
     self.layout.operator(Export3DAN.bl_idname, text="3DAN/3DGI/Animated Fundoshi-kun (.anm)")
-    self.layout.operator(ExportToBSP.bl_idname, text="Star Fox ASM BSP (No BSP trees) (.asm/.bsp)")
+    self.layout.operator(ExportToBSP.bl_idname, text="Star Fox ASM BSP (treeless) (.asm/.bsp)")
     self.layout.operator(ExportToGZS.bl_idname, text="Star Fox ASM GZS (.asm/.gzs)")
 
 # =========================
