@@ -9,11 +9,27 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 
 # Features
 - 3DG1 format importer/exporter
+- Partial ASM BSP/GZS import/export support - no animations, cannot generate BSP trees for Z-sorting in BSP format shapes
 - Custom Super FX material by Euclidium98 to help preview what the final product will look like (simple face coloring is also an option)
 - Proper wireframe/edge support
 - Faces sorted on export
 - Collision box import/export/editing support
 - No more ``-nan``'s! all point coordinates will be whole integers on export.
+
+# Supported Formats
+## Importing:
+- 3DG1 - Fundoshi-kun - point coordinates are integers  
+- 3DG1 - Model to FX - point coordinates are floats, has extra spacing in between lines in the face list  
+- 3DG1 - Blender 2.4 - point coordinates are floats, uses BGR format hex colors for face colors  
+- 3DAN/3DGI - Animated Fundoshi-kun
+- Star Fox ASM BSP format - static import only, no animation support  
+- Star Fox ASM GZS format (BSP format variant) - static import only, no animation support  
+
+## Exporting:
+- 3DG1 - Fundoshi-kun  
+- 3DAN - Animated Fundoshi-kun
+- Star Fox ASM BSP format - static export only, no animations or BSP trees for face sorting on more complex shapes  
+- Star Fox ASM GZS format (BSP format variant) - static export only, no animations, lacks any support for face sorting  
 
 # Installation
 Download the ``fastfx.py`` file from this repo. In Blender, go to ``Edit -> Preferences -> Add-ons -> Install...``  
@@ -55,6 +71,24 @@ Select all the frame objects in Blender. They should all be in order from Frame 
 Go to ``File -> Export -> 3DAN/3DGI/Animated Fundoshi-kun (.anm)`` to export the animation to a .anm file in 3DAN/3DGI format.  
 
 ## Converting 3DG1/3DAN to Star Fox BSP Format
+
+## Method 1: Via FastFX
+```diff  
+-WARNING!-
+FastFX currently only supports exporting static models to BSP format without BSP trees. There is no support yet for exporting animations in this format. It is recommended you use SHAPED for models that have any faces that would overlap without a proper face order. For simpler shapes however, FastFX's exporter is perfectly usable.
+```
+Go to ``File -> Export -> Star Fox ASM BSP (treeless) (.asm/.bsp)`` to export.  
+There are no face sorting options at the moment due to a lack of support for BSP tree generation.  
+
+We need to edit the output a bit after exporting for it to be usable in-game. Open the output ASM file and look for a line that looks something like this:  
+``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,colbox,36,14,80,80,id_0_c,0,0,0,0,<MYSHIP_4>``  
+This is the shape header.  
+Remove ``colbox`` and replace it with a valid colbox label, e.g ``playerB_col``, or ``0`` for no colbox.  
+Your shape header should now look something like this:  
+``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,playerB_col,36,14,80,80,id_0_c,0,0,0,0,<MYSHIP_4>``
+Save the file.  
+
+## Method 2: SHAPED.EXE
 Get Shaped [here](https://github.com/Sunlitspace542/FastFX/releases/tag/shaped).  
 Extract ``shaped.zip`` somewhere. Run ``run shaped.cmd`` to run Shaped.
 To convert:  
@@ -72,7 +106,7 @@ Use the .txt extension for 3DG1 format shapes and the .anm extension for 3DAN fo
 6. We need to edit the output a bit for it to be usable in-game. Open the output ASM file and look for a line that looks something like this:  
 ``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,80,36,14,80,80,,0,0,0,0,<MYSHIP_4>``  
 This is the shape header.  
-Add ``id_0_c`` in between the two commas at the end (this refers to the color/texture palette), and remove the first number after the 5 zeroes and replace this with a valid colbox label, e.g ``playerB_col``. 
+Add ``id_0_c`` in between the two commas at the end (this refers to the color/texture palette), and remove the first number after the 5 zeroes and replace this with a valid colbox label, e.g ``playerB_col```, or ``0`` for no colbox.  
 Your shape header should now look like this:  
 ``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,playerB_col,36,14,80,80,id_0_c,0,0,0,0,<MYSHIP_4>``
 Save the file.  
@@ -85,8 +119,8 @@ Currently, this plugin only supports importing 6 formats:
 - 3DG1 - Model to FX - point coordinates are floats, has extra spacing in between lines in the face list  
 - 3DG1 - Blender 2.4 - point coordinates are floats, uses BGR format hex colors for face colors  
 - 3DAN/3DGI - Animated Fundoshi-kun
-- Star Fox ASM BSP format (inert only, no animation)  
-- Star Fox ASM GZS format (inert only, no animation)  
+- Star Fox ASM BSP format - static import only, no animation support  
+- Star Fox ASM GZS format (BSP format variant) - static import only, no animation support  
   
 Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import a 3DG1 format shape.  
 Go to ``File -> Import -> Star Fox ASM BSP/GZS (.asm/.bsp)`` to import a Star Fox ASM BSP format shape.  
@@ -177,5 +211,4 @@ If your model becomes greatly distorted, try scaling it up (preferably by a numb
 # Things this can't do/extra notes
 - Sorting faces on export - Star Fox's renderer does not have a Z-buffer. FastFX pre-sorts faces on export based on their distance from the origin. It's pretty good, but there is a chance you may still need to manually sort faces in the 3DG1/BSP afterwards. Remember that whatever comes last in the list is drawn first.  
 - Import stray edges with colors - (The 3DG1 importer can read models with colored stray edges, but it's hard to see what material is assigned to a given edge.)  
-- Import/Export straight from/to Star Fox BSP format - SHAPED.EXE (Argonaut DOS tool) is still needed to get the 3DG1 into the format Star Fox (2) can actually use. Reverse engineering and documentation of the BSP format is a work in progress.  
-- Animation - 3DAN support is planned but not yet implemented in any capacity.  
+- Import/Export straight from/to Star Fox BSP format - SHAPED.EXE (Argonaut DOS tool) is still needed to get the 3DG1 into the format Star Fox (2) can actually use. Reverse engineering and documentation of the BSP format is a work in progress. Most of the format has now been cracked, though animations and BSP tree generation/Z-sorting are currently not supported.  
