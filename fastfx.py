@@ -1405,7 +1405,7 @@ def write_3dan(filepath, objects, frame_number):
         f.write(chr(0x1a))
 
 # =========================
-# 3DAN Exporter Operator
+# 3DAN Export Operator
 # =========================
 class Export3DAN(bpy.types.Operator):
     """Export to 3DAN Format"""
@@ -1435,6 +1435,187 @@ class Export3DAN(bpy.types.Operator):
         write_3dan(filepath, frame_objects, frame_number)
 
         self.report({'INFO'}, f"Exported {frame_number} frames to {filepath}")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+# =========================
+# GZS/BSP Export Utility functions
+# =========================
+def calculate_normals_and_viz(vertices, polygons):
+    """
+    Calculates face normals and generates Viz data.
+    Handles division-by-zero issues gracefully.
+    """
+    viz_data = []
+    for poly in polygons:
+        indices = poly['indices']
+        v0, v1, v2 = (vertices[i] for i in indices[:3])  # Get the first three vertices
+
+        # Compute face normal using the cross product
+        try:
+            edge1 = [v1[i] - v0[i] for i in range(3)]
+            edge2 = [v2[i] - v0[i] for i in range(3)]
+            normal = [
+                edge1[1] * edge2[2] - edge1[2] * edge2[1],
+                edge1[2] * edge2[0] - edge1[0] * edge2[2],
+                edge1[0] * edge2[1] - edge1[1] * edge2[0],
+            ]
+            # Normalize the vector
+            length = math.sqrt(sum(n ** 2 for n in normal))
+            normal = [int(n * 127 / length) for n in normal]
+            # Invert the normal vector
+            inverted_viz_normal = [-n for n in normal]
+        except ZeroDivisionError:
+            # Set normal to zero if calculation fails
+            normal = [0, 0, 0]
+
+        viz_data.append({'indices': indices, 'normal': inverted_viz_normal})
+
+    return viz_data
+
+def validate_point_format(vertices):
+    """
+    Determines whether to use Pointsb or Pointsw based on coordinate range.
+    """
+    max_coord = max(abs(coord) for vertex in vertices for coord in vertex)
+    if max_coord > 32767:
+        raise ValueError("Point coordinates exceed signed 16-bit range.")
+    return 'Pointsb' if max_coord <= 127 else 'Pointsw'
+
+def write_points_section(file, vertices, point_format):
+    """
+    Writes the Points section (Pointsb or Pointsw).
+    """
+    file.write(f"\t{point_format}\t{len(vertices)}\n")
+    for i, (x, y, z) in enumerate(vertices):
+        x, y, z = round(x), round(y), round(z)
+        file.write(f"\tp{point_format[6]}\t{x},{y},{z}\t;{i}\n")
+
+def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
+    """
+    Writes the Vizi and Faces section for BSP or GZS format.
+    """
+
+    shape_name = os.path.splitext(os.path.basename(filepath))[0]
+
+    file.write(f"\n{shape_name}_F\n")
+    file.write(f"\tVizis\t{len(viz_data)}\n")
+    for i, viz in enumerate(viz_data):
+        indices = ",".join(map(str, viz['indices']))
+        normal = viz['normal']
+        normal[2] = -normal[2]  # Invert the Z-component of the normal
+        normal_str = ",".join(map(str, normal))
+        file.write(f"\tViz\t{indices},{normal_str}\t;{i}\n")
+
+    if is_gzs:
+        file.write(f"\tFaces\t{len(polygons)}\n")
+        for i, poly in enumerate(polygons):
+            indices = ",".join(map(str, poly['indices']))
+            normal = ",".join(map(str, viz_data[i]['normal']))
+            file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
+        file.write("\tFendQ\n")
+    else:
+        file.write(f"\n{shape_name}_F1\tFaces\n")
+        for i, poly in enumerate(polygons):
+            indices = ",".join(map(str, poly['indices']))
+            normal = ",".join(map(str, viz_data[i]['normal']))
+            file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
+        file.write("\tFend\n")
+
+def write_shape_header(file, shape_name, vertices):
+    """
+    Writes the ShapeHdr line based on the bounding box.
+    """
+    x_max = max(abs(v[0]) for v in vertices)
+    y_max = max(abs(v[1]) for v in vertices)
+    z_max = max(abs(v[2]) for v in vertices)
+    radius = math.sqrt(x_max ** 2 + y_max ** 2 + z_max ** 2)
+
+    file.write(f"\tifne\tDO_HDR\n\n")
+    file.write(f"{shape_name}\n")
+    file.write(
+        f"\tShapeHdr\t{shape_name}_P,0,{shape_name}_F,0,0,0,0,0,colbox,{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)},id_0_c,0,0,0,0,<{shape_name}>\n"
+    )
+    file.write("\telseif\n")
+
+def collect_data_from_mesh(obj):
+    """
+    Extracts vertices and polygons from a Blender object.
+    """
+    # Translate to Star Fox's coordinate system, Invert all, swap Y/Z
+    vertices = [(-(v.co.x), -(v.co.z), -(v.co.y)) for v in obj.data.vertices]
+    polygons = []
+    for poly in obj.data.polygons:
+        indices = list(poly.vertices)
+        material_index = poly.material_index
+        material_name = obj.data.materials[material_index].name if material_index < len(obj.data.materials) else "FX0"
+        color_index = int(material_name[2:]) if material_name.startswith("FX") else 0
+        polygons.append({'indices': indices, 'color_index': color_index})
+    return vertices, polygons
+
+def export_to_format(filepath, obj, is_gzs):
+    """
+    Main export function for BSP/GZS format.
+    """
+    shape_name = os.path.splitext(os.path.basename(filepath))[0]
+    vertices, polygons = collect_data_from_mesh(obj)
+    point_format = validate_point_format(vertices)
+    viz_data = calculate_normals_and_viz(vertices, polygons)
+
+    with open(filepath, "w") as file:
+        file.write(f";--Shape file ----- {shape_name} ---- Generated with FastFX\n")
+        write_shape_header(file, shape_name, vertices)
+        file.write(f"{shape_name}_P\n")
+        write_points_section(file, vertices, point_format)
+        file.write("\n\tEndPoints")
+        write_faces_section(filepath, file, polygons, viz_data, is_gzs)
+        file.write("\tEndShape\n\n\tendc\n")
+
+# =========================
+# ASM BSP Export Operator
+# =========================
+class ExportToBSP(bpy.types.Operator):
+    """Export to BSP Format"""
+    bl_idname = "export_mesh.bsp"
+    bl_label = "Export to BSP Format"
+    bl_options = {'PRESET'}
+
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        obj = context.object
+        if not obj or obj.type != 'MESH':
+            self.report({'ERROR'}, "Please select a mesh object.")
+            return {'CANCELLED'}
+        export_to_format(self.filepath, obj, is_gzs=False)
+        self.report({'INFO'}, f"Exported to BSP: {self.filepath}")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+# =========================
+# ASM GZS Export Operator
+# =========================
+class ExportToGZS(bpy.types.Operator):
+    """Export to GZS Format"""
+    bl_idname = "export_mesh.gzs"
+    bl_label = "Export to GZS Format"
+    bl_options = {'PRESET'}
+
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        obj = context.object
+        if not obj or obj.type != 'MESH':
+            self.report({'ERROR'}, "Please select a mesh object.")
+            return {'CANCELLED'}
+        export_to_format(self.filepath, obj, is_gzs=True)
+        self.report({'INFO'}, f"Exported to GZS: {self.filepath}")
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -2736,6 +2917,8 @@ def menu_func_import(self, context):
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
     self.layout.operator(Export3DAN.bl_idname, text="3DAN/3DGI/Animated Fundoshi-kun (.anm)")
+    self.layout.operator(ExportToBSP.bl_idname, text="Star Fox ASM BSP (No BSP trees) (.asm/.bsp)")
+    self.layout.operator(ExportToGZS.bl_idname, text="Star Fox ASM GZS (.asm/.gzs)")
 
 # =========================
 # Registration
@@ -2758,6 +2941,8 @@ def register():
     bpy.utils.register_class(ImportBSPOperator)
     bpy.utils.register_class(Import3DANOperator)
     bpy.utils.register_class(Export3DAN)
+    bpy.utils.register_class(ExportToBSP)
+    bpy.utils.register_class(ExportToGZS)
 
 def unregister():
     bpy.utils.unregister_class(Import3DG1)
@@ -2777,6 +2962,8 @@ def unregister():
     bpy.utils.unregister_class(ImportBSPOperator)
     bpy.utils.unregister_class(Import3DANOperator)
     bpy.utils.unregister_class(Export3DAN)
+    bpy.utils.unregister_class(ExportToBSP)
+    bpy.utils.unregister_class(ExportToGZS)
 
 if __name__ == "__main__":
     register()
