@@ -1531,14 +1531,20 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
         for i, poly in enumerate(polygons):
             indices = ",".join(map(str, poly['indices']))
             normal = ",".join(map(str, viz_data[i]['normal']))
-            file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
+            if len(poly['indices']) < 3:
+                file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},-1,{normal},{indices}\n")
+            else:
+                file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
         file.write("\tFendQ\n")
     else:
         file.write(f"\n{shape_name}_F1\tFaces\n")
         for i, poly in enumerate(polygons):
             indices = ",".join(map(str, poly['indices']))
             normal = ",".join(map(str, viz_data[i]['normal']))
-            file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
+            if len(poly['indices']) < 3:
+                file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},-1,{normal},{indices}\n")
+            else:
+                file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
         file.write("\tFend\n")
 
 
