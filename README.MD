@@ -12,7 +12,7 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 - Partial ASM BSP/GZS import/export support - no animations, cannot generate BSP trees for Z-sorting in BSP format shapes
 - Custom Super FX material by Euclidium98 to help preview what the final product will look like (simple face coloring is also an option)
 - Proper wireframe/edge support
-- Faces sorted on export
+- Faces sorted on export (3DG1 export only)
 - Collision box import/export/editing support
 - No more ``-nan``'s! all point coordinates will be whole integers on export.
 

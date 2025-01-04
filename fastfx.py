@@ -1470,7 +1470,7 @@ def calculate_normals_and_viz(vertices, polygons):
             inverted_viz_normal = [-n for n in normal]
         except ZeroDivisionError:
             # Set normal to zero if calculation fails
-            normal = [0, 0, 0]
+            inverted_viz_normal = [0, 0, 0]
 
         viz_data.append({'indices': indices, 'normal': inverted_viz_normal})
 
