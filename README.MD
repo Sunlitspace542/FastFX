@@ -127,7 +127,8 @@ Currently, this plugin only supports importing 6 formats:
   
 Go to ``File -> Import -> 3DG1/Fundoshi-kun (.txt/.3dg1/.obj)`` to import a 3DG1 format shape.  
 Go to ``File -> Import -> Star Fox ASM BSP/GZS (.asm/.bsp)`` to import a Star Fox ASM BSP format shape.  
-Go to ``File -> Import -> 3DG1/3DGI/Animated Fundoshi-kun (.anm)"`` to import a 3DGI/3DAN format shape.
+Go to ``File -> Import -> 3DG1/3DGI/Animated Fundoshi-kun (.anm)`` to import a 3DGI/3DAN format shape.  
+Go to ``Star Fox ASM BSP/GZS (.asm/.bsp/.gzs)`` to import a ASM BSP/GZS format shape.  
 The mesh (or meshes if it's an animated shape) should appear. The simple material palette will be applied automatically.  
 
 # Collision Boxes

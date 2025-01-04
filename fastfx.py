@@ -1002,6 +1002,12 @@ def read_3dg1(filepath, context):
         return {'CANCELLED'}
 
 # =========================
+# Gets distance from origin
+# =========================
+def distance_from_origin(point):
+    return math.sqrt(point[0]**2 + point[1]**2 + point[2]**2)
+
+# =========================
 # 3DG1 Exporter
 # =========================
 def write_3dg1(filepath, obj, sort_mode="distance"):
@@ -1012,10 +1018,6 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
     :param obj: Blender mesh object to export.
     :param sort_mode: Sorting mode ("distance", "material", "none").
     """
-
-    # Gets distance from origin
-    def distance_from_origin(point):
-        return math.sqrt(point[0]**2 + point[1]**2 + point[2]**2)
 
     # Open the file for writing
     with open(filepath, "w") as file:
@@ -1452,27 +1454,32 @@ def calculate_normals_and_viz(vertices, polygons):
     viz_data = []
     for poly in polygons:
         indices = poly['indices']
-        v0, v1, v2 = (vertices[i] for i in indices[:3])  # Get the first three vertices
-
-        # Compute face normal using the cross product
-        try:
-            edge1 = [v1[i] - v0[i] for i in range(3)]
-            edge2 = [v2[i] - v0[i] for i in range(3)]
-            normal = [
-                edge1[1] * edge2[2] - edge1[2] * edge2[1],
-                edge1[2] * edge2[0] - edge1[0] * edge2[2],
-                edge1[0] * edge2[1] - edge1[1] * edge2[0],
-            ]
-            # Normalize the vector
-            length = math.sqrt(sum(n ** 2 for n in normal))
-            normal = [int(n * 127 / length) for n in normal]
-            # Invert the normal vector
-            inverted_viz_normal = [-n for n in normal]
-        except ZeroDivisionError:
-            # Set normal to zero if calculation fails
+        if len(indices) < 3:
+            # SHAPED does not compute normals for edges
             inverted_viz_normal = [0, 0, 0]
+            viz_data.append({'indices': indices, 'normal': inverted_viz_normal})
+        else:
+            v0, v1, v2 = (vertices[i] for i in indices[:3])  # Get the first three vertices
 
-        viz_data.append({'indices': indices, 'normal': inverted_viz_normal})
+            # Compute face normal using the cross product
+            try:
+                edge1 = [v1[i] - v0[i] for i in range(3)]
+                edge2 = [v2[i] - v0[i] for i in range(3)]
+                normal = [
+                    edge1[1] * edge2[2] - edge1[2] * edge2[1],
+                    edge1[2] * edge2[0] - edge1[0] * edge2[2],
+                    edge1[0] * edge2[1] - edge1[1] * edge2[0],
+                ]
+                # Normalize the vector
+                length = math.sqrt(sum(n ** 2 for n in normal))
+                normal = [int(n * 127 / length) for n in normal]
+                # Invert the normal vector
+                inverted_viz_normal = [-n for n in normal]
+            except ZeroDivisionError:
+                # Set normal to zero if calculation fails
+                inverted_viz_normal = [0, 0, 0]
+
+            viz_data.append({'indices': indices, 'normal': inverted_viz_normal})
 
     return viz_data
 
@@ -1499,11 +1506,15 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
     Writes the Vizi and Faces section for BSP or GZS format.
     """
 
+    # Get the shape's name for the point/face ptr labels the ShapeHdr references
     shape_name = os.path.splitext(os.path.basename(filepath))[0]
 
+    # Filter Viz data to exclude entries for 2-pointed faces
+    filtered_viz_data = [viz for viz in viz_data if len(viz['indices']) > 2]
+
     file.write(f"\n{shape_name}_F\n")
-    file.write(f"\tVizis\t{len(viz_data)}\n")
-    for i, viz in enumerate(viz_data):
+    file.write(f"\tVizis\t{len(filtered_viz_data)}\n")
+    for i, viz in enumerate(filtered_viz_data):
         indices = ",".join(map(str, viz['indices']))
         normal = viz['normal']
         normal[2] = -normal[2]  # Invert the Z-component of the normal
@@ -1525,10 +1536,15 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
             file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
         file.write("\tFend\n")
 
+
 def write_shape_header(file, shape_name, vertices):
     """
     Writes the ShapeHdr line based on the bounding box.
     """
+
+    # Format of the Shape header is as follows:
+    # ShapeHdr  pointptr,bank,faceptr,0,sortz,0,0,shift,colboxptr,xmax,ymax,zmax,radius,colptr,shadowptr,simple1ptr,simple2ptr,simple3ptr,<Name>
+
     x_max = max(abs(v[0]) for v in vertices)
     y_max = max(abs(v[1]) for v in vertices)
     z_max = max(abs(v[2]) for v in vertices)
@@ -1545,7 +1561,7 @@ def collect_data_from_mesh(obj):
     """
     Extracts vertices and polygons from a Blender object.
     """
-    # Translate to Star Fox's coordinate system, Invert all, swap Y/Z
+    # Translate to Star Fox's coordinate system: Invert all, swap Y/Z
     vertices = [(-(v.co.x), -(v.co.z), -(v.co.y)) for v in obj.data.vertices]
     polygons = []
     for poly in obj.data.polygons:
@@ -1566,7 +1582,10 @@ def export_to_format(filepath, obj, is_gzs):
     viz_data = calculate_normals_and_viz(vertices, polygons)
 
     with open(filepath, "w") as file:
-        file.write(f";--Shape file ----- {shape_name} ---- Generated with FastFX\n")
+        if is_gzs:
+            file.write(f";--Shape file ----- {shape_name}.gzs ---- Generated with FastFX\n")
+        else:
+            file.write(f";--Shape file ----- {shape_name}.bsp ---- Generated with FastFX\n")
         write_shape_header(file, shape_name, vertices)
         file.write(f"{shape_name}_P\n")
         write_points_section(file, vertices, point_format)
@@ -2912,7 +2931,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 def menu_func_import(self, context):
     self.layout.operator(Import3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
     self.layout.operator(Import3DANOperator.bl_idname, text="3DAN/3DGI/Animated Fundoshi-kun (.anm)")
-    self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm)")
+    self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm/.bsp/.gzs)")
 
 def menu_func_export(self, context):
     self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
