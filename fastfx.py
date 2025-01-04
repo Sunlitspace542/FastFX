@@ -1513,13 +1513,18 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
     filtered_viz_data = [viz for viz in viz_data if len(viz['indices']) > 2]
 
     file.write(f"\n{shape_name}_F\n")
-    file.write(f"\tVizis\t{len(filtered_viz_data)}\n")
-    for i, viz in enumerate(filtered_viz_data):
-        indices = ",".join(map(str, viz['indices']))
-        normal = viz['normal']
-        normal[2] = -normal[2]  # Invert the Z-component of the normal
-        normal_str = ",".join(map(str, normal))
-        file.write(f"\tViz\t{indices},{normal_str}\t;{i}\n")
+    # Create a dummy vizi if there are none, at least one vizi is required for the shape to render
+    if len(filtered_viz_data) == 0:
+        file.write(f"\tVizis\t1\n")
+        file.write(f"\tViz\t0,0,0,0,0,0\t;0\n")
+    else:
+        file.write(f"\tVizis\t{len(filtered_viz_data)}\n")
+        for i, viz in enumerate(filtered_viz_data):
+            indices = ",".join(map(str, viz['indices']))
+            normal = viz['normal']
+            normal[2] = -normal[2]  # Invert the Z-component of the normal
+            normal_str = ",".join(map(str, normal))
+            file.write(f"\tViz\t{indices},{normal_str}\t;{i}\n")
 
     if is_gzs:
         file.write(f"\tFaces\t{len(polygons)}\n")
@@ -1559,18 +1564,40 @@ def write_shape_header(file, shape_name, vertices):
 
 def collect_data_from_mesh(obj):
     """
-    Extracts vertices and polygons from a Blender object.
+    Extracts vertices and polygons (including edges for FE# materials) from a Blender object.
     """
-    # Translate to Star Fox's coordinate system: Invert all, swap Y/Z
+    # Translate from Blender's coordinate system to Star Fox's: Invert all, swap Y/Z
     vertices = [(-(v.co.x), -(v.co.z), -(v.co.y)) for v in obj.data.vertices]
     polygons = []
+
     for poly in obj.data.polygons:
         indices = list(poly.vertices)
         material_index = poly.material_index
         material_name = obj.data.materials[material_index].name if material_index < len(obj.data.materials) else "FX0"
-        color_index = int(material_name[2:]) if material_name.startswith("FX") else 0
-        polygons.append({'indices': indices, 'color_index': color_index})
+
+        if material_name.startswith("FE"):
+            # If the material indicates edges, create 2-pointed faces for each edge
+            try:
+                color_index = int(material_name[2:])
+            except ValueError:
+                color_index = 0  # Default to 0 if parsing fails
+
+            # Convert the polygon into edges
+            for i in range(len(indices)):
+                edge = [indices[i], indices[(i + 1) % len(indices)]]  # Wrap around for closed edges
+                polygons.append({'indices': edge, 'color_index': color_index})
+
+        else:
+            # Handle standard polygons
+            try:
+                color_index = int(material_name[2:]) if material_name.startswith("FX") else 0
+            except ValueError:
+                color_index = 0  # Default to 0 if parsing fails
+
+            polygons.append({'indices': indices, 'color_index': color_index})
+
     return vertices, polygons
+
 
 def export_to_format(filepath, obj, is_gzs):
     """
