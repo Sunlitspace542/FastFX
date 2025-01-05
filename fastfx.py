@@ -1012,25 +1012,52 @@ def distance_from_origin(point):
 # =========================
 def write_3dg1(filepath, obj, sort_mode="distance"):
     """
-    Exports a mesh object to 3DG1 format with customizable sorting modes.
-    
+    Exports a mesh object to 3DG1 format with customizable sorting modes and compression optimization.
+
     :param filepath: Path to write the 3DG1 file.
     :param obj: Blender mesh object to export.
     :param sort_mode: Sorting mode ("distance", "material", "none").
     """
-
     # Open the file for writing
     with open(filepath, "w") as file:
         # Collect unique vertices and map them to indices
-        unique_vertices = {}
+        original_vertices = [(
+            round(v.co.x), round(v.co.y), round(v.co.z)
+        ) for v in obj.data.vertices]
+
+        index_map = {}
         vertex_count = 0
+
+        # Pair points for compression
+        sorted_indices = sorted(range(len(original_vertices)), key=lambda i: distance_from_origin(original_vertices[i]))
+        new_vertices = []
+
+        while sorted_indices:
+            current_index = sorted_indices.pop(0)
+            current_point = original_vertices[current_index]
+
+            # Try to find a pair with an inverse-X point
+            best_match = None
+            for candidate_index in sorted_indices:
+                candidate_point = original_vertices[candidate_index]
+                if current_point[1:] == candidate_point[1:] and current_point[0] == -candidate_point[0]:
+                    best_match = candidate_index
+                    break
+
+            # Add the current point
+            new_vertices.append(current_point)
+            index_map[current_index] = len(new_vertices) - 1
+
+            # Add its pair if found
+            if best_match is not None:
+                new_vertices.append(original_vertices[best_match])
+                index_map[best_match] = len(new_vertices) - 1
+                sorted_indices.remove(best_match)
+
+        # Process polygons and edges
         polygons = []
         edges = []  # Store edges for colored lines
 
-        # Write 3DG1 header
-        file.write("3DG1\n")
-
-        # Process the mesh data
         mesh = obj.data
         mesh.calc_loop_triangles()
 
@@ -1039,52 +1066,24 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
             material = obj.material_slots[material_index].material
 
             if material:
-                # Check if the material represents an edge (FE#)
-                if material.name.startswith("FE"):
+                if material.name.startswith("FE"):  # Handle edges
                     try:
                         edge_color_index = int(material.name[2:])  # Extract color index for edges
                     except ValueError:
                         edge_color_index = 0  # Default to 0 if parsing fails
 
-                    # Convert the face to edges
                     for i in range(len(poly.vertices)):
                         v1 = poly.vertices[i]
-                        v2 = poly.vertices[(i + 1) % len(poly.vertices)]  # Wrap around to create a closed edge
-                        co1 = tuple([round(v) for v in mesh.vertices[v1].co])
-                        co2 = tuple([round(v) for v in mesh.vertices[v2].co])
+                        v2 = poly.vertices[(i + 1) % len(poly.vertices)]
+                        edges.append((index_map[v1], index_map[v2], edge_color_index))
 
-                        # Map unique vertices
-                        if co1 not in unique_vertices:
-                            unique_vertices[co1] = vertex_count
-                            vertex_count += 1
-                        if co2 not in unique_vertices:
-                            unique_vertices[co2] = vertex_count
-                            vertex_count += 1
-
-                        # Calculate the midpoint for sorting
-                        midpoint = tuple((c1 + c2) / 2 for c1, c2 in zip(co1, co2))
-                        edges.append((unique_vertices[co1], unique_vertices[co2], edge_color_index, midpoint))
-
-                # Otherwise, handle it as a polygon
-                elif material.name.startswith("FX"):
+                elif material.name.startswith("FX"):  # Handle polygons
                     try:
                         color_index = int(material.name[2:])  # Extract color index for polygons
                     except ValueError:
                         color_index = 0  # Default to 0 if parsing fails
 
-                    poly_vertices = []
-                    for loop_index in poly.loop_indices:
-                        vertex = mesh.vertices[mesh.loops[loop_index].vertex_index]
-                        co = tuple([round(v) for v in vertex.co])
-
-                        # Map unique vertices
-                        if co not in unique_vertices:
-                            unique_vertices[co] = vertex_count
-                            vertex_count += 1
-
-                        poly_vertices.append(unique_vertices[co])
-
-                    # Calculate the centroid for sorting
+                    poly_vertices = [index_map[vertex] for vertex in poly.vertices]
                     centroid = tuple(
                         sum(mesh.vertices[v].co[i] for v in poly.vertices) / len(poly.vertices)
                         for i in range(3)
@@ -1094,22 +1093,24 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
         # Apply sorting based on the selected mode
         if sort_mode == "distance":
             polygons.sort(key=lambda p: distance_from_origin(p[2]))  # Sort polygons by centroid distance from origin
-            edges.sort(key=lambda e: distance_from_origin(e[3]))  # Sort edges by midpoint distance from origin
+            edges.sort(key=lambda e: distance_from_origin(
+                [(new_vertices[e[0]][i] + new_vertices[e[1]][i]) / 2 for i in range(3)]
+            ))  # Sort edges by midpoint distance from origin
         elif sort_mode == "material":
             polygons.sort(key=lambda p: p[3])  # Sort by material index
-        # If sort_mode is "none", no sorting is applied
 
         if sort_mode == "distance":
             # Reverse the order so farthest elements are written last
             polygons.reverse()
             edges.reverse()
 
-        # Write vertex count
-        file.write(f"{len(unique_vertices)}\n")
+        # Write 3DG1 header
+        file.write("3DG1\n")
+        file.write(f"{len(new_vertices)}\n")  # Total vertex count
 
         # Write vertices
-        for vertex in unique_vertices:
-            file.write(f"{vertex[0]} {vertex[2]} {-(vertex[1])}\n") # translate back to the 3DG1/3DAN coordinate system (Y is up/down)
+        for vertex in new_vertices:
+            file.write(f"{vertex[0]} {vertex[2]} {-(vertex[1])}\n")  # Convert back to 3DG1 coordinate system
 
         # Write polygons
         for poly_vertices, color_index, _, _ in polygons:
@@ -1118,13 +1119,15 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
             file.write(f"{color_index}\n")
 
         # Write edges
-        for v1, v2, color_index, _ in edges:
+        for v1, v2, color_index in edges:
             file.write(f"2 {v1} {v2} {color_index}\n")
 
         # End-of-file marker
         file.write(chr(0x1A))
 
     return {'FINISHED'}
+
+
 
 # =========================
 # ASM BSP/GZS Importer Operator
@@ -1494,12 +1497,65 @@ def validate_point_format(vertices):
 
 def write_points_section(file, vertices, point_format):
     """
-    Writes the Points section (Pointsb or Pointsw).
+    Writes the Points section (Pointsb or Pointsw) with support for PointsX{format} compression,
+    maintaining the original order of chunks in the point list.
     """
+
+    """
+    # note that for animated shapes, no compression would be used, if logic for BSP animation were implemented (currently isn't).
     file.write(f"\t{point_format}\t{len(vertices)}\n")
     for i, (x, y, z) in enumerate(vertices):
         x, y, z = round(x), round(y), round(z)
         file.write(f"\tp{point_format[6]}\t{x},{y},{z}\t;{i}\n")
+    """
+
+    i = 0
+    total_vertices = len(vertices)
+    chunk_index = 0
+
+    while i < total_vertices:
+        # Check for a compressible pair
+        if i + 1 < total_vertices:
+            x1, y1, z1 = vertices[i]
+            x2, y2, z2 = vertices[i + 1]
+
+            if x1 == -x2 and y1 == y2 and z1 == z2:
+                # Start a PointsX{format} chunk
+                compressed_chunk = []
+                while i + 1 < total_vertices:
+                    x1, y1, z1 = vertices[i]
+                    x2, y2, z2 = vertices[i + 1]
+
+                    if x1 == -x2 and y1 == y2 and z1 == z2:
+                        compressed_chunk.append((x1, y1, z1))
+                        i += 2  # Skip the pair
+                    else:
+                        break
+
+                # Write the compressed chunk
+                file.write(f"\tPointsX{point_format[-1]}\t{len(compressed_chunk)}\n")
+                for idx, (x, y, z) in enumerate(compressed_chunk):
+                    file.write(f"\tp{point_format[6]}\t{int(x)},{int(y)},{int(z)}\t;{chunk_index}\n")
+                    chunk_index += 1
+
+                continue
+
+        # If no compressible pair, write an uncompressed chunk
+        uncompressed_chunk = []
+        while i < total_vertices:
+            x1, y1, z1 = vertices[i]
+            if i + 1 < total_vertices:
+                x2, y2, z2 = vertices[i + 1]
+                if x1 == -x2 and y1 == y2 and z1 == z2:
+                    break  # Stop before the next compressible pair
+            uncompressed_chunk.append((x1, y1, z1))
+            i += 1
+
+        # Write the uncompressed chunk
+        file.write(f"\t{point_format}\t{len(uncompressed_chunk)}\n")
+        for idx, (x, y, z) in enumerate(uncompressed_chunk):
+            file.write(f"\tp{point_format[6]}\t{int(x)},{int(y)},{int(z)}\t;{chunk_index}\n")
+            chunk_index += 1
 
 def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
     """
@@ -1585,16 +1641,54 @@ def write_shape_header(file, obj, shape_name, vertices):
 
 def collect_data_from_mesh(obj, sort_mode="distance"):
     """
-    Extracts vertices and polygons (including edges for FE# materials) from a Blender object.
+    Extracts vertices and polygons (including edges for FE# materials) from a Blender object,
+    optimizing points for compression.
+
     :param obj: Blender mesh object to export.
     :param sort_mode: Sorting mode ("distance", "material", "none").
     """
     # Translate from Blender's coordinate system to Star Fox's: Invert all, swap Y/Z
-    vertices = [(-(v.co.x), -(v.co.z), -(v.co.y)) for v in obj.data.vertices]
-    polygons = []
+    original_vertices = [(-(v.co.x), -(v.co.z), -(v.co.y)) for v in obj.data.vertices]
+    vertex_pairs = []
+    remaining_indices = set(range(len(original_vertices)))
 
+    # Pair points to optimize for compression
+    sorted_indices = sorted(remaining_indices, key=lambda i: distance_from_origin(original_vertices[i]))
+    new_vertices = []
+    index_map = {}
+
+    while sorted_indices:
+        current_index = sorted_indices.pop(0)
+        current_point = original_vertices[current_index]
+        best_match = None
+        best_distance = float('inf')
+
+        # Find the best pair for compression
+        for candidate_index in sorted_indices:
+            candidate_point = original_vertices[candidate_index]
+            if current_point[1:] == candidate_point[1:] and current_point[0] == -candidate_point[0]:
+                best_match = candidate_index
+                break
+            else:
+                # Measure distance for fallback pairing
+                dist = sum((current_point[i] - candidate_point[i]) ** 2 for i in range(3))
+                if dist < best_distance:
+                    best_distance = dist
+                    best_match = candidate_index
+
+        # Pair and map indices
+        new_vertices.append(current_point)
+        index_map[current_index] = len(new_vertices) - 1
+
+        if best_match is not None:
+            new_vertices.append(original_vertices[best_match])
+            index_map[best_match] = len(new_vertices) - 1
+            sorted_indices.remove(best_match)
+
+    # Extract polygons and remap indices
+    polygons = []
     for poly in obj.data.polygons:
-        indices = list(poly.vertices)
+        indices = [index_map[vertex] for vertex in poly.vertices]
         material_index = poly.material_index
         material_name = obj.data.materials[material_index].name if material_index < len(obj.data.materials) else "FX0"
 
@@ -1608,7 +1702,7 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
             # Convert the polygon into edges
             for i in range(len(indices)):
                 edge = [indices[i], indices[(i + 1) % len(indices)]]  # Wrap around for closed edges
-                midpoint = tuple((vertices[edge[0]][j] + vertices[edge[1]][j]) / 2 for j in range(3))
+                midpoint = tuple((new_vertices[edge[0]][j] + new_vertices[edge[1]][j]) / 2 for j in range(3))
                 polygons.append({'indices': edge, 'color_index': color_index, 'distance': distance_from_origin(midpoint)})
 
         else:
@@ -1620,7 +1714,7 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
 
             # Calculate centroid
             centroid = tuple(
-                sum(vertices[vertex][i] for vertex in indices) / len(indices) for i in range(3)
+                sum(new_vertices[vertex][i] for vertex in indices) / len(indices) for i in range(3)
             )
             polygons.append({'indices': indices, 'color_index': color_index, 'distance': distance_from_origin(centroid)})
 
@@ -1631,7 +1725,7 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
         polygons.sort(key=lambda p: p['color_index'])  # Sort by material index
     # If sort_mode is "none," no sorting is applied
 
-    return vertices, polygons
+    return new_vertices, polygons
 
 
 def export_to_format(filepath, obj, sort_mode, is_gzs):
