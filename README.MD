@@ -165,7 +165,7 @@ A colbox's properties can be accessed from the item panel -> Properties. It is l
 - label of next colbox to link to this one (if this is the only box or there are no further boxes, enter 0)
 - offset (x, y, z)
 - rotation allowed for this colbox (can be rotx, roty, rotz, or norot for no rotation)
-- scale (shifts dimension and offset fields left by this number when assembled) - this is kept for compatibility with the original assembler macro, it is recommended you scale your colboxes properly in Blender so you never have to touch this. Best kept at 0.
+- scale - shifts dimension and offset fields left by this number when assembled (e.g. a scale of 1 is equivalent to 2^1 or ``1 << 1``); this is kept for compatibility with the original assembler macro, it is recommended you scale your colboxes properly in Blender so you never have to touch this. Best kept at 0.
   
 
 The easiest way to create a new colbox is to select your mesh and click ``Generate Colbox for Mesh`` to generate a colbox that fits.  
