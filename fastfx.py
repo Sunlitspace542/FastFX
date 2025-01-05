@@ -1568,9 +1568,11 @@ def write_shape_header(file, shape_name, vertices):
     )
     file.write("\telseif\n")
 
-def collect_data_from_mesh(obj):
+def collect_data_from_mesh(obj, sort_mode="distance"):
     """
     Extracts vertices and polygons (including edges for FE# materials) from a Blender object.
+    :param obj: Blender mesh object to export.
+    :param sort_mode: Sorting mode ("distance", "material", "none").
     """
     # Translate from Blender's coordinate system to Star Fox's: Invert all, swap Y/Z
     vertices = [(-(v.co.x), -(v.co.z), -(v.co.y)) for v in obj.data.vertices]
@@ -1591,7 +1593,8 @@ def collect_data_from_mesh(obj):
             # Convert the polygon into edges
             for i in range(len(indices)):
                 edge = [indices[i], indices[(i + 1) % len(indices)]]  # Wrap around for closed edges
-                polygons.append({'indices': edge, 'color_index': color_index})
+                midpoint = tuple((vertices[edge[0]][j] + vertices[edge[1]][j]) / 2 for j in range(3))
+                polygons.append({'indices': edge, 'color_index': color_index, 'distance': distance_from_origin(midpoint)})
 
         else:
             # Handle standard polygons
@@ -1600,17 +1603,28 @@ def collect_data_from_mesh(obj):
             except ValueError:
                 color_index = 0  # Default to 0 if parsing fails
 
-            polygons.append({'indices': indices, 'color_index': color_index})
+            # Calculate centroid
+            centroid = tuple(
+                sum(vertices[vertex][i] for vertex in indices) / len(indices) for i in range(3)
+            )
+            polygons.append({'indices': indices, 'color_index': color_index, 'distance': distance_from_origin(centroid)})
+
+    # Apply sorting based on the selected mode
+    if sort_mode == "distance":
+        polygons.sort(key=lambda p: p['distance'], reverse=True)  # Sort by distance from origin (farthest last)
+    elif sort_mode == "material":
+        polygons.sort(key=lambda p: p['color_index'])  # Sort by material index
+    # If sort_mode is "none," no sorting is applied
 
     return vertices, polygons
 
 
-def export_to_format(filepath, obj, is_gzs):
+def export_to_format(filepath, obj, sort_mode, is_gzs):
     """
     Main export function for BSP/GZS format.
     """
     shape_name = os.path.splitext(os.path.basename(filepath))[0]
-    vertices, polygons = collect_data_from_mesh(obj)
+    vertices, polygons = collect_data_from_mesh(obj, sort_mode)
     point_format = validate_point_format(vertices)
     viz_data = calculate_normals_and_viz(vertices, polygons)
 
@@ -1636,13 +1650,23 @@ class ExportToBSP(bpy.types.Operator):
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    sort_mode: bpy.props.EnumProperty(
+        name="Sort Mode",
+        description="Choose how to sort faces and edges in the exported file",
+        items=[
+            ('distance', "Distance from Origin", "Sort by distance from the origin"),
+            ('material', "Material Order", "Sort by material order. Last material is drawn first."),
+            ('none', "No Sorting", "No sorting; use Blender's internal order")
+        ],
+        default='distance'
+    )
 
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
-        export_to_format(self.filepath, obj, is_gzs=False)
+        export_to_format(self.filepath, obj, self.sort_mode, is_gzs=False)
         self.report({'INFO'}, f"Exported to BSP: {self.filepath}")
         return {'FINISHED'}
 
@@ -1660,13 +1684,23 @@ class ExportToGZS(bpy.types.Operator):
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    sort_mode: bpy.props.EnumProperty(
+        name="Sort Mode",
+        description="Choose how to sort faces and edges in the exported file",
+        items=[
+            ('distance', "Distance from Origin", "Sort by distance from the origin"),
+            ('material', "Material Order", "Sort by material order. Last material is drawn first."),
+            ('none', "No Sorting", "No sorting; use Blender's internal order")
+        ],
+        default='distance'
+    )
 
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
-        export_to_format(self.filepath, obj, is_gzs=True)
+        export_to_format(self.filepath, obj, self.sort_mode, is_gzs=True)
         self.report({'INFO'}, f"Exported to GZS: {self.filepath}")
         return {'FINISHED'}
 
