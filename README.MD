@@ -29,7 +29,7 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 - 3DG1 - Fundoshi-kun  
 - 3DAN - Animated Fundoshi-kun
 - Star Fox ASM BSP format - static export only, no animations or BSP trees for face sorting on more complex shapes  
-- Star Fox ASM GZS format (BSP format variant) - static export only, no animations, lacks any support for face sorting  
+- Star Fox ASM GZS format (BSP format variant) - static export only, no animations, limited face sorting capability  
 
 # Installation
 Download the ``fastfx.py`` file from this repo. In Blender, go to ``Edit -> Preferences -> Add-ons -> Install...``  
@@ -80,15 +80,23 @@ There is no support yet for exporting animations in this format.
 It is recommended you use SHAPED for models that have any faces that would overlap without a proper face order.
 For simpler shapes however, FastFX's exporter is perfectly usable.
 ```
+
+Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds some editable shape header properties to the selected object.  
+You can edit these properties by selecting the object and going to the Properties section of the Item panel.
+  
+Explanation:  
+``zsort_priority`` - Z-sorting priority of the shape when rendered with other shapes. Can usually be left as-is.  
+``scale`` - Scale factor of the model when rendered in game. For example, a scale factor of 1 will scale the model up by 2^1 (equivalent to ``1 << 1``).  
+``colbox_label`` - assembler label pointing to the collision box to use for this model. 0 for none.  
+``color_palette`` - color/texture palette to use for this model. ``id_0_c`` is used most commonly, and is the palette FastFX supports.  
+``shadow_shape`` - assembler label of a shape to use for this shape's shadow. if 0, Star Fox's renderer creates a shadow automatically.  
+``close_lod_shape`` - assembler label of a shape to use for the close LOD. 0 for none.  
+``mid_lod_shape`` - assembler label of a shape to use for the mid LOD. 0 for none.  
+``far_lod_shape`` - assembler label of a shape to use for the far LOD. 0 for none.  
+  
 Go to ``File -> Export -> Star Fox ASM BSP (treeless) (.asm/.bsp)`` to export.  
 There are no face sorting options at the moment due to a lack of support for BSP tree generation.  
 
-We need to edit the output a bit after exporting for it to be usable in-game. Open the output ASM file and look for a line that looks something like this:  
-``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,colbox,36,14,80,80,id_0_c,0,0,0,0,<MYSHIP_4>``  
-This is the shape header.  
-Remove ``colbox`` and replace it with a valid colbox label, e.g ``playerB_col``, or ``0`` for no colbox.  
-Your shape header should now look something like this:  
-``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,playerB_col,36,14,80,80,id_0_c,0,0,0,0,<MYSHIP_4>``
 Save the file.  
 
 ## Method 2: SHAPED.EXE
@@ -211,6 +219,9 @@ If your model becomes greatly distorted, try scaling it up (preferably by a numb
 ``Update Colbox Positions`` updates the position properties of the selected colboxes based on the position of the empties.  
   
 ``Generate Colbox for Mesh`` generates a colbox that fits the selected mesh.  
+
+### BSP/GZS Tools
+``Add ShapeHdr Properties`` assigns all the editable BSP/GZS shape header properties as properties to a selected object.
 
 # Things this can't do/extra notes
 - Sorting faces on export - Star Fox's renderer does not have a Z-buffer. FastFX pre-sorts faces on export based on their distance from the origin. It's pretty good, but there is a chance you may still need to manually sort faces in the 3DG1/BSP afterwards. Remember that whatever comes last in the list is drawn first.  

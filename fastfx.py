@@ -1548,14 +1548,26 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
         file.write("\tFend\n")
 
 
-def write_shape_header(file, shape_name, vertices):
+def write_shape_header(file, obj, shape_name, vertices):
     """
     Writes the ShapeHdr line based on the bounding box.
     """
 
     # Format of the Shape header is as follows:
-    # ShapeHdr  pointptr,bank,faceptr,0,sortz,0,0,shift,colboxptr,xmax,ymax,zmax,radius,colptr,shadowptr,simple1ptr,simple2ptr,simple3ptr,<Name>
+    # ShapeHdr  pointptr,bank,faceptr,0,sortz,0,0,scale,colboxptr,xmax,ymax,zmax,radius,colptr,shadowptr,simple1ptr,simple2ptr,simple3ptr,<Name>
 
+    # Get ShapeHdr properties from object
+
+    zsort_priority = obj.get("zsort_priority", "0")
+    scale = obj.get("scale", "0")
+    colbox_label = obj.get("colbox_label", "0")
+    color_palette = obj.get("color_palette", "id_0_c")
+    shadow_shape = obj.get("shadow_shape", "0")
+    close_lod_shape = obj.get("close_lod_shape", "0")
+    mid_lod_shape = obj.get("mid_lod_shape", "0")
+    far_lod_shape = obj.get("far_lod_shape", "0")
+
+    # Compute radius/size field
     x_max = max(abs(v[0]) for v in vertices)
     y_max = max(abs(v[1]) for v in vertices)
     z_max = max(abs(v[2]) for v in vertices)
@@ -1564,7 +1576,10 @@ def write_shape_header(file, shape_name, vertices):
     file.write(f"\tifne\tDO_HDR\n\n")
     file.write(f"{shape_name}\n")
     file.write(
-        f"\tShapeHdr\t{shape_name}_P,0,{shape_name}_F,0,0,0,0,0,colbox,{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)},id_0_c,0,0,0,0,<{shape_name}>\n"
+        f"\tShapeHdr\t" \
+        f"{shape_name}_P,0,{shape_name}_F,0,{zsort_priority},0,0,{scale},{colbox_label}," \
+        f"{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)}," \
+        f"{color_palette},{shadow_shape},{close_lod_shape},{mid_lod_shape},{far_lod_shape},<{shape_name}>\n"
     )
     file.write("\telseif\n")
 
@@ -1633,7 +1648,7 @@ def export_to_format(filepath, obj, sort_mode, is_gzs):
             file.write(f";--Shape file ----- {shape_name}.gzs ---- Generated with FastFX\n")
         else:
             file.write(f";--Shape file ----- {shape_name}.bsp ---- Generated with FastFX\n")
-        write_shape_header(file, shape_name, vertices)
+        write_shape_header(file, obj, shape_name, vertices)
         file.write(f"{shape_name}_P\n")
         write_points_section(file, vertices, point_format)
         file.write("\n\tEndPoints")
@@ -2962,12 +2977,40 @@ class OBJECT_OT_apply_material_colors_simple(bpy.types.Operator):
         self.report({'INFO'}, "Palette applied to materials")
         return {'FINISHED'}
 
+# =========================
+# FastFX Menu Panel - Add Editable ShapeHdr Properties to Object
+# =========================
+class AddShapeHeaderPropertiesOperator(bpy.types.Operator):
+    """Add Shape Header Properties to Selected Object"""
+    bl_idname = "object.add_shape_header_properties"
+    bl_label = "Add ShapeHdr Properties"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        obj = context.active_object
+
+        if obj is None or obj.type != 'MESH':
+            self.report({'ERROR'}, "Please select a valid mesh object.")
+            return {'CANCELLED'}
+
+        # Set ShapeHdr properties on the object
+        obj["zsort_priority"] = "0"
+        obj["scale"] = "0"
+        obj["colbox_label"] = "0"
+        obj["color_palette"] = "id_0_c"
+        obj["shadow_shape"] = "0"
+        obj["close_lod_shape"] = "0"
+        obj["mid_lod_shape"] =  "0"
+        obj["far_lod_shape"] =  "0"
+
+        self.report({'INFO'}, f"ShapeHdr properties assigned to {obj.name}")
+        return {'FINISHED'}
 
 # =========================
 # FastFX Menu Panel Layout
 # =========================
 class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
-    """Tools for 3DG1 format"""
+    """FastFX tools"""
     bl_label = "FastFX"
     bl_idname = "VIEW3D_PT_fastfx_tools"
     bl_space_type = 'VIEW_3D'
@@ -2990,6 +3033,8 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.operator("object.update_colboxes")
         layout.operator("object.update_colbox_offsets")
         layout.operator("object.generate_colbox")
+        layout.label(text="BSP/GZS Tools")
+        layout.operator("object.add_shape_header_properties")
 
 
 # =========================
@@ -3029,6 +3074,7 @@ def register():
     bpy.utils.register_class(Export3DAN)
     bpy.utils.register_class(ExportToBSP)
     bpy.utils.register_class(ExportToGZS)
+    bpy.utils.register_class(AddShapeHeaderPropertiesOperator)
 
 def unregister():
     bpy.utils.unregister_class(Import3DG1)
@@ -3050,6 +3096,7 @@ def unregister():
     bpy.utils.unregister_class(Export3DAN)
     bpy.utils.unregister_class(ExportToBSP)
     bpy.utils.unregister_class(ExportToGZS)
+    bpy.utils.unregister_class(AddShapeHeaderPropertiesOperator)
 
 if __name__ == "__main__":
     register()
