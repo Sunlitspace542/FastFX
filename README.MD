@@ -86,9 +86,9 @@ You can edit these properties by selecting the object and going to the Propertie
   
 Explanation:  
 - ``zsort_priority`` - Z-sorting priority of the shape when rendered with other shapes. Can usually be left as-is.  
-- ``scale`` - Scale factor of the model when rendered in game. For example, a scale factor of 1 will scale the model up by 2^1 (equivalent to ``1 << 1``).  
-- ``colbox_label`` - assembler label pointing to the collision box to use for this model. 0 for none.  
-- ``color_palette`` - color/texture palette to use for this model. ``id_0_c`` is used most commonly, and is the palette FastFX supports.  
+- ``scale`` - Scale factor of the shape when rendered in game. For example, a scale factor of 1 will scale the shape up by 2^1 (equivalent to ``1 << 1``).  
+- ``colbox_label`` - assembler label pointing to the collision box to use for this shape. 0 for none.  
+- ``color_palette`` - color/texture palette to use for this shape. ``id_0_c`` is used most commonly, and is the palette FastFX supports.  
 - ``shadow_shape`` - assembler label of a shape to use for this shape's shadow. if 0, Star Fox's renderer creates a shadow automatically.  
 - ``close_lod_shape`` - assembler label of a shape to use for the close LOD. 0 for none.  
 - ``mid_lod_shape`` - assembler label of a shape to use for the mid LOD. 0 for none.  
