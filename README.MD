@@ -85,14 +85,14 @@ Make a model. Select it in Object Mode and go to the FastFX panel and click ``Ad
 You can edit these properties by selecting the object and going to the Properties section of the Item panel.
   
 Explanation:  
-``zsort_priority`` - Z-sorting priority of the shape when rendered with other shapes. Can usually be left as-is.  
-``scale`` - Scale factor of the model when rendered in game. For example, a scale factor of 1 will scale the model up by 2^1 (equivalent to ``1 << 1``).  
-``colbox_label`` - assembler label pointing to the collision box to use for this model. 0 for none.  
-``color_palette`` - color/texture palette to use for this model. ``id_0_c`` is used most commonly, and is the palette FastFX supports.  
-``shadow_shape`` - assembler label of a shape to use for this shape's shadow. if 0, Star Fox's renderer creates a shadow automatically.  
-``close_lod_shape`` - assembler label of a shape to use for the close LOD. 0 for none.  
-``mid_lod_shape`` - assembler label of a shape to use for the mid LOD. 0 for none.  
-``far_lod_shape`` - assembler label of a shape to use for the far LOD. 0 for none.  
+- ``zsort_priority`` - Z-sorting priority of the shape when rendered with other shapes. Can usually be left as-is.  
+- ``scale`` - Scale factor of the model when rendered in game. For example, a scale factor of 1 will scale the model up by 2^1 (equivalent to ``1 << 1``).  
+- ``colbox_label`` - assembler label pointing to the collision box to use for this model. 0 for none.  
+- ``color_palette`` - color/texture palette to use for this model. ``id_0_c`` is used most commonly, and is the palette FastFX supports.  
+- ``shadow_shape`` - assembler label of a shape to use for this shape's shadow. if 0, Star Fox's renderer creates a shadow automatically.  
+- ``close_lod_shape`` - assembler label of a shape to use for the close LOD. 0 for none.  
+- ``mid_lod_shape`` - assembler label of a shape to use for the mid LOD. 0 for none.  
+- ``far_lod_shape`` - assembler label of a shape to use for the far LOD. 0 for none.  
   
 Go to ``File -> Export -> Star Fox ASM BSP (treeless) (.asm/.bsp)`` to export.  
 There are no face sorting options at the moment due to a lack of support for BSP tree generation.  
