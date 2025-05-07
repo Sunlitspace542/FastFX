@@ -95,8 +95,13 @@ Explanation:
 - ``far_lod_shape`` - Assembler label of a shape to use for the far LOD (AKA ``simple3``). 0 for none.  
   
 Go to ``File -> Export -> Star Fox ASM BSP (treeless) (.asm/.bsp)`` to export.  
-There are no face sorting options at the moment due to a lack of support for BSP tree generation.  
-
+There is a drop-down in the export dialog for selecting which method of face sorting to use.  
+Face sorting breakdown:  
+- Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting and is recommended for best results.  
+- Material Order: sorts faces by the order of the material list in Blender. This is how M2FX handles sorting faces.  
+- No Sorting: No sorting operations are performed. Blender's internal hierarchy is used for the face order.  
+There is also a drop-down in the export dialog regarding use of a simplified shape header. This is for compatibility with Star Fox EX.  
+If you are not using this plugin with that game, you can leave this option set to 'Off'.  
 Save the file.  
 
 ## Method 2: SHAPED.EXE
