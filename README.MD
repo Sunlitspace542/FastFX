@@ -100,6 +100,9 @@ Face sorting breakdown:
 - Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting and is recommended for best results.  
 - Material Order: sorts faces by the order of the material list in Blender. This is how M2FX handles sorting faces.  
 - No Sorting: No sorting operations are performed. Blender's internal hierarchy is used for the face order.  
+
+<!-- EOL -->
+
 There is also a drop-down in the export dialog regarding use of a simplified shape header. This is for compatibility with Star Fox EX.  
 If you are not using this plugin with that game, you can leave this option set to 'Off'.  
 Save the file.  
