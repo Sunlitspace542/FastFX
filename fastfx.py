@@ -1604,13 +1604,16 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
         file.write("\tFend\n")
 
 
-def write_shape_header(file, obj, shape_name, vertices):
+def write_shape_header(file, obj, shape_name, vertices, no_simple123="off"):
     """
     Writes the ShapeHdr line based on the bounding box.
     """
 
     # Format of the Shape header is as follows:
     # ShapeHdr  pointptr,bank,faceptr,0,sortz,0,0,scale,colboxptr,xmax,ymax,zmax,radius,colptr,shadowptr,simple1ptr,simple2ptr,simple3ptr,<Name>
+
+    # Simplified Shape header is as follows:
+    # ShapeHdr  pointptr,bank,faceptr,0,sortz,0,0,scale,colboxptr,xmax,ymax,zmax,radius,colptr,shadowptr,<Name>
 
     # Get ShapeHdr properties from object
 
@@ -1631,11 +1634,19 @@ def write_shape_header(file, obj, shape_name, vertices):
 
     file.write(f"\tifne\tDO_HDR\n\n")
     file.write(f"{shape_name}\n")
-    file.write(
-        f"\tShapeHdr\t" \
-        f"{shape_name}_P,0,{shape_name}_F,0,{zsort_priority},0,0,{scale},{colbox_label}," \
-        f"{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)}," \
-        f"{color_palette},{shadow_shape},{close_lod_shape},{mid_lod_shape},{far_lod_shape},<{shape_name}>\n"
+    if no_simple123 == "off":
+        file.write(
+            f"\tShapeHdr\t" \
+            f"{shape_name}_P,0,{shape_name}_F,0,{zsort_priority},0,0,{scale},{colbox_label}," \
+            f"{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)}," \
+            f"{color_palette},{shadow_shape},{close_lod_shape},{mid_lod_shape},{far_lod_shape},<{shape_name}>\n"
+    )
+    elif no_simple123 == "on":
+        file.write(
+            f"\tShapeHdr\t" \
+            f"{shape_name}_P,0,{shape_name}_F,0,{zsort_priority},0,0,{scale},{colbox_label}," \
+            f"{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)}," \
+            f"{color_palette},{shadow_shape},<{shape_name}>\n"
     )
     file.write("\telseif\n")
 
@@ -1728,7 +1739,7 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
     return new_vertices, polygons
 
 
-def export_to_format(filepath, obj, sort_mode, is_gzs):
+def export_to_format(filepath, obj, sort_mode, is_gzs, no_simple123):
     """
     Main export function for BSP/GZS format.
     """
@@ -1742,7 +1753,7 @@ def export_to_format(filepath, obj, sort_mode, is_gzs):
             file.write(f";--Shape file ----- {shape_name}.gzs ---- Generated with FastFX\n")
         else:
             file.write(f";--Shape file ----- {shape_name}.bsp ---- Generated with FastFX\n")
-        write_shape_header(file, obj, shape_name, vertices)
+        write_shape_header(file, obj, shape_name, vertices, no_simple123)
         file.write(f"{shape_name}_P\n")
         write_points_section(file, vertices, point_format)
         file.write("\n\tEndPoints")
@@ -1769,13 +1780,22 @@ class ExportToBSP(bpy.types.Operator):
         ],
         default='distance'
     )
+    no_simple123: bpy.props.EnumProperty(
+        name="Simplified ShapeHdr",
+        description="Whether or not to exclude LODs from the shape header.",
+        items=[
+            ('on', "On", "Exclude LODs from the shape header."),
+            ('off', "Off", "Do not exclude LODs from the shape header.")
+        ],
+        default='off'
+    )
 
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
-        export_to_format(self.filepath, obj, self.sort_mode, is_gzs=False)
+        export_to_format(self.filepath, obj, self.sort_mode, False, self.no_simple123)
         self.report({'INFO'}, f"Exported to BSP: {self.filepath}")
         return {'FINISHED'}
 
@@ -1803,13 +1823,22 @@ class ExportToGZS(bpy.types.Operator):
         ],
         default='distance'
     )
+    no_simple123: bpy.props.EnumProperty(
+        name="Simplified ShapeHdr",
+        description="Exclude LODs from the shape header.",
+        items=[
+            ('on', "On", "Exclude LODs from the shape header."),
+            ('off', "Off", "Do not exclude LODs from the shape header.")
+        ],
+        default='off'
+    )
 
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
-        export_to_format(self.filepath, obj, self.sort_mode, is_gzs=True)
+        export_to_format(self.filepath, obj, self.sort_mode, True, self.no_simple123)
         self.report({'INFO'}, f"Exported to GZS: {self.filepath}")
         return {'FINISHED'}
 
