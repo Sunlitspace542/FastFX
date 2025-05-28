@@ -1732,12 +1732,12 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
     # Apply sorting based on the selected mode
     if sort_mode == "distance":
         polygons.sort(key=lambda p: p['distance'], reverse=True)  # Sort by distance from origin (farthest last)
-#    elif sort_mode == "material":
-#        polygons.sort(key=lambda p: p['color_index'])  # Sort by material index (seems to be broken)
     elif sort_mode == "material":
+        polygons.sort(key=lambda p: p['color_index'])  # Sort by material index (seems to be broken)
+#    elif sort_mode == "material":
         # Create a mapping of material names to their slot index
-        material_slot_order = {mat.name: idx for idx, mat in enumerate(obj.data.materials)}
-        polygons.sort(key=lambda p: material_slot_order.get(obj.material_slots[p[3]].material.name, 9999))
+#        material_slot_order = {mat.name: idx for idx, mat in enumerate(obj.data.materials)}
+#        polygons.sort(key=lambda p: material_slot_order.get(obj.material_slots[p[3]].material.name, 9999))
 
     # If sort_mode is "none," no sorting is applied
 
