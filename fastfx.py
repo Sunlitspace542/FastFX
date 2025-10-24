@@ -1576,11 +1576,15 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
     else:
         file.write(f"\tVizis\t{len(filtered_viz_data)}\n")
         for i, viz in enumerate(filtered_viz_data):
-            indices = ",".join(map(str, viz['indices']))
+            # We only need to write the first 3 members of indices, see later comment
+            indices = ",".join(map(str, viz['indices'][:3]))
             normal = viz['normal']
             normal[2] = -normal[2]  # Invert the Z-component of the normal
-            normal_str = ",".join(map(str, normal))
-            file.write(f"\tViz\t{indices},{normal_str}\t;{i}\n")
+            #normal_str = ",".join(map(str, normal))
+            #file.write(f"\tViz\t{indices},{normal_str}\t;{i}\n")
+            # Turns out the viz macro only stores the first 3 parms to ROM as the faceX macros have the normal too
+            # Thanks Pete
+            file.write(f"\tViz\t{indices}\t;{i}\n")
 
     if is_gzs:
         file.write(f"\tFaces\t{len(polygons)}\n")
@@ -1591,7 +1595,7 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
                 file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},-1,{normal},{indices}\n")
             else:
                 file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
-        file.write("\tFendQ\n")
+        file.write("\tFend\n")
     else:
         file.write(f"\n{shape_name}_F1\tFaces\n")
         for i, poly in enumerate(polygons):
@@ -1602,7 +1606,8 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
             else:
                 file.write(f"\tFace{len(poly['indices'])}\t{poly['color_index']},{i},{normal},{indices}\n")
         file.write("\tFend\n")
-
+        # FendQ is only used if the given shape contains a BSP tree
+        # TODO figure out BSP trees for BSP format
 
 def write_shape_header(file, obj, shape_name, vertices, no_simple123="off"):
     """
