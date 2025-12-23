@@ -1572,7 +1572,7 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
     # Create a dummy vizi if there are none, at least one vizi is required for the shape to render
     if len(filtered_viz_data) == 0:
         file.write(f"\tVizis\t1\n")
-        file.write(f"\tViz\t0,0,0,0,0,0\t;0\n")
+        file.write(f"\tViz\t0,0,0\t;0\n")
     else:
         file.write(f"\tVizis\t{len(filtered_viz_data)}\n")
         for i, viz in enumerate(filtered_viz_data):
