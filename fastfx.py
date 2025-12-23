@@ -1064,7 +1064,6 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
         for poly in mesh.polygons:
             material_index = poly.material_index
             material = obj.material_slots[material_index].material
-
             if material:
                 if material.name.startswith("FE"):  # Handle edges
                     try:
@@ -1103,6 +1102,20 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
             # Reverse the order so farthest elements are written last
             polygons.reverse()
             edges.reverse()
+
+        # Deduplicate edges that occupy the same positions and have the same color
+        deduped_edges = []
+        seen = set()
+        for v1, v2, color_index in edges:
+            p1 = tuple(round(c, 6) for c in new_vertices[v1])
+            p2 = tuple(round(c, 6) for c in new_vertices[v2])
+            key = (p1, p2) if p1 <= p2 else (p2, p1)
+            key = (key, color_index)
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped_edges.append((v1, v2, color_index))
+        edges = deduped_edges
 
         # Write 3DG1 header
         file.write("3DG1\n")
@@ -1703,6 +1716,8 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
 
     # Extract polygons and remap indices
     polygons = []
+    # Track seen edge positions (position pairs + color) to avoid duplicates when creating 2-point faces
+    seen_edges = set()
     for poly in obj.data.polygons:
         indices = [index_map[vertex] for vertex in poly.vertices]
         material_index = poly.material_index
@@ -1715,11 +1730,23 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
             except ValueError:
                 color_index = 0  # Default to 0 if parsing fails
 
-            # Convert the polygon into edges
+            # Convert the polygon into edges, skipping duplicate edges located at the same positions
             for i in range(len(indices)):
-                edge = [indices[i], indices[(i + 1) % len(indices)]]  # Wrap around for closed edges
-                midpoint = tuple((new_vertices[edge[0]][j] + new_vertices[edge[1]][j]) / 2 for j in range(3))
-                polygons.append({'indices': edge, 'color_index': color_index, 'distance': distance_from_origin(midpoint)})
+                a = indices[i]
+                b = indices[(i + 1) % len(indices)]  # Wrap around for closed edges
+
+                # Use the endpoint positions (rounded) and color index as the dedupe key
+                pa = tuple(round(c, 6) for c in new_vertices[a])
+                pb = tuple(round(c, 6) for c in new_vertices[b])
+                key = (pa, pb) if pa <= pb else (pb, pa)
+                key = (key, color_index)
+
+                if key in seen_edges:
+                    continue
+                seen_edges.add(key)
+
+                midpoint = tuple((new_vertices[a][j] + new_vertices[b][j]) / 2 for j in range(3))
+                polygons.append({'indices': [a, b], 'color_index': color_index, 'distance': distance_from_origin(midpoint)})
 
         else:
             # Handle standard polygons
