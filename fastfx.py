@@ -10,7 +10,7 @@ bl_info = {
     "version": (1, 0),
     "blender": (3, 0, 0),
     "location": "File > Import-Export > 3DG1",
-    "description": "Import/Export Fundoshi-kun (3DG1) format shapes, with additional tools.",
+    "description": "Import/Export Fundoshi-kun (3DG1) format shapes, and other model data for Star Fox 1/2/EX.",
     "category": "Import-Export",
 }
 
@@ -3174,12 +3174,12 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 # Menu Functions
 # =========================
 def menu_func_import(self, context):
-    self.layout.operator(Import3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
+    self.layout.operator(Import3DG1.bl_idname, text="3DG1/3DGI/Fundoshi-kun (.txt/.3dg1/.obj)")
     self.layout.operator(Import3DANOperator.bl_idname, text="3DAN/3DGI/Animated Fundoshi-kun (.anm)")
     self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm/.bsp/.gzs)")
 
 def menu_func_export(self, context):
-    self.layout.operator(Export3DG1.bl_idname, text="3DG1/Fundoshi-kun (.txt/.3dg1/.obj)")
+    self.layout.operator(Export3DG1.bl_idname, text="3DG1/3DGI/Fundoshi-kun (.txt/.3dg1/.obj)")
     self.layout.operator(Export3DAN.bl_idname, text="3DAN/3DGI/Animated Fundoshi-kun (.anm)")
     self.layout.operator(ExportToBSP.bl_idname, text="Star Fox ASM BSP (treeless) (.asm/.bsp)")
     self.layout.operator(ExportToGZS.bl_idname, text="Star Fox ASM GZS (.asm/.gzs)")
