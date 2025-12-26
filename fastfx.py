@@ -3167,6 +3167,29 @@ class AddShapeHeaderPropertiesOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 # =========================
+# FastFX Menu Panel - Toggle Backface Culling on all Materials
+# =========================
+class OBJECT_OT_toggle_backface_culling(bpy.types.Operator):
+    """Toggle backface culling for all materials"""
+    bl_idname = "object.toggle_backface_culling"
+    bl_label = "Toggle Backface Culling on Materials"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        count = 0
+        for m in bpy.data.materials:
+            if m is None:
+                continue
+            current = getattr(m, 'use_backface_culling', False)
+            try:
+                m.use_backface_culling = not current
+                count += 1
+            except Exception:
+                continue
+        self.report({'INFO'}, f"Toggled backface culling for {count} materials")
+        return {'FINISHED'}
+
+# =========================
 # FastFX Menu Panel Layout
 # =========================
 class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
@@ -3179,6 +3202,8 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.label(text="Material Configuration")
+        layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
         layout.label(text="Color Palette (Fancy)")
         layout.operator("object.create_super_fx")
         layout.operator("object.apply_material_colors")
@@ -3218,6 +3243,7 @@ def register():
     bpy.utils.register_class(Import3DG1)
     bpy.utils.register_class(Export3DG1)
     bpy.utils.register_class(VertexOperation)
+    bpy.utils.register_class(OBJECT_OT_toggle_backface_culling)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     bpy.utils.register_class(OBJECT_OT_apply_material_colors)
@@ -3240,6 +3266,7 @@ def unregister():
     bpy.utils.unregister_class(Import3DG1)
     bpy.utils.unregister_class(Export3DG1)
     bpy.utils.unregister_class(VertexOperation)
+    bpy.utils.unregister_class(OBJECT_OT_toggle_backface_culling)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
     bpy.utils.unregister_class(OBJECT_OT_apply_material_colors)
