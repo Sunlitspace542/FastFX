@@ -45,6 +45,9 @@ You can also look at the ``id_0_c_rgb`` dictionary in ``fastfx.py`` itself for c
 If you are going to make a model composed entirely of 2-pointed faces and are exporting to 3DG1/3DAN, you must either:  
 - A: Make a dummy face (a small triangle will work). Assign color 47 to it to make it transparent.  
 - B: Create a dummy viz entry in the BSP/GZS after converting with SHAPED.EXE. a vizi count of 1 and a viz entry of all zeroes, e.g. ``	viz	0,0,0 ;0`` will work.  
+
+<!-- EOL -->
+
 If you do not do either of these, the shape will crash the game.  
   
 ## Exporting 3DG1 Models
@@ -131,9 +134,9 @@ This is the shape header.
 Add ``id_0_c`` in between the two commas at the end (this refers to the color/texture palette), and remove the first number after the 5 zeroes and replace this with a valid colbox label, e.g ``playerB_col``, or ``0`` for no colbox.  
 Your shape header should now look like this:  
 ``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,playerB_col,36,14,80,80,id_0_c,0,0,0,0,<MYSHIP_4>``
-Additionally, if you are going to import the shape into Star Fox EX, you must remove the last 3 parameters before the shape name field in the header.  
-The end result should look like this:  
+Additionally, if you are going to import the shape into Star Fox EX, you must remove the last 3 parameters before the shape name field in the header. The end result should look like this:  
 ``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,playerB_col,36,14,80,80,id_0_c,0,<MYSHIP_4>``
+  
 Save the file.  
 ## Importing into Star Fox
 Proper guide coming at some point. For now, the quick summary of this process is:  
