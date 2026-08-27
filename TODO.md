@@ -13,3 +13,4 @@
 9. Figure out some way to determine how textures will be mapped on a face (some way to show which way is "up")?
 10. 2-point faces with materials - is there seriously no way we can render the material on them in the viewport or make it obvious to the user at all??
 11. Enforce CRLF line endings on output files - this is to deal with UNIX being UNIX when the files written need to be able to be read by a geriatric assembler stuck on DOS that does not know what LF alone means
+12. Slope data import/export for Star Fox 2? Almost no one will use it but it's relevant to have
