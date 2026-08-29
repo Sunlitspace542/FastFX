@@ -28,6 +28,57 @@ def hex_to_rgb(hex_color, alpha=1.0):
     return (srgb_to_linearrgb(r), srgb_to_linearrgb(g), srgb_to_linearrgb(b), alpha)
 
 # =========================
+# Gets distance from origin
+# =========================
+def distance_from_origin(point):
+    return math.sqrt(point[0]**2 + point[1]**2 + point[2]**2)
+
+# =========================
+# Vertex Pairing for Compression
+# =========================
+def pair_points_for_compression(vertices, prefer_closest_fallback=False):
+    """Pair vertices to optimize for compact format encoding.
+
+    The default behavior prioritizes exact inverse-X matches, which is the strategy
+    used by the 3DG1 export path. If prefer_closest_fallback is enabled, the code
+    also keeps the nearest-neighbor fallback behavior used by the ASM exports.
+    """
+    sorted_indices = sorted(range(len(vertices)), key=lambda i: distance_from_origin(vertices[i]))
+    new_vertices = []
+    index_map = {}
+
+    while sorted_indices:
+        current_index = sorted_indices.pop(0)
+        current_point = vertices[current_index]
+        best_match = None
+        best_distance = float('inf')
+
+        # Try to find a pair with an inverse-X point
+        for candidate_index in sorted_indices:
+            candidate_point = vertices[candidate_index]
+            if current_point[1:] == candidate_point[1:] and current_point[0] == -candidate_point[0]:
+                best_match = candidate_index
+                break
+
+            if prefer_closest_fallback:
+                # Measure distance for fallback pairing
+                dist = sum((current_point[i] - candidate_point[i]) ** 2 for i in range(3))
+                if dist < best_distance:
+                    best_distance = dist
+                    best_match = candidate_index
+
+        # Pair and map indices
+        new_vertices.append(current_point)
+        index_map[current_index] = len(new_vertices) - 1
+
+        if best_match is not None:
+            new_vertices.append(vertices[best_match])
+            index_map[best_match] = len(new_vertices) - 1
+            sorted_indices.remove(best_match)
+
+    return new_vertices, index_map
+
+# =========================
 # Vertex Operations Logic
 # =========================
 class VertexOperation(bpy.types.Operator):

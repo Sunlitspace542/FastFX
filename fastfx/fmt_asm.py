@@ -3,8 +3,7 @@ import math
 import os
 from bpy_extras.io_utils import ImportHelper
 
-from .fmt_3dg1 import distance_from_origin
-from .common import hex_to_rgb
+from .common import hex_to_rgb, distance_from_origin, pair_points_for_compression
 from .palette import id_0_c_rgb
 
 # FastFX
@@ -365,41 +364,8 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
     """
     # Translate from Blender's coordinate system to Star Fox's: Invert all, swap Y/Z
     original_vertices = [(-(v.co.x), -(v.co.z), -(v.co.y)) for v in obj.data.vertices]
-    vertex_pairs = []
-    remaining_indices = set(range(len(original_vertices)))
 
-    # Pair points to optimize for compression
-    sorted_indices = sorted(remaining_indices, key=lambda i: distance_from_origin(original_vertices[i]))
-    new_vertices = []
-    index_map = {}
-
-    while sorted_indices:
-        current_index = sorted_indices.pop(0)
-        current_point = original_vertices[current_index]
-        best_match = None
-        best_distance = float('inf')
-
-        # Find the best pair for compression
-        for candidate_index in sorted_indices:
-            candidate_point = original_vertices[candidate_index]
-            if current_point[1:] == candidate_point[1:] and current_point[0] == -candidate_point[0]:
-                best_match = candidate_index
-                break
-            else:
-                # Measure distance for fallback pairing
-                dist = sum((current_point[i] - candidate_point[i]) ** 2 for i in range(3))
-                if dist < best_distance:
-                    best_distance = dist
-                    best_match = candidate_index
-
-        # Pair and map indices
-        new_vertices.append(current_point)
-        index_map[current_index] = len(new_vertices) - 1
-
-        if best_match is not None:
-            new_vertices.append(original_vertices[best_match])
-            index_map[best_match] = len(new_vertices) - 1
-            sorted_indices.remove(best_match)
+    new_vertices, index_map = pair_points_for_compression(original_vertices, prefer_closest_fallback=True)
 
     # Extract polygons and remap indices
     polygons = []

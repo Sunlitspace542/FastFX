@@ -2,7 +2,7 @@ import bpy
 import math
 import os
 
-from .common import hex_to_rgb
+from .common import hex_to_rgb, distance_from_origin, pair_points_for_compression
 from .palette import id_0_c_rgb
 
 # FastFX
@@ -173,12 +173,6 @@ def read_3dg1(filepath, context):
         return {'CANCELLED'}
 
 # =========================
-# Gets distance from origin
-# =========================
-def distance_from_origin(point):
-    return math.sqrt(point[0]**2 + point[1]**2 + point[2]**2)
-
-# =========================
 # 3DG1 Exporter
 # =========================
 def write_3dg1(filepath, obj, sort_mode="distance"):
@@ -197,33 +191,8 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
         ) for v in obj.data.vertices]
 
         index_map = {}
-        vertex_count = 0
 
-        # Pair points for compression
-        sorted_indices = sorted(range(len(original_vertices)), key=lambda i: distance_from_origin(original_vertices[i]))
-        new_vertices = []
-
-        while sorted_indices:
-            current_index = sorted_indices.pop(0)
-            current_point = original_vertices[current_index]
-
-            # Try to find a pair with an inverse-X point
-            best_match = None
-            for candidate_index in sorted_indices:
-                candidate_point = original_vertices[candidate_index]
-                if current_point[1:] == candidate_point[1:] and current_point[0] == -candidate_point[0]:
-                    best_match = candidate_index
-                    break
-
-            # Add the current point
-            new_vertices.append(current_point)
-            index_map[current_index] = len(new_vertices) - 1
-
-            # Add its pair if found
-            if best_match is not None:
-                new_vertices.append(original_vertices[best_match])
-                index_map[best_match] = len(new_vertices) - 1
-                sorted_indices.remove(best_match)
+        new_vertices, index_map = pair_points_for_compression(original_vertices)
 
         # Process polygons and edges
         polygons = []

@@ -1,4 +1,11 @@
+# exclude built addon packages
 dist/*
 *.zip
+
+# exclude python compiler junk
 __pycache__/*
 *.pyc
+
+# ignore all VSCode junk other than settings
+.vscode/*
+!.vscode/settings.json

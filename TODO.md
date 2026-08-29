@@ -7,7 +7,7 @@
 4. Better shape header/colbox setup - this is all a bit fragmented right now and I wish it sucked much less
 5. Better side panel in general - Fast64 has a nice side panel, I wish we did
 5. (DONE) Split addon code into separate files - it makes testing take a bit longer, but it makes the code less of a hot mess (can we make a build script to simplify testing?)
-6. Make point sorting for horizontal mirroring optimization on export optional
+6. (NOT DONE) Make point sorting for horizontal mirroring optimization on export optional, (DONE) deduplicate point pairing code from bsp/gzs and 3dg1 code and consolidate into a shared function
 7. Button to select twisted faces (shaped has this and I think it'd be useful)
 8. Expose sort mode setting in a more obvious place perhaps?
 9. Figure out some way to determine how textures will be mapped on a face (some way to show which way is "up")?
