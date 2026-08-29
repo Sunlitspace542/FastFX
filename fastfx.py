@@ -1648,7 +1648,7 @@ def write_shape_header(file, obj, shape_name, vertices, no_simple123="off"):
     x_max = max(abs(v[0]) for v in vertices)
     y_max = max(abs(v[1]) for v in vertices)
     z_max = max(abs(v[2]) for v in vertices)
-    radius = math.sqrt(x_max ** 2 + y_max ** 2 + z_max ** 2)
+    radius = math.sqrt((x_max * x_max) + (y_max * y_max) + (z_max * z_max))
 
     file.write(f"\tifne\tDO_HDR\n\n")
     file.write(f"{shape_name}\n")
