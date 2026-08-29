@@ -32,19 +32,16 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 - Star Fox ASM GZS format (BSP format variant) - static export only, no animations, limited face sorting capability  
 
 # Installation
-Download the ``fastfx.py`` file from this repo. In Blender, go to ``Edit -> Preferences -> Add-ons -> Install...``  
-Locate and open ``fastfx.py``. a plugin called FastFX should appear in the window. Click the checkbox to enable it.  
+Run `build_addon.ps1` (Windows PowerShell) / `build.sh` (Linux) to make the addon ZIP, or download a release if one exists. In Blender, go to ``Edit -> Preferences -> Add-ons -> Install...``  
+Locate and open ``fastfx.zip``. a plugin called FastFX should appear in the window. Click the checkbox to enable it.  
 
 # Usage
 
 ## Creating Models
 Make a model in Blender. The Fundoshi-kun 3DG1 format can only accept whole numbers for vertex positions, so it is strongly recommended you enable snapping to the nearest increment in Blender.  
-Materials must be named in the format ``FX#``, where ``#`` is the color index of that material. See ``Color Reference.png`` for a chart of colors and their IDs.  
-You can also look at the ``id_0_c_rgb`` dictionary in ``fastfx.py`` itself for color descriptions. Use the utility panel to apply the proper color palette (see Utility Panel section below).  
+Materials must be named in the format ``FX#``, where ``#`` is the color index of that material. See ``extras/Color Reference.png`` for a chart of colors and their IDs.  
+You can also look at the ``id_0_c_rgb`` dictionary in ``fastfx/palette.py`` itself for color descriptions. Use the utility panel to apply the proper color palette (see Utility Panel section below).  
 2-pointed faces (AKA stray edges or colored edges) are also supported. use ``FE#`` instead of ``FX#`` as the material name. Faces using that material naming scheme will be converted to edges when exporting. Generated edges are also deduplicated based on if two edges are at the same position and have the same color. A 3DG1 shape file is also included to allow you to import a generic 2-pointed face to use.  
-If you are going to make a model composed entirely of 2-pointed faces and are exporting to 3DG1/3DAN, you must either:  
-- A: Make a dummy face (a small triangle will work). Assign color 47 to it to make it transparent.  
-- B: Create a dummy viz entry in the BSP/GZS after converting with SHAPED.EXE. a vizi count of 1 and a viz entry of all zeroes, e.g. ``	viz	0,0,0 ;0`` will work.  
 
 <!-- EOL -->
 

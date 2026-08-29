@@ -1,0 +1,233 @@
+import bpy
+
+from .common import VertexOperation, hex_to_rgb
+from .palette import id_0_c_components_rgb, id_0_c_rgb
+from .superfx import super_fx_node_group
+
+# FastFX
+# File: ui.py
+# FastFX menu panel functions.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
+
+# =========================
+# FastFX Menu Panel -  Palette assignment (fancy)
+# =========================
+class OBJECT_OT_apply_material_colors(bpy.types.Operator):
+    """Apply colors and additional settings based on material names (FX#)"""
+    bl_idname = "object.apply_material_colors"
+    bl_label = "Apply Material Palette (Fancy)"
+
+    def execute(self, context):
+        obj = context.object
+        if not obj or obj.type != 'MESH':
+            self.report({'WARNING'}, "No mesh object selected")
+            return {'CANCELLED'}
+
+        if not obj.data.materials:
+            self.report({'WARNING'}, "No materials found on selected object")
+            return {'CANCELLED'}
+
+        # Ensure the Super FX node group exists
+        if "Super FX" not in bpy.data.node_groups:
+            self.report({'WARNING'}, "No Super FX node group")
+            return {'CANCELLED'}
+
+        for material_slot in obj.material_slots:
+            material = material_slot.material
+            if material and (material.name.startswith("FX") or material.name.startswith("FE")):
+                try:
+                    # Extract color index from the material name
+                    color_index = int(material.name[2:])
+                    settings = id_0_c_components_rgb.get(color_index)
+
+                    if not settings:
+                        self.report({'WARNING'}, f"No settings found for material '{material.name}'")
+                        continue
+
+                    # Ensure the material uses nodes
+                    material.use_nodes = True
+
+                    # Clear existing nodes
+                    node_tree = material.node_tree
+                    nodes = node_tree.nodes
+                    links = node_tree.links
+                    nodes.clear()
+
+                    # Create material output node and Super FX node
+                    output_node = nodes.new(type="ShaderNodeOutputMaterial")
+                    output_node.location = (300, 0)
+
+                    super_fx = nodes.new(type="ShaderNodeGroup")
+                    super_fx.node_tree = bpy.data.node_groups["Super FX"]
+                    super_fx.location = (0, 0)
+
+                    # Link Super FX to material output
+                    links.new(super_fx.outputs["Emission"], output_node.inputs["Surface"])
+
+                    # Assign colors to the Super FX node group inputs
+                    for input_name, value in settings.items():
+                        if input_name.startswith("Colour"):
+                            # Process color inputs
+                            if input_name in super_fx.inputs:
+                                super_fx.inputs[input_name].default_value = hex_to_rgb(value)
+                        else:
+                            # Handle other material settings
+                            if input_name == "Carry Over":
+                                try:
+                                    super_fx.inputs[input_name].default_value = float(value)
+                                except ValueError:
+                                    self.report({'WARNING'}, f"Invalid value for '{input_name}' in material '{material.name}'")
+
+                except ValueError:
+                    self.report({'WARNING'}, f"Material '{material.name}' has invalid FX# or FE# format")
+                    continue
+
+        self.report({'INFO'}, "Palette applied to materials")
+        return {'FINISHED'}
+
+
+# =========================
+# FastFX Menu Panel -  Palette assignment (simple)
+# =========================
+class OBJECT_OT_apply_material_colors_simple(bpy.types.Operator):
+    """Apply colors based on material names (FX#)"""
+    bl_idname = "object.apply_material_colors_simple"
+    bl_label = "Apply Material Palette (Simple)"
+
+    def execute(self, context):
+        obj = context.object
+        if not obj or obj.type != 'MESH':
+            self.report({'WARNING'}, "No mesh object selected")
+            return {'CANCELLED'}
+
+        if not obj.data.materials:
+            self.report({'WARNING'}, "No materials found on selected object")
+            return {'CANCELLED'}
+
+        for material_slot in obj.material_slots:
+            material = material_slot.material
+            if material and (material.name.startswith("FX") or material.name.startswith("FE")):
+                try:
+                    # Extract color index and retrieve the color
+                    color_index = int(material.name[2:])
+                    hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white
+
+                    # Convert HEX to linear RGB for Blender
+                    linear_rgb_color = hex_to_rgb(hex_color)
+
+                    # Ensure the material uses nodes
+                    material.use_nodes = True
+                    node_tree = material.node_tree
+
+                    # Clear existing nodes
+                    nodes = node_tree.nodes
+                    links = node_tree.links
+                    nodes.clear()
+
+                    # Add a new Principled BSDF node
+                    bsdf_node = nodes.new(type="ShaderNodeBsdfPrincipled")
+                    bsdf_node.location = (0, 0)
+
+                    # Set the Base Color
+                    bsdf_node.inputs["Base Color"].default_value = linear_rgb_color
+
+                    # Add a Material Output node
+                    output_node = nodes.new(type="ShaderNodeOutputMaterial")
+                    output_node.location = (300, 0)
+
+                    # Connect the BSDF to the Surface input of the Material Output
+                    links.new(bsdf_node.outputs["BSDF"], output_node.inputs["Surface"])
+
+                except ValueError:
+                    self.report({'WARNING'}, f"Material '{material.name}' has invalid FX# or FE# format")
+                    continue
+
+        self.report({'INFO'}, "Palette applied to materials")
+        return {'FINISHED'}
+
+# =========================
+# FastFX Menu Panel - Add Editable ShapeHdr Properties to Object
+# =========================
+class AddShapeHeaderPropertiesOperator(bpy.types.Operator):
+    """Add Shape Header Properties to Selected Object"""
+    bl_idname = "object.add_shape_header_properties"
+    bl_label = "Add ShapeHdr Properties"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        obj = context.active_object
+
+        if obj is None or obj.type != 'MESH':
+            self.report({'ERROR'}, "Please select a valid mesh object.")
+            return {'CANCELLED'}
+
+        # Set ShapeHdr properties on the object
+        obj["zsort_priority"] = "0"
+        obj["scale"] = "0"
+        obj["colbox_label"] = "0"
+        obj["color_palette"] = "id_0_c"
+        obj["shadow_shape"] = "0"
+        obj["close_lod_shape"] = "0"
+        obj["mid_lod_shape"] =  "0"
+        obj["far_lod_shape"] =  "0"
+
+        self.report({'INFO'}, f"ShapeHdr properties assigned to {obj.name}")
+        return {'FINISHED'}
+
+# =========================
+# FastFX Menu Panel - Toggle Backface Culling on all Materials
+# =========================
+class OBJECT_OT_toggle_backface_culling(bpy.types.Operator):
+    """Toggle backface culling for all materials"""
+    bl_idname = "object.toggle_backface_culling"
+    bl_label = "Toggle Backface Culling on Materials"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        count = 0
+        for m in bpy.data.materials:
+            if m is None:
+                continue
+            current = getattr(m, 'use_backface_culling', False)
+            try:
+                m.use_backface_culling = not current
+                count += 1
+            except Exception:
+                continue
+        self.report({'INFO'}, f"Toggled backface culling for {count} materials")
+        return {'FINISHED'}
+
+# =========================
+# FastFX Menu Panel Layout
+# =========================
+class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
+    """FastFX tools"""
+    bl_label = "FastFX"
+    bl_idname = "VIEW3D_PT_fastfx_tools"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "FastFX"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Material Configuration")
+        layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
+        layout.label(text="Color Palette (Fancy)")
+        layout.operator("object.create_super_fx")
+        layout.operator("object.apply_material_colors")
+        layout.label(text="Color Palette (Simple)")
+        layout.operator("object.apply_material_colors_simple")
+        layout.label(text="Vertex Operations")
+        layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
+        layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
+        layout.label(text="Collision Box Tools")
+        layout.operator("object.import_colboxes_clipboard")
+        layout.operator("object.export_colboxes")
+        layout.operator("object.update_colboxes")
+        layout.operator("object.update_colbox_offsets")
+        layout.operator("object.generate_colbox")
+        layout.label(text="BSP/GZS Tools")
+        layout.operator("object.add_shape_header_properties")
+
+
