@@ -53,6 +53,11 @@ class Export3DG1(bpy.types.Operator):
         ],
         default='distance'
     )
+    compress_point_pairs: bpy.props.BoolProperty(
+        name="Compress point pairs",
+        description="Pair vertices for compact format compression during export",
+        default=True
+    )
 
     def execute(self, context):
         obj = context.object
@@ -60,7 +65,7 @@ class Export3DG1(bpy.types.Operator):
             self.report({'ERROR'}, "Selected object is not a mesh")
             return {'CANCELLED'}
 
-        write_3dg1(self.filepath, obj, self.sort_mode)
+        write_3dg1(self.filepath, obj, self.sort_mode, self.compress_point_pairs)
         self.report({'INFO'}, f"Exported to {self.filepath} with sorting mode: {self.sort_mode}")
         return {'FINISHED'}
 
@@ -76,6 +81,7 @@ class Export3DG1(bpy.types.Operator):
 
         # Add dropdown for sort mode
         layout.prop(self, "sort_mode", text="Sort Mode")
+        layout.prop(self, "compress_point_pairs", text="Compress point pairs")
 
 # =========================
 # 3DG1 Importer
@@ -175,13 +181,14 @@ def read_3dg1(filepath, context):
 # =========================
 # 3DG1 Exporter
 # =========================
-def write_3dg1(filepath, obj, sort_mode="distance"):
+def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True):
     """
     Exports a mesh object to 3DG1 format with customizable sorting modes and compression optimization.
 
     :param filepath: Path to write the 3DG1 file.
     :param obj: Blender mesh object to export.
     :param sort_mode: Sorting mode ("distance", "material", "none").
+    :param compress_point_pairs: Whether to reorder vertices into compression-friendly pairs.
     """
     # Open the file for writing
     with open(filepath, "w") as file:
@@ -190,9 +197,11 @@ def write_3dg1(filepath, obj, sort_mode="distance"):
             round(v.co.x), round(v.co.y), round(v.co.z)
         ) for v in obj.data.vertices]
 
-        index_map = {}
-
-        new_vertices, index_map = pair_points_for_compression(original_vertices)
+        if compress_point_pairs:
+            new_vertices, index_map = pair_points_for_compression(original_vertices)
+        else:
+            new_vertices = list(original_vertices)
+            index_map = {i: i for i in range(len(original_vertices))}
 
         # Process polygons and edges
         polygons = []

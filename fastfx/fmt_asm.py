@@ -354,18 +354,23 @@ def write_shape_header(file, obj, shape_name, vertices, no_simple123="off"):
     )
     file.write("\telseif\n")
 
-def collect_data_from_mesh(obj, sort_mode="distance"):
+def collect_data_from_mesh(obj, sort_mode="distance", compress_point_pairs=True):
     """
     Extracts vertices and polygons (including edges for FE# materials) from a Blender object,
-    optimizing points for compression.
+    optionally optimizing points for compression.
 
     :param obj: Blender mesh object to export.
     :param sort_mode: Sorting mode ("distance", "material", "none").
+    :param compress_point_pairs: Whether to reorder vertices into compression-friendly pairs.
     """
     # Translate from Blender's coordinate system to Star Fox's: Invert all, swap Y/Z
     original_vertices = [(-(v.co.x), -(v.co.z), -(v.co.y)) for v in obj.data.vertices]
 
-    new_vertices, index_map = pair_points_for_compression(original_vertices, prefer_closest_fallback=True)
+    if compress_point_pairs:
+        new_vertices, index_map = pair_points_for_compression(original_vertices, prefer_closest_fallback=True)
+    else:
+        new_vertices = list(original_vertices)
+        index_map = {i: i for i in range(len(original_vertices))}
 
     # Extract polygons and remap indices
     polygons = []
@@ -429,12 +434,12 @@ def collect_data_from_mesh(obj, sort_mode="distance"):
     return new_vertices, polygons
 
 
-def export_to_format(filepath, obj, sort_mode, is_gzs, no_simple123):
+def export_to_format(filepath, obj, sort_mode, is_gzs, no_simple123, compress_point_pairs=True):
     """
     Main export function for BSP/GZS format.
     """
     shape_name = os.path.splitext(os.path.basename(filepath))[0]
-    vertices, polygons = collect_data_from_mesh(obj, sort_mode)
+    vertices, polygons = collect_data_from_mesh(obj, sort_mode, compress_point_pairs)
     point_format = validate_point_format(vertices)
     viz_data = calculate_normals_and_viz(vertices, polygons)
 
@@ -479,19 +484,31 @@ class ExportToBSP(bpy.types.Operator):
         ],
         default='off'
     )
+    compress_point_pairs: bpy.props.BoolProperty(
+        name="Compress point pairs",
+        description="Pair vertices for compact format compression during export",
+        default=True
+    )
 
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
-        export_to_format(self.filepath, obj, self.sort_mode, False, self.no_simple123)
+        export_to_format(self.filepath, obj, self.sort_mode, False, self.no_simple123, self.compress_point_pairs)
         self.report({'INFO'}, f"Exported to BSP: {self.filepath}")
         return {'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="ASM BSP Export Options", icon='INFO')
+        layout.prop(self, "sort_mode", text="Sort Mode")
+        layout.prop(self, "no_simple123", text="Simplified ShapeHdr")
+        layout.prop(self, "compress_point_pairs", text="Compress point pairs")
 
 # =========================
 # ASM GZS Export Operator
@@ -522,17 +539,29 @@ class ExportToGZS(bpy.types.Operator):
         ],
         default='off'
     )
+    compress_point_pairs: bpy.props.BoolProperty(
+        name="Compress point pairs",
+        description="Pair vertices for compact format compression during export",
+        default=True
+    )
 
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
-        export_to_format(self.filepath, obj, self.sort_mode, True, self.no_simple123)
+        export_to_format(self.filepath, obj, self.sort_mode, True, self.no_simple123, self.compress_point_pairs)
         self.report({'INFO'}, f"Exported to GZS: {self.filepath}")
         return {'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="ASM GZS Export Options", icon='INFO')
+        layout.prop(self, "sort_mode", text="Sort Mode")
+        layout.prop(self, "no_simple123", text="Simplified ShapeHdr")
+        layout.prop(self, "compress_point_pairs", text="Compress point pairs")
 
