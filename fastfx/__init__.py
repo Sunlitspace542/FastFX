@@ -33,6 +33,7 @@ from .ui import (
     AddShapeHeaderPropertiesOperator,
     OBJECT_OT_apply_material_colors,
     OBJECT_OT_apply_material_colors_simple,
+    OBJECT_OT_select_twisted_faces,
     OBJECT_OT_toggle_backface_culling,
     VIEW3D_PT_fastfx_tools,
 )
@@ -48,6 +49,7 @@ classes = (
     OBJECT_OT_toggle_backface_culling,
     OBJECT_OT_apply_material_colors,
     OBJECT_OT_apply_material_colors_simple,
+    OBJECT_OT_select_twisted_faces,
     VIEW3D_PT_fastfx_tools,
     OBJECT_OT_create_super_fx,
     OBJECT_OT_import_colboxes_clipboard,

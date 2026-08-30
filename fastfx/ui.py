@@ -1,4 +1,6 @@
 import bpy
+import bmesh
+import math
 
 from .common import VertexOperation, hex_to_rgb
 from .palette import id_0_c_components_rgb, id_0_c_rgb
@@ -176,6 +178,88 @@ class AddShapeHeaderPropertiesOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 # =========================
+# FastFX Menu Panel - Select twisted faces in Edit Mode
+# =========================
+class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
+    """Select faces whose vertices twist away from a single plane."""
+    bl_idname = "object.select_twisted_faces"
+    bl_label = "Select Twisted Faces"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @staticmethod
+    def _face_twist(face):
+        if len(face.verts) <= 3:
+            return 0.0
+
+        a = face.verts[0].co
+        b = face.verts[1].co
+        c = face.verts[2].co
+
+        ux = b.x - a.x
+        uy = b.y - a.y
+        uz = b.z - a.z
+        vx = c.x - a.x
+        vy = c.y - a.y
+        vz = c.z - a.z
+
+        nx = uy * vz - uz * vy
+        ny = uz * vx - ux * vz
+        nz = ux * vy - uy * vx
+        magnitude = math.sqrt(nx * nx + ny * ny + nz * nz)
+
+        if magnitude <= 1e-12:
+            return 0.0
+
+        nx /= magnitude
+        ny /= magnitude
+        nz /= magnitude
+
+        plane_d = nx * a.x + ny * a.y + nz * a.z
+        total_distance = 0.0
+
+        for vert in face.verts:
+            v = vert.co
+            distance = nx * v.x + ny * v.y + nz * v.z - plane_d
+            total_distance += distance * distance
+
+        return total_distance / magnitude
+
+    def execute(self, context):
+        obj = context.object
+        if obj is None or obj.type != 'MESH':
+            self.report({'ERROR'}, "Please select a valid mesh object.")
+            return {'CANCELLED'}
+
+        is_edit_mode = (context.mode == 'EDIT_MESH') or getattr(obj, 'mode', None) == 'EDIT'
+        if not is_edit_mode:
+            self.report({'WARNING'}, "This operator must be run in Edit Mode.")
+            return {'CANCELLED'}
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        selected_count = 0
+        total_twist = 0.0
+        polygon_count = 0
+
+        for face in bm.faces:
+            face.select = False
+            if len(face.verts) <= 2:
+                continue
+
+            polygon_count += 1
+            twist = self._face_twist(face)
+            total_twist += twist
+
+            if len(face.verts) > 3 and twist > 0.01:
+                face.select = True
+                selected_count += 1
+
+        bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
+
+        average_twist = (total_twist * 100.0 / polygon_count) if polygon_count else 0.0
+        self.report({'INFO'}, f"Avg twist {average_twist:.6f}% | Selected {selected_count} twisted faces")
+        return {'FINISHED'}
+
+# =========================
 # FastFX Menu Panel - Toggle Backface Culling on all Materials
 # =========================
 class OBJECT_OT_toggle_backface_culling(bpy.types.Operator):
@@ -218,9 +302,10 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.operator("object.apply_material_colors")
         layout.label(text="Color Palette (Simple)")
         layout.operator("object.apply_material_colors_simple")
-        layout.label(text="Vertex Operations")
+        layout.label(text="Mesh Utilities")
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
+        layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
         layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")

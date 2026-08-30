@@ -221,14 +221,16 @@ FastFX adds a panel on the right hand side of the screen called ``FastFX`` with 
 ``Apply Material Palette (Simple)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using simple flat colors.  
   
 
-### Vertex Operations
+### Mesh Utilities
 
-The 3DG1 exporter will automatically round all vertex coordinates, though you may also want to manually do this.  
+The 3DG1 exporter will automatically round all vertex coordinates, though you may also want to manually do this. Options for this are provided in this section.  
 The operations available are:  
   
 ``Round Vertex Coordinates`` will round the coordinates of all vertices.  
   
 ``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates, e.g. a number such as ``12.34567890`` becomes ``12``.  
+  
+``Select Twisted Faces`` computes the average face twist for the mesh and selects any quads and N-gons whose vertices twist away from the plane. Twisted faces may render unreliably in game. This operator only works in edit mode.  
   
 If your model becomes greatly distorted after using these tools, try scaling it up (preferably by a number divisible by 2), and/or apply scale first, then round or truncate.  
 
