@@ -181,7 +181,7 @@ class AddShapeHeaderPropertiesOperator(bpy.types.Operator):
 # FastFX Menu Panel - Select twisted faces in Edit Mode
 # =========================
 class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
-    """Select faces whose vertices twist away from a single plane."""
+    """Select faces whose vertices twist away from a single plane"""
     bl_idname = "object.select_twisted_faces"
     bl_label = "Select Twisted Faces"
     bl_options = {'REGISTER', 'UNDO'}

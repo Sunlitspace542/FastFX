@@ -308,6 +308,39 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
         # FendQ is only used if the given shape contains a BSP tree
         # TODO figure out BSP trees for BSP format
 
+def _format_shape_hdr_value(value):
+    """Round like C's %.0f formatting for a non-negative float."""
+    if value >= 0.0:
+        return int(math.floor(value + 0.5))
+    return int(math.ceil(value - 0.5))
+
+
+def _shape_header_bounds(vertices):
+    """Match SHAPED's C logic: max abs-axis extents and max Euclidean point radius."""
+    x_max = 0.0
+    y_max = 0.0
+    z_max = 0.0
+    radius = 0.0
+
+    for x, y, z in vertices:
+        ax = abs(x)
+        ay = abs(y)
+        az = abs(z)
+
+        if ax > x_max:
+            x_max = ax
+        if ay > y_max:
+            y_max = ay
+        if az > z_max:
+            z_max = az
+
+        point_radius = math.sqrt((x * x) + (y * y) + (z * z))
+        if point_radius > radius:
+            radius = point_radius
+
+    return x_max, y_max, z_max, radius
+
+
 def write_shape_header(file, obj, shape_name, vertices, no_simple123=False):
     """
     Writes the ShapeHdr line based on the bounding box.
@@ -330,11 +363,11 @@ def write_shape_header(file, obj, shape_name, vertices, no_simple123=False):
     mid_lod_shape = obj.get("mid_lod_shape", "0")
     far_lod_shape = obj.get("far_lod_shape", "0")
 
-    # Compute radius/size field
-    x_max = max(abs(v[0]) for v in vertices)
-    y_max = max(abs(v[1]) for v in vertices)
-    z_max = max(abs(v[2]) for v in vertices)
-    radius = math.sqrt((x_max * x_max) + (y_max * y_max) + (z_max * z_max))
+    x_max, y_max, z_max, radius = _shape_header_bounds(vertices)
+    x_max_i = _format_shape_hdr_value(x_max)
+    y_max_i = _format_shape_hdr_value(y_max)
+    z_max_i = _format_shape_hdr_value(z_max)
+    radius_i = _format_shape_hdr_value(radius)
 
     file.write(f"\tifne\tDO_HDR\n\n")
     file.write(f"{shape_name}\n")
@@ -342,14 +375,14 @@ def write_shape_header(file, obj, shape_name, vertices, no_simple123=False):
         file.write(
             f"\tShapeHdr\t" \
             f"{shape_name}_P,0,{shape_name}_F,0,{zsort_priority},0,0,{scale},{colbox_label}," \
-            f"{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)}," \
+            f"{x_max_i},{y_max_i},{z_max_i},{radius_i}," \
             f"{color_palette},{shadow_shape},{close_lod_shape},{mid_lod_shape},{far_lod_shape},<{shape_name}>\n"
     )
     else:
         file.write(
             f"\tShapeHdr\t" \
             f"{shape_name}_P,0,{shape_name}_F,0,{zsort_priority},0,0,{scale},{colbox_label}," \
-            f"{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)}," \
+            f"{x_max_i},{y_max_i},{z_max_i},{radius_i}," \
             f"{color_palette},{shadow_shape},<{shape_name}>\n"
     )
     file.write("\telseif\n")
