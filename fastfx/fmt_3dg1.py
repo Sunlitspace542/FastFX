@@ -48,7 +48,7 @@ class Export3DG1(bpy.types.Operator):
         description="Choose how to sort faces and edges in the exported file",
         items=[
             ('distance', "Distance from Origin", "Sort by distance from the origin"),
-            ('material', "Material Order", "Sort by material order. Last material is drawn first."),
+            ('material', "Material Order", "Sort by material order. Last material is drawn first"),
             ('none', "No Sorting", "No sorting; use Blender's internal order")
         ],
         default='distance'

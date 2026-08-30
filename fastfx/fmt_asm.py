@@ -308,7 +308,7 @@ def write_faces_section(filepath, file, polygons, viz_data, is_gzs):
         # FendQ is only used if the given shape contains a BSP tree
         # TODO figure out BSP trees for BSP format
 
-def write_shape_header(file, obj, shape_name, vertices, no_simple123="off"):
+def write_shape_header(file, obj, shape_name, vertices, no_simple123=False):
     """
     Writes the ShapeHdr line based on the bounding box.
     """
@@ -338,14 +338,14 @@ def write_shape_header(file, obj, shape_name, vertices, no_simple123="off"):
 
     file.write(f"\tifne\tDO_HDR\n\n")
     file.write(f"{shape_name}\n")
-    if no_simple123 == "off":
+    if not no_simple123:
         file.write(
             f"\tShapeHdr\t" \
             f"{shape_name}_P,0,{shape_name}_F,0,{zsort_priority},0,0,{scale},{colbox_label}," \
             f"{int(x_max)},{int(y_max)},{int(z_max)},{int(radius)}," \
             f"{color_palette},{shadow_shape},{close_lod_shape},{mid_lod_shape},{far_lod_shape},<{shape_name}>\n"
     )
-    elif no_simple123 == "on":
+    else:
         file.write(
             f"\tShapeHdr\t" \
             f"{shape_name}_P,0,{shape_name}_F,0,{zsort_priority},0,0,{scale},{colbox_label}," \
@@ -470,19 +470,15 @@ class ExportToBSP(bpy.types.Operator):
         description="Choose how to sort faces and edges in the exported file",
         items=[
             ('distance', "Distance from Origin", "Sort by distance from the origin"),
-            ('material', "Material Order", "Sort by material order. Last material is drawn first."),
+            ('material', "Material Order", "Sort by material order. Last material is drawn first"),
             ('none', "No Sorting", "No sorting; use Blender's internal order")
         ],
         default='distance'
     )
-    no_simple123: bpy.props.EnumProperty(
+    no_simple123: bpy.props.BoolProperty(
         name="Simplified ShapeHdr",
-        description="Whether or not to exclude LODs from the shape header.",
-        items=[
-            ('on', "On", "Exclude LODs from the shape header."),
-            ('off', "Off", "Do not exclude LODs from the shape header.")
-        ],
-        default='off'
+        description="Exclude LODs from the shape header when enabled",
+        default=False
     )
     compress_point_pairs: bpy.props.BoolProperty(
         name="Compress point pairs",
@@ -525,19 +521,15 @@ class ExportToGZS(bpy.types.Operator):
         description="Choose how to sort faces and edges in the exported file",
         items=[
             ('distance', "Distance from Origin", "Sort by distance from the origin"),
-            ('material', "Material Order", "Sort by material order. Last material is drawn first."),
+            ('material', "Material Order", "Sort by material order. Last material is drawn first"),
             ('none', "No Sorting", "No sorting; use Blender's internal order")
         ],
         default='distance'
     )
-    no_simple123: bpy.props.EnumProperty(
+    no_simple123: bpy.props.BoolProperty(
         name="Simplified ShapeHdr",
-        description="Exclude LODs from the shape header.",
-        items=[
-            ('on', "On", "Exclude LODs from the shape header."),
-            ('off', "Off", "Do not exclude LODs from the shape header.")
-        ],
-        default='off'
+        description="Exclude LODs from the shape header when enabled",
+        default=False
     )
     compress_point_pairs: bpy.props.BoolProperty(
         name="Compress point pairs",
