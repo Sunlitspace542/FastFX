@@ -1105,7 +1105,7 @@ def super_fx_node_group():
     return superfx
 
 class OBJECT_OT_create_super_fx(bpy.types.Operator):
-    """Create the Super FX node group and base material, and set color management to Standard."""
+    """Create the Super FX node group and base material, and set color management to Standard"""
     bl_idname = "object.create_super_fx"
     bl_label = "Create Super FX Node Group"
 
