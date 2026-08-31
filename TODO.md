@@ -6,9 +6,11 @@ Categories are named by their source files.
 
 ## common
 - [x] Make point sorting for horizontal mirroring optimization on export optional, deduplicate point pairing code from bsp/gzs and 3dg1 code and consolidate into a shared function
+- [ ] More code in 3DG1/ASM importers/exporters could be potentially deduplicated
+- [ ] Deduplicate edge deduplication logic in 3DG1 and ASM exporters
 
 ## fmt_3dan
-- [ ] Animations - Blender supports vertex animation through AnimAll (addon included by default), can we communicate with this for animation import/export?
+- [ ] Animations - We really need a better approach for handling these; Blender supports vertex animation through AnimAll (addon included by default), can we communicate with this for animation import/export?
 
 ## fmt_3dg1
 - N/A
