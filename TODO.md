@@ -1,4 +1,5 @@
 # FastFX Rework TODO
+Categories are named by their source files.  
 
 ## colboxes
 - N/A
@@ -32,7 +33,7 @@
 - [ ] Better shape header/colbox setup - this is all a bit fragmented right now and I wish it sucked much less
 - [ ] possibly move export dialog options to menu bar?
 
-## other
+## OTHER
 - [x] Split addon code into separate files - it makes testing take a bit longer, but it makes the code less of a hot mess (can we make a build script to simplify testing?)
 - [ ] 2-point faces with materials - is there seriously no way we can render the material on them in the viewport or make it obvious to the user at all??
 - [ ] Slope data import/export for Star Fox 2? Almost no one will use it but it's relevant to have
