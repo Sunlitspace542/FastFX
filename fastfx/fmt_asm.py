@@ -476,7 +476,9 @@ def export_to_format(filepath, obj, sort_mode, is_gzs, no_simple123, compress_po
     point_format = validate_point_format(vertices)
     viz_data = calculate_normals_and_viz(vertices, polygons)
 
-    with open(filepath, "w") as file:
+    # Force CRLF output regardless of host OS so tools that expect DOS/ASM-friendly line endings
+    # can consume the exported files without post-processing.
+    with open(filepath, "w", newline="\r\n") as file:
         if is_gzs:
             file.write(f";--Shape file ----- {shape_name}.gzs ---- Generated with FastFX\n")
         else:
