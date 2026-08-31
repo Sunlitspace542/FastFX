@@ -27,7 +27,7 @@ from .colboxes import (
     OBJECT_OT_update_colbox_offsets,
 )
 from .common import VertexOperation
-from .menus import menu_func_export, menu_func_import
+from .menus import TOPBAR_MT_fastfx_asm, menu_func_export, menu_func_import
 from .superfx import OBJECT_OT_create_super_fx
 from .ui import (
     AddShapeHeaderPropertiesOperator,
@@ -64,6 +64,7 @@ classes = (
     Export3DAN,
     ExportToBSP,
     ExportToGZS,
+    TOPBAR_MT_fastfx_asm,
     AddShapeHeaderPropertiesOperator,
 )
 

@@ -494,7 +494,7 @@ def export_to_format(filepath, obj, sort_mode, is_gzs, no_simple123, compress_po
 # ASM BSP Export Operator
 # =========================
 class ExportToBSP(bpy.types.Operator):
-    """Export to BSP Format"""
+    """Export to Star Fox ASM BSP Format"""
     bl_idname = "export_mesh.bsp"
     bl_label = "Export Treeless ASM BSP"
     bl_options = {'PRESET'}
@@ -545,7 +545,7 @@ class ExportToBSP(bpy.types.Operator):
 # ASM GZS Export Operator
 # =========================
 class ExportToGZS(bpy.types.Operator):
-    """Export to GZS Format"""
+    """Export to Star Fox ASM GZS Format"""
     bl_idname = "export_mesh.gzs"
     bl_label = "Export ASM GZS"
     bl_options = {'PRESET'}

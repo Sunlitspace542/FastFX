@@ -19,7 +19,7 @@ Categories are named by their source files.
 - [ ] Finally add BSP/GZS animation import/export?
 
 ## menus
-- [ ] maybe group BSP/GZS export buttons under a shared category (aesthetic thing)
+- [x] maybe group BSP/GZS export buttons under a shared category (aesthetic thing)
 ## palette
 - N/A
 
