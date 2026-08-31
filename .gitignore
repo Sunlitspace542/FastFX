@@ -9,3 +9,4 @@ __pycache__/*
 # ignore all VSCode junk other than settings
 .vscode/*
 !.vscode/settings.json
+!.vscode/tasks.json
