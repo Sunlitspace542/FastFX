@@ -31,6 +31,7 @@ from .menus import menu_func_export, menu_func_import
 from .superfx import OBJECT_OT_create_super_fx
 from .ui import (
     AddShapeHeaderPropertiesOperator,
+    OBJECT_OT_add_2_point_face,
     OBJECT_OT_apply_material_colors,
     OBJECT_OT_apply_material_colors_simple,
     OBJECT_OT_select_twisted_faces,
@@ -47,6 +48,7 @@ classes = (
     Export3DG1,
     VertexOperation,
     OBJECT_OT_toggle_backface_culling,
+    OBJECT_OT_add_2_point_face,
     OBJECT_OT_apply_material_colors,
     OBJECT_OT_apply_material_colors_simple,
     OBJECT_OT_select_twisted_faces,

@@ -1,8 +1,11 @@
 import bpy
 import bmesh
 import math
+import os
+import tempfile
 
 from .common import VertexOperation, hex_to_rgb
+from .fmt_3dg1 import read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
 from .superfx import super_fx_node_group
 
@@ -260,6 +263,105 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
         return {'FINISHED'}
 
 # =========================
+# FastFX Menu Panel - 2-point face primitive
+# =========================
+class OBJECT_OT_add_2_point_face(bpy.types.Operator):
+    """Create a reusable 2-point face primitive using an embedded template mesh"""
+    bl_idname = "object.add_2_point_face"
+    bl_label = "Add 2-Point Face"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    template_name = "two-point-face"
+
+    def _build_template(self):
+        return """3DG1
+2
+0 -2 0
+0 2 0
+2 1 0 43
+\x1A
+"""
+
+    def _find_template_object(self, obj=None):
+        for candidate in bpy.data.objects:
+            if candidate.type != 'MESH':
+                continue
+            if candidate.name.startswith(self.template_name):
+                if obj is not None and candidate.name == obj.name:
+                    continue
+                return candidate
+        return None
+
+    def _import_template(self, context):
+        fd, temp_path = tempfile.mkstemp(prefix=f"{self.template_name}_", suffix=".3dg1")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
+                handle.write(self._build_template())
+            result = read_3dg1(temp_path, context)
+            imported = self._find_template_object()
+            if imported is not None:
+                imported.name = self.template_name
+                imported.data.name = self.template_name
+            return result, imported
+        finally:
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+
+    def _drop_template_material(self, imported):
+        if imported is None or imported.data is None:
+            return
+
+        if not imported.data.materials:
+            return
+
+        material = imported.data.materials[0]
+        if material is None:
+            return
+
+        if material.users > 1:
+            imported.data.materials.clear()
+            return
+
+        imported.data.materials.clear()
+        if material.name in bpy.data.materials:
+            bpy.data.materials.remove(material, do_unlink=True)
+
+    def execute(self, context):
+        obj = context.object
+
+        if context.mode == 'EDIT_MESH':
+            if obj is None or obj.type != 'MESH':
+                self.report({'ERROR'}, "Please select a valid mesh object to append to.")
+                return {'CANCELLED'}
+
+            bpy.ops.object.mode_set(mode='OBJECT')
+            result, imported = self._import_template(context)
+            if result != {'FINISHED'} or imported is None:
+                self.report({'ERROR'}, "Failed to import the 2-point face template.")
+                return {'CANCELLED'}
+
+            self._drop_template_material(imported)
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            imported.select_set(True)
+            context.view_layer.objects.active = obj
+            bpy.ops.object.join()
+            bpy.ops.object.mode_set(mode='EDIT')
+            self.report({'INFO'}, "2-point face appended to the active mesh")
+            return {'FINISHED'}
+
+        result, imported = self._import_template(context)
+        if result != {'FINISHED'} or imported is None:
+            self.report({'ERROR'}, "Failed to create the 2-point face mesh.")
+            return {'CANCELLED'}
+
+        self._drop_template_material(imported)
+        self.report({'INFO'}, "2-point face created")
+        return {'FINISHED'}
+
+# =========================
 # FastFX Menu Panel - Toggle Backface Culling on all Materials
 # =========================
 class OBJECT_OT_toggle_backface_culling(bpy.types.Operator):
@@ -305,6 +407,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.label(text="Mesh Utilities")
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
+        layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
         layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
