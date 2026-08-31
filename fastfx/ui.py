@@ -266,7 +266,7 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
 # FastFX Menu Panel - 2-point face primitive
 # =========================
 class OBJECT_OT_add_2_point_face(bpy.types.Operator):
-    """Create a reusable 2-point face primitive using an embedded template mesh"""
+    """Create a 2-point face primitive"""
     bl_idname = "object.add_2_point_face"
     bl_label = "Add 2-Point Face"
     bl_options = {'REGISTER', 'UNDO'}
