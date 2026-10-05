@@ -237,7 +237,7 @@ class Shape:
         if not simplified:
             fields += [str(header.simple1), str(header.simple2), str(header.simple3)]
         fields.append(f"<{name}>")
-        return [f";--Shape file ----- {name} ---- Generated with FastFX\n", "\tifne\tDO_HDR", "", name, f"\tShapeHdr\t{','.join(fields)}", "\telseif"]
+        return [f";--Shape file ----- {name} ---- Generated with FastFX", "\tifne\tDO_HDR", "", name, f"\tShapeHdr\t{','.join(fields)}", "\telseif"]
 
     def _asm_dot(self, index: int, frame: int, extra: list[Dot], overrides: dict[int, Dot]) -> Dot:
         if index in overrides:

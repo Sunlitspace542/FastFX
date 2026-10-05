@@ -155,6 +155,12 @@ def export_to_format(filepath, obj, sort_mode, output_format, no_simple123, comp
     output_path = Path(filepath)
     shape_name = output_path.stem
 
+    # Format of the Shape header is as follows:
+    # ShapeHdr  pointptr,bank,faceptr,0,sortz,0,0,scale,colboxptr,xmax,ymax,zmax,radius,colptr,shadowptr,simple1ptr,simple2ptr,simple3ptr,<Name>
+
+    # Simplified Shape header is as follows:
+    # ShapeHdr  pointptr,bank,faceptr,0,sortz,0,0,scale,colboxptr,xmax,ymax,zmax,radius,colptr,shadowptr,<Name>
+
     with TemporaryDirectory() as temporary:
         source_path = Path(temporary) / "model.3dg1"
         write_3dg1(source_path, obj, sort_mode, compress_point_pairs)
