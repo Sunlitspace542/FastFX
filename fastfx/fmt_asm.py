@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -10,6 +11,154 @@ from .fmt_3dan import sort_animation_objects, write_3dan
 from .fmt_3dg1 import write_3dg1
 from .palette import id_0_c_rgb
 from .shaped import ShapeHeader, load as load_shape, write as write_shape
+
+
+_POINT_DIRECTIVE = re.compile(r"\b(PointsX?[bw])\s+(\d+)", re.IGNORECASE)
+_POINT_VALUE = re.compile(r"\bp[bw]\s+(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)", re.IGNORECASE)
+
+
+def _parse_point_macro(lines, line_index, next_point_index):
+    """Read one Points/PointsX block and return decoded points and next line."""
+    directive_line = lines[line_index].split(";", 1)[0]
+    match = _POINT_DIRECTIVE.search(directive_line)
+    if not match:
+        return {}, line_index + 1, next_point_index
+
+    mirrored = match.group(1).lower().startswith("pointsx")
+    point_rows = int(match.group(2))
+    points = {}
+    cursor = line_index + 1
+    for _ in range(point_rows):
+        while cursor < len(lines) and not _POINT_VALUE.search(lines[cursor].split(";", 1)[0]):
+            if _POINT_DIRECTIVE.search(lines[cursor].split(";", 1)[0]):
+                raise ValueError("Point block ended before all coordinates were read.")
+            cursor += 1
+        if cursor >= len(lines):
+            raise ValueError("Point block ended before all coordinates were read.")
+
+        row = lines[cursor]
+        value_match = _POINT_VALUE.search(row.split(";", 1)[0])
+        x, y, z = map(int, value_match.groups())
+        comment = row.partition(";")[2]
+        index_match = re.match(r"\s*(\d+)", comment)
+        point_index = int(index_match.group(1)) if index_match else next_point_index
+
+        # Convert Star Fox coordinates to Blender coordinates.
+        points[point_index] = (-x, -z, -y)
+        if mirrored:
+            points[point_index + 1] = (x, -z, -y)
+        next_point_index = max(next_point_index, point_index + (2 if mirrored else 1))
+        cursor += 1
+
+    return points, cursor, next_point_index
+
+
+def _parse_asm_points(lines):
+    """Decode static and SHAPED animated point blocks into Blender-space frames."""
+    static_points = {}
+    animated_blocks = []
+    next_point_index = 0
+    cursor = 0
+
+    while cursor < len(lines):
+        content = lines[cursor].split(";", 1)[0].strip()
+        if content.lower().startswith("endpoints"):
+            break
+
+        frames_match = re.match(r"Frames\s+(\d+)\b", content, re.IGNORECASE)
+        if frames_match:
+            frame_count = int(frames_match.group(1))
+            if frame_count < 1:
+                raise ValueError("Animated point blocks must contain at least one frame.")
+
+            jump_targets = []
+            cursor += 1
+            while cursor < len(lines):
+                target_match = re.match(r"jumptab\s+([.\w]+)", lines[cursor].split(";", 1)[0].strip(), re.IGNORECASE)
+                if not target_match:
+                    break
+                jump_targets.append(target_match.group(1))
+                cursor += 1
+            if len(jump_targets) != frame_count:
+                raise ValueError(
+                    f"Animated point block declares {frame_count} frames but has "
+                    f"{len(jump_targets)} jump-table entries."
+                )
+
+            block_frames = []
+            block_next_point_index = next_point_index
+            for target in jump_targets:
+                label_pattern = re.compile(rf"^\s*{re.escape(target)}(?:\s|$)", re.IGNORECASE)
+                while cursor < len(lines) and not label_pattern.match(lines[cursor].split(";", 1)[0]):
+                    cursor += 1
+                if cursor >= len(lines):
+                    raise ValueError(f"Animated frame label {target} was not found.")
+
+                frame_points = {}
+                frame_next_point_index = block_next_point_index
+                while cursor < len(lines):
+                    content = lines[cursor].split(";", 1)[0].strip()
+                    if re.match(r"jump\s+\.EB[\w]*\b", content, re.IGNORECASE):
+                        cursor += 1
+                        break
+                    if re.match(r"\.EB[\w]*\b", content, re.IGNORECASE):
+                        cursor += 1
+                        break
+                    directive_match = _POINT_DIRECTIVE.search(content)
+                    if directive_match:
+                        points, cursor, frame_next_point_index = _parse_point_macro(
+                            lines, cursor, frame_next_point_index
+                        )
+                        frame_points.update(points)
+                    else:
+                        cursor += 1
+                block_frames.append(frame_points)
+                if block_frames:
+                    block_next_point_index = max(block_next_point_index, frame_next_point_index)
+            next_point_index = block_next_point_index
+
+            # The final frame may jump to the shared end label rather than
+            # ending directly at it.
+            while cursor < len(lines):
+                content = lines[cursor].split(";", 1)[0].strip()
+                if re.match(r"\.EB[\w]*\b", content, re.IGNORECASE):
+                    cursor += 1
+                    break
+                if content and not content.lower().startswith(("jump ",)):
+                    break
+                cursor += 1
+            animated_blocks.append(block_frames)
+            continue
+
+        if _POINT_DIRECTIVE.search(content):
+            points, cursor, next_point_index = _parse_point_macro(lines, cursor, next_point_index)
+            static_points.update(points)
+        else:
+            cursor += 1
+
+    if not animated_blocks:
+        return [[static_points[index] for index in range(max(static_points, default=-1) + 1)]]
+
+    frame_count = len(animated_blocks[0])
+    if any(len(block) != frame_count for block in animated_blocks):
+        raise ValueError("Animated point blocks declare different frame counts.")
+
+    frames = []
+    point_count = max(
+        (max(points, default=-1) for block in animated_blocks for points in block),
+        default=-1,
+    )
+    point_count = max(point_count, max(static_points, default=-1)) + 1
+    for frame_index in range(frame_count):
+        frame_points = dict(static_points)
+        for block in animated_blocks:
+            frame_points.update(block[frame_index])
+        missing = [index for index in range(point_count) if index not in frame_points]
+        if missing:
+            raise ValueError(f"Point data is missing index {missing[0]} in animation frame {frame_index}.")
+        frames.append([frame_points[index] for index in range(point_count)])
+    return frames
+
 
 # FastFX
 # File: fmt_asm.py
@@ -42,56 +191,28 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
 # ASM BSP/GZS Importer
 # =========================
     def import_bsp(self, file_path):
-        points = []
         faces = []
         face_data = []  # Store faces with original order and material indices
         material_map = {}
 
-        is_point_section = False
         is_face_section = False
-        invert_x = False
 
         try:
             with open(file_path, 'r') as f:
                 bsp_data = f.read()
 
-            for line in bsp_data.splitlines():
-                stripped_line = line.strip()
+            file_lines = bsp_data.splitlines()
+            points_by_frame = _parse_asm_points(file_lines)
 
-                # Check if we are entering a points section
-                if stripped_line.startswith(("Pointsb", "PointsXb", "Pointsw", "PointsXw")):
-                    is_point_section = True
-                    is_face_section = False
-                    invert_x = stripped_line.startswith("PointsXb") or stripped_line.startswith("PointsXw")
-                    continue
+            for line in file_lines:
+                stripped_line = line.strip()
 
                 # Check if we are entering a faces section
                 # If it starts with "Faces\t", it's a GZS format file
                 # If it ends with "Faces", it's a BSP format file
                 if stripped_line.endswith("Faces") or stripped_line.startswith("Faces\t"):
-                    is_point_section = False
                     is_face_section = True
                     continue
-
-                # Handle points
-                # Make sure the shape itself isn't named "Points"
-                if is_point_section and stripped_line.startswith("ShapeHdr"):
-                    is_point_section = False
-
-                if is_point_section and (stripped_line.startswith("pb") or stripped_line.startswith("pw")):
-                    line_without_comments = stripped_line.split(";")[0].strip()
-                    if not line_without_comments:
-                        continue
-
-                    _, coords = line_without_comments.split("\t", 1)
-                    x, y, z = map(int, coords.split(","))
-
-                    # Invert X and Y coordinates
-                    x, y = -x, -y
-
-                    points.append((x, -z, y)) # Translate from Star Fox coordinate system to Blender's (Z is up/down)
-                    if invert_x:
-                        points.append((-x, -z, y)) # Translate from Star Fox coordinate system to Blender's (Z is up/down)
 
                 # Handle faces
                 # Make sure the shape itself isn't named "Faces"
@@ -128,25 +249,32 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
             faces = [face[1] for face in face_data]  # Extract reordered point indices
             material_indices = [face[2] for face in face_data]  # Extract reordered material indices
 
-            # Create the mesh and object
+            # Create a mesh object for each animation frame, matching the
+            # separate-frame-object convention used by the 3DAN importer.
             mesh_name = os.path.basename(file_path).split('.')[0]
-            mesh = bpy.data.meshes.new(mesh_name)
-            obj = bpy.data.objects.new(mesh_name, mesh)
-            bpy.context.collection.objects.link(obj)
+            for frame_index, frame_points in enumerate(points_by_frame):
+                object_name = mesh_name if len(points_by_frame) == 1 else f"{mesh_name}_Frame{frame_index}"
+                mesh = bpy.data.meshes.new(object_name)
+                obj = bpy.data.objects.new(object_name, mesh)
+                bpy.context.collection.objects.link(obj)
 
-            mesh.from_pydata(points, [], faces)
-            mesh.update()
+                mesh.from_pydata(frame_points, [], faces)
+                mesh.update()
 
-            # Assign materials to the mesh
-            for material_name, material_index in material_map.items():
-                material = bpy.data.materials.get(material_name)
-                if material:
-                    mesh.materials.append(material)
+                # Assign materials to the mesh
+                for material_name, material_index in material_map.items():
+                    material = bpy.data.materials.get(material_name)
+                    if material:
+                        mesh.materials.append(material)
 
-            for i, polygon in enumerate(mesh.polygons):
-                polygon.material_index = material_indices[i]
+                for i, polygon in enumerate(mesh.polygons):
+                    polygon.material_index = material_indices[i]
 
-            self.report({'INFO'}, f"Mesh '{mesh_name}' created with {len(points)} points and {len(faces)} faces.")
+            self.report(
+                {'INFO'},
+                f"Mesh '{mesh_name}' created with {len(points_by_frame)} frame(s), "
+                f"{len(points_by_frame[0])} points and {len(faces)} faces."
+            )
         except Exception as e:
             raise RuntimeError(f"Error processing BSP file: {e}")
 

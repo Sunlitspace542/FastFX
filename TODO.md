@@ -21,7 +21,7 @@ Categories are named by their source files.
 - [x] BSP tree generation - the BSP algorithm has been cracked thanks to kando throwing SHAPED.EXE at a clanker, this really should be integrated
 - [x] Enforce CRLF line endings on output files - this is to deal with UNIX being UNIX when the files written need to be able to be read by a geriatric assembler stuck on DOS that does not know what LF alone means
 - [x] Finally add BSP/GZS animation export
-- [ ] BSP/GZS animation import
+- [x] BSP/GZS animation import
 
 ## menus
 - [x] maybe group BSP/GZS export buttons under a shared category (aesthetic thing)
@@ -40,7 +40,7 @@ Categories are named by their source files.
 
 ## OTHER
 - [x] Split addon code into separate files - it makes testing take a bit longer, but it makes the code less of a hot mess (can we make a build script to simplify testing?)
-- [ ] 2-point faces with materials - is there seriously no way we can render the material on them in the viewport or make it obvious to the user at all??
+- [x] 2-point faces with materials - is there seriously no way we can render the material on them in the viewport or make it obvious to the user at all??
 - [ ] Slope data import/export for Star Fox 2? Almost no one will use it but it's relevant to have
 - [ ] Figure out some way to determine how textures will be mapped on a face beforehand (some way to show which way is "up")?
 - [ ] CAD/NCA import - wowjinxy's 3ddraw clone rewrite thing is able to read these, add functionality to import them eventually maybe
