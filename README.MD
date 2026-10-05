@@ -9,7 +9,7 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 
 # Features
 - 3DG1 format importer/exporter
-- Partial ASM BSP/GZS import/export support - no animations, cannot generate BSP trees for Z-sorting in BSP format shapes
+- ASM BSP (treeless) and GZS export through the bundled SHAPED model compiler, plus static BSP/GZS import - no animations yet
 - Custom Super FX material by Euclidium98 to help preview what the final product will look like (simple face coloring is also an option, used by default)
 - Proper 2-pointed face/edge support
 - Faces sorted on export (3DG1 export only)
@@ -28,7 +28,7 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 ## Exporting:
 - 3DG1 - Fundoshi-kun  
 - 3DAN - Animated Fundoshi-kun
-- Star Fox ASM BSP format - static export only, no animations or BSP trees for face sorting on more complex shapes  
+- Star Fox ASM BSP format - static export with optional BSP tree generation or a treeless flat face list, no animations yet
 - Star Fox ASM GZS format (BSP format variant) - static export only, no animations, limited face sorting capability  
 
 # Installation
@@ -78,11 +78,10 @@ You may need to correct the order of the animation jump tables in the BSP/GZS af
 ## Method 1: Via FastFX
 ```diff  
 -WARNING!-
-FastFX currently only supports exporting static models to BSP format without BSP trees.
+FastFX currently only supports exporting static models to BSP/GZS format.
 There is no support yet for exporting animations in this format.
-It is recommended you use SHAPED for models that have any faces that would overlap without a proper face order.
-For simpler shapes however, FastFX's exporter is perfectly usable.
 ```
+FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Choose BSP to generate a BSP tree for Z-sorting, or BSP (treeless) to force a flat face list; GZS export is also available. Face sorting and point-pair compression are applied during the 3DG1 export stage.
 
 Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds some editable shape header properties to the selected object.  
 You can edit these properties by selecting the object and going to the Properties section of the Item panel.

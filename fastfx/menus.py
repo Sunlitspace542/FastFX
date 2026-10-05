@@ -2,7 +2,7 @@ import bpy
 
 from .fmt_3dan import Export3DAN, Import3DANOperator
 from .fmt_3dg1 import Export3DG1, Import3DG1
-from .fmt_asm import ExportToBSP, ExportToGZS, ImportBSPOperator
+from .fmt_asm import ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
 
 # FastFX
 # File: menus.py
@@ -18,7 +18,8 @@ class TOPBAR_MT_fastfx_asm(bpy.types.Menu):
     bl_label = "Star Fox ASM"
 
     def draw(self, context):
-        self.layout.operator(ExportToBSP.bl_idname, text="Star Fox ASM BSP (treeless) (.asm/.bsp)")
+        self.layout.operator(ExportToBSP.bl_idname, text="Star Fox ASM BSP (.asm/.bsp)")
+        self.layout.operator(ExportToBSPTreeless.bl_idname, text="Star Fox ASM BSP (treeless) (.asm/.bsp)")
         self.layout.operator(ExportToGZS.bl_idname, text="Star Fox ASM GZS (.asm/.gzs)")
 
 # =========================

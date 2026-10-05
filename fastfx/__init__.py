@@ -18,7 +18,7 @@ bl_info = {
 
 from .fmt_3dan import Export3DAN, Import3DANOperator
 from .fmt_3dg1 import Export3DG1, Import3DG1
-from .fmt_asm import ExportToBSP, ExportToGZS, ImportBSPOperator
+from .fmt_asm import ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
 from .colboxes import (
     OBJECT_OT_export_colboxes,
     OBJECT_OT_generate_colbox,
@@ -63,6 +63,7 @@ classes = (
     Import3DANOperator,
     Export3DAN,
     ExportToBSP,
+    ExportToBSPTreeless,
     ExportToGZS,
     TOPBAR_MT_fastfx_asm,
     AddShapeHeaderPropertiesOperator,
