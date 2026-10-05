@@ -6,8 +6,6 @@ Categories are named by their source files.
 
 ## common
 - [x] Make point sorting for horizontal mirroring optimization on export optional, deduplicate point pairing code from bsp/gzs and 3dg1 code and consolidate into a shared function
-- [ ] More code in 3DG1/ASM importers/exporters could be potentially deduplicated
-- [ ] Deduplicate edge deduplication logic in 3DG1 and ASM exporters
 - [ ] Possibly combine 3DG1/3DAN import into one menu option because the formats are similar (use header magic to tell apart, to tell animated/static 3DGI apart maybe check for if there are 2 lines with 1 number each (2 lines means animated))
 - [ ] Look into improving point sorting algorithm to create as long of a pointsXb/pointsXw block as possible (not having to jump in/out of a compressed block as often probably renders faster)
 
@@ -18,7 +16,7 @@ Categories are named by their source files.
 - N/A
 
 ## fmt_asm
-- [ ] (WORK IN PROGRESS) BSP tree generation - the BSP algorithm has been cracked thanks to kando throwing SHAPED.EXE at a clanker, this really should be integrated
+- [x] (WORK IN PROGRESS) BSP tree generation - the BSP algorithm has been cracked thanks to kando throwing SHAPED.EXE at a clanker, this really should be integrated
 - [x] Enforce CRLF line endings on output files - this is to deal with UNIX being UNIX when the files written need to be able to be read by a geriatric assembler stuck on DOS that does not know what LF alone means
 - [ ] Finally add BSP/GZS animation import/export?
 
