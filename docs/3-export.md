@@ -19,7 +19,7 @@ To export to 3DAN, select all frame objects, and go to `File -> Export -> 3DAN/3
 ## B. To ASM
 
 ## Method 1: Via FastFX
-FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Coordinates outside the signed 16-bit range (-32768 to 32767) are rejected to prevent SHAPED from wrapping them. Choose BSP to generate a BSP tree for Z-sorting, or BSP (treeless) to force a flat face list; GZS export is also available. Face sorting and point-pair compression are applied during the 3DG1 export stage.
+FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Coordinates outside the signed 16-bit range (-32768 to 32767) are rejected.
 
 Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds some editable shape header properties to the selected object. Custom ShapeHdr properties are currently not supported in animation export, but will be supported eventually.  
 You can edit these properties in the ``ShapeHdr Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties.
@@ -30,7 +30,7 @@ Explanation of the 3 supported assembly formats:
 - Star Fox ASM BSP (treeless) - The same as BSP, but faces are written as a flat list with no BSP tree information.  
 - Star Fox ASM GZS - Similar to treeless BSP, having no BSP tree information, but with a slightly different format and worse Z-sorting.  
 
-Once you select the format, there will be options on the right hand side of the file picker dialog.  
+Once you select the format, there will be options on the right hand side of the file picker dialog. These options are applied in the 3DG1 export stage.  
 
 Face sorting (drop-down):  
 - Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting as it tends to yield decent results.  

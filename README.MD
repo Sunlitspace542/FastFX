@@ -1,6 +1,6 @@
 # FastFX
 A Blender plugin to Import/Export Fundoshi-kun (3DG1) format shapes and other model data for Star Fox 1/2/EX.  
-Blender 3.x is required. Later Blender versions *might* work to some degree.  
+**Blender 3.x is required.** Later Blender versions *might* work to some degree.  
 
 # Credits
 Super FX material: Euclidium98  
