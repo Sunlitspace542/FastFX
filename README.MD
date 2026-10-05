@@ -36,4 +36,4 @@ Run `build_addon.ps1` (Windows PowerShell) / `build.sh` (Linux) to make the addo
 Locate and open ``fastfx.zip``. a plugin called FastFX should appear in the window. Click the checkbox to enable it.  
 
 # Usage
-For usage instructions, see `MANUAL.md` in the `docs/` directory.
+For usage instructions, see [the FastFX user's manual](docs/MANUAL.md).
