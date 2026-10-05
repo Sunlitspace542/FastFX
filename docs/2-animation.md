@@ -4,7 +4,7 @@
 -IMPORTANT!-
 SHAPED.EXE (the original DOS tool used to convert 3DG1/3DAN to ASM) only supports up to 16 frames of animation (15 if counting from 0).
 ```
-The way animations in Star Fox work is comparable to stop motion or claymation. The format logs the changes in vertices for each frame.  
+The way animations in Star Fox work is comparable to stop motion or claymation. The format logs point position changes for each frame.  
 
 Note that this procedure is very janky and manual and may be completely reworked in the future. It's good enough for simple things (e.g. moving doors/gates), but more complex animations can get tedious quickly.  
 
