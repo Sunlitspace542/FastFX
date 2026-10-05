@@ -1,11 +1,13 @@
 import bpy
 import bmesh
 import blf
+import gpu
 import math
 import os
 import re
 import tempfile
 from bpy_extras import view3d_utils
+from gpu_extras.batch import batch_for_shader
 
 from .common import VertexOperation, hex_to_rgb
 from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
@@ -102,6 +104,7 @@ def _draw_edge_material_labels():
     blf.shadow(font_id, 3, 0.0, 0.0, 0.0, 1.0)
     blf.shadow_offset(font_id, 1, -1)
 
+    projected_edges = []
     for start, end, label in edge_labels:
         start_2d = view3d_utils.location_3d_to_region_2d(
             region, region_3d, obj.matrix_world @ start
@@ -114,6 +117,27 @@ def _draw_edge_material_labels():
 
         color_index = int(label[2:]) if label[2:].isdigit() else 0
         color = hex_to_rgb(id_0_c_rgb.get(color_index, "#FFFFFF"))
+        projected_edges.append((start_2d, end_2d, label, color))
+
+    if projected_edges:
+        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        gpu.state.blend_set('ALPHA')
+        gpu.state.line_width_set(3.0)
+        try:
+            shader.bind()
+            for start_2d, end_2d, _, color in projected_edges:
+                batch = batch_for_shader(
+                    shader,
+                    'LINES',
+                    {"pos": (start_2d[:], end_2d[:])},
+                )
+                shader.uniform_float("color", color)
+                batch.draw(shader)
+        finally:
+            gpu.state.line_width_set(1.0)
+            gpu.state.blend_set('NONE')
+
+    for start_2d, end_2d, label, color in projected_edges:
         text_width, _ = blf.dimensions(font_id, label)
         midpoint_x = (start_2d.x + end_2d.x) / 2
         midpoint_y = (start_2d.y + end_2d.y) / 2
