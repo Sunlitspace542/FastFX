@@ -1,6 +1,6 @@
 # FastFX
-A Blender addon to Import/Export shapes and collision box data for use with Star Fox 1/2/EX.  
-**Blender 3.x is required.** Later Blender versions *might* work to some degree.  
+This Blender addon allows one to Import/Export shapes and collision box data for use with Star Fox 1/2/EX.  
+**Blender 3.x is required.** Later Blender versions *might* work to some degree, YMMV.  
 
 # Credits
 Super FX material: Euclidium98  
