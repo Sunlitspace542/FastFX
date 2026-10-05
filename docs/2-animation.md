@@ -16,5 +16,7 @@ Note that this procedure is very janky and manual and may be completely reworked
 ## Exporting Animations
 Select all the frame objects in Blender. They should all be in order from Frame 0 to whatever your last frame is. Usually Blender will sort the object list for you.  
 Go to ``File -> Export -> 3DAN/3DGI/Animated Fundoshi-kun (.anm)`` to export the animation to a .anm file in 3DAN/3DGI format.  
+To export as assembly, use the `File -> Export -> Star Fox ASM (Animated)` submenu.  
+For more detailed information on exporting animations, see chapter 3.  
 
 There is a rare chance that you may need to correct the order of the animation jump tables in the assembly after conversion to assembly if the animation frame order is incorrect. The addon has measures to try to prevent this, but things could still come out wrong.  
