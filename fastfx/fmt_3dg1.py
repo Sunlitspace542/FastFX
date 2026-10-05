@@ -1,6 +1,7 @@
 import bpy
 import math
 import os
+import re
 
 from .common import hex_to_rgb, distance_from_origin, pair_points_for_compression
 from .palette import id_0_c_rgb
@@ -214,9 +215,10 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True):
             material_index = poly.material_index
             material = obj.material_slots[material_index].material
             if material:
-                if material.name.startswith("FE"):  # Handle edges
+                material_name = re.sub(r"\.\d{3}$", "", material.name)
+                if material_name.startswith("FE"):  # Handle edges
                     try:
-                        edge_color_index = int(material.name[2:])  # Extract color index for edges
+                        edge_color_index = int(material_name[2:])  # Extract color index for edges
                     except ValueError:
                         edge_color_index = 0  # Default to 0 if parsing fails
 
@@ -225,9 +227,9 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True):
                         v2 = poly.vertices[(i + 1) % len(poly.vertices)]
                         edges.append((index_map[v1], index_map[v2], edge_color_index))
 
-                elif material.name.startswith("FX"):  # Handle polygons
+                elif material_name.startswith("FX"):  # Handle polygons
                     try:
-                        color_index = int(material.name[2:])  # Extract color index for polygons
+                        color_index = int(material_name[2:])  # Extract color index for polygons
                     except ValueError:
                         color_index = 0  # Default to 0 if parsing fails
 
@@ -288,6 +290,5 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True):
         file.write(chr(0x1A))
 
     return {'FINISHED'}
-
 
 
