@@ -1,0 +1,31 @@
+# 1. Creating Models
+Make a model in Blender. The 3DG1/3DAN and ASM formats can only accept whole numbers for vertex positions, also limited to the 16-bit coordinate range for ASM export, so it is strongly recommended you enable snapping to the nearest increment in Blender.
+
+The UI also provides tools to keep points at proper coordinate positions (see the chapter on the UI).  
+  
+## Materials
+Materials must be named in the format ``FX#``, where ``#`` is the color index of that material. See `extras/` for charts of colors in the standard `id_0_c` palette and their numbers. You can also look at the ``id_0_c_rgb`` dictionary in ``fastfx/palette.py`` itself for color descriptions.
+
+Use the FastFX sidebar to apply the proper color palette to the materials (see the chapter on the UI).
+
+## Edges and 2-pointed faces/2-gons
+Real 2-gons and stray edges for colored edges are also supported.
+
+For new 2-point faces, select loose edges in Edit Mode, choose an ``FX#`` material as the active material, and click ``Assign FX Material to Edges`` in the FastFX sidebar. Edges used by faces are skipped.
+
+These colored loose edges export as 2-point faces and are deduplicated with edges converted from existing 2-point faces.
+
+You may sometimes get an error when attempting to apply materials to loose edges in this way. Just try again and it should eventually go through.
+
+### Legacy 2-gon features
+You can also create 2-gons directly using the ``Add 2-Point Face`` option in the FastFX sidebar, though this is a legacy feature, and working with real 2-gons in Blender has its quirks and issues. 2-gons are only used when importing a shape or on older projects from before edge tagging was added.
+
+### Edge material overlay
+The active mesh's assigned loose edges and existing 2-point faces with ``FX#`` materials display a palette-colored line and material label over the edge in the 3D Viewport; this is a viewport-only visual aid and does not add geometry or affect exports.
+
+The line and label overlays can be toggled independently in the FastFX sidebar under ``Edge Material Overlay``.
+
+## Face to edge conversion (3DG1 and non-animated export only)
+To convert faces on a model into edges, use ``FE#`` instead of ``FX#`` as the material name. Please note that ``FE#`` materials are reserved for this feature only and should not be used otherwise. Faces using that material naming scheme will be converted to edges when exporting.
+
+Generated edges are also deduplicated based on if two edges are at the same position and have the same color.  
