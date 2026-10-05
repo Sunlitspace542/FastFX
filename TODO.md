@@ -16,7 +16,7 @@ Categories are named by their source files.
 - N/A
 
 ## fmt_asm
-- [x] (WORK IN PROGRESS) BSP tree generation - the BSP algorithm has been cracked thanks to kando throwing SHAPED.EXE at a clanker, this really should be integrated
+- [x] BSP tree generation - the BSP algorithm has been cracked thanks to kando throwing SHAPED.EXE at a clanker, this really should be integrated
 - [x] Enforce CRLF line endings on output files - this is to deal with UNIX being UNIX when the files written need to be able to be read by a geriatric assembler stuck on DOS that does not know what LF alone means
 - [ ] Finally add BSP/GZS animation import/export?
 
