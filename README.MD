@@ -1,5 +1,5 @@
 # FastFX
-A Blender plugin to Import/Export shapes and collision box data for use with Star Fox 1/2/EX.  
+A Blender addon to Import/Export shapes and collision box data for use with Star Fox 1/2/EX.  
 **Blender 3.x is required.** Later Blender versions *might* work to some degree.  
 
 # Credits
@@ -33,7 +33,7 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 
 # Installation
 Run `build_addon.ps1` (Windows PowerShell) / `build.sh` (Linux) to make the addon ZIP, or download a release if one exists. In Blender, go to ``Edit -> Preferences -> Add-ons -> Install...``  
-Locate and open ``fastfx.zip``. a plugin called FastFX should appear in the window. Click the checkbox to enable it.  
+Locate and open ``fastfx.zip``. an addon called FastFX should appear in the window. Click the checkbox to enable it.  
 
 # Usage
 For usage instructions, see [the FastFX user's manual](docs/MANUAL.md).

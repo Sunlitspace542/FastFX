@@ -1,6 +1,6 @@
 [Return to User's Manual index](MANUAL.md)
 # 4. Importing Shapes Into Blender
-Currently, this plugin only supports importing 6 formats:  
+Currently, this addon only supports importing 6 formats:  
 - 3DG1/3DGI
     - Fundoshi-kun - point coordinates are integers  
     - Model to FX - point coordinates are floats, has extra spacing in between lines in the face list  
