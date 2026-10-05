@@ -5,6 +5,7 @@
 Collision boxes have to be in a very specific sanitized format. Remove any extra tabs and manually evaluate any expressions if importing from source.  
 
 The collision box format is as follows:
+
 `[name]	colbox	[linked label], Offset X, Y, Z, rotation flag (rotx/y/z or norot), Dimensions X, Y, Z, flags to set, flags to clear, scale`
 
 For example, properly sanitized and formatted colbox definitions for the player would look like:
@@ -21,8 +22,9 @@ Blender might crash when using "Generate Colbox for Mesh". Save often.
 You have been warned.
 ```
 
-A colbox's properties can be accessed in the ``Colbox Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties. It is laid out like this:
+A colbox's properties can be accessed in the ``Colbox Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties.
 
+Explanation for each item:  
 - Label: Assembler label for the colbox
 - Linked label: Assembler label of next colbox to link to this one (if this is the only box or there are no further boxes, enter 0)
 - Offset (x, y, z)

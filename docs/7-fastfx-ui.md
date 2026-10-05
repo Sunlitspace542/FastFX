@@ -2,10 +2,10 @@
 # 7. FastFX Sidebar
 FastFX adds a panel on the right hand side of the screen called ``FastFX`` with extra utilities.  
 
-### Material Configuration:
+## Material Configuration:
 ``Toggle Backface Culling`` toggles backface culling on all materials. This allows for a more accurate representation of the shape in Blender, as Star Fox doesn't draw polygons as double-sided.  
 
-### Color Palette (Fancy):
+## Color Palette (Fancy):
 **PLEASE NOTE**: these features are only known to work on Blender 3.x.  
   
 ``Create Super FX node group`` creates the node group needed for the Super FX material. You only need to click this once per .blend file.  
@@ -13,11 +13,11 @@ FastFX adds a panel on the right hand side of the screen called ``FastFX`` with 
 ``Apply Material Palette (Fancy)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using the Super FX material. The node group must exist first.  
   
 
-### Color Palette (Simple):
+## Color Palette (Simple):
 ``Apply Material Palette (Simple)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using simple flat colors.  
   
 
-### Mesh Utilities
+## Mesh Utilities
 
 The 3DG1 exporter will automatically round all vertex coordinates, though you may also want to manually do this. Options for this are provided in this section.  
 The operations available are:  
@@ -36,10 +36,10 @@ If your model becomes greatly distorted after using these tools, try scaling it 
 
 ``Assign FX Material to Edges`` assigns a selected FX# material in the material pane to a selected plain edge in edit mode. You may sometimes get an error when attempting to apply materials to loose edges in this way. Just try again and it should eventually go through.  
 
-### Edge Material Overlay
+## Edge Material Overlay
 This section allows you to enable/disable the edge color and label overlays if desired.  
 
-### Collision Box Tools
+## Collision Box Tools
 ``Import Colboxes From Clipboard`` imports colbox definitions from the clipboard.  
   
 ``Export Colboxes to Clipboard`` copies colbox definitions to the clipboard.  
@@ -50,10 +50,10 @@ This section allows you to enable/disable the edge color and label overlays if d
   
 ``Generate Colbox for Mesh`` generates a colbox that fits the selected mesh. **NOTE:** this can sometimes cause Blender to crash. Save often and you should be fine.  
 
-### BSP/GZS Tools
+## BSP/GZS Tools
 ``Add ShapeHdr Properties`` assigns all the editable BSP/GZS shape header properties as properties to a selected object. These are used to populate certain fields in the shape header when exporting to assembly.  
 
-## ShapeHdr/Colbox Properties
+### ShapeHdr/Colbox Properties
 Click on an object which has ShapeHdr properties added, or a colbox, and its properties will appear in this area.  
 
 ShapeHdr Properties Explanation:  
