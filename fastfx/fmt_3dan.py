@@ -1,5 +1,6 @@
 import bpy
 import os
+import re
 
 from .common import hex_to_rgb
 from .palette import id_0_c_rgb
@@ -110,6 +111,16 @@ class Import3DANOperator(bpy.types.Operator):
 # =========================
 # 3DAN Exporter
 # =========================
+def _object_name_sort_key(obj):
+    """Sort object names naturally so numbered animation frames stay in order."""
+    name_parts = re.split(r"(\d+)", obj.name.casefold())
+    natural_name = tuple(
+        (1, int(part)) if part.isdigit() else (0, part)
+        for part in name_parts
+    )
+    return natural_name, obj.name
+
+
 def write_3dan(filepath, objects, frame_number):
     """
     Writes the 3DAN file format.
@@ -118,8 +129,8 @@ def write_3dan(filepath, objects, frame_number):
     :param objects: List of Blender objects (with meshes) representing animation frames.
     :param frame_number: Total number of frames.
     """
-    # Sort objects by name to ensure frames are in the correct order
-    sorted_objects = sorted(objects, key=lambda obj: obj.name)
+    # Sort object names naturally so Frame2 comes before Frame10.
+    sorted_objects = sorted(objects, key=_object_name_sort_key)
 
     with open(filepath, "w") as f:
         # Header
@@ -193,4 +204,3 @@ class Export3DAN(bpy.types.Operator):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-

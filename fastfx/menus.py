@@ -22,6 +22,8 @@ class TOPBAR_MT_fastfx_asm(bpy.types.Menu):
         self.layout.operator(ExportToBSPTreeless.bl_idname, text="Star Fox ASM BSP (treeless) (.asm/.bsp)")
         self.layout.operator(ExportToGZS.bl_idname, text="Star Fox ASM GZS (.asm/.gzs)")
 
+# TODO another menu for "Star Fox ASM (Animated)" that has the same formats but using the 3DAN exporter instead
+
 # =========================
 # Menu Functions
 # =========================
