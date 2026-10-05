@@ -30,9 +30,9 @@ Categories are named by their source files.
 
 ## ui
 - [x] Add 2-point face function (I think we need to trick Blender to do this, I created a 3DG1 file with a single 2-point face for this, the idea being we import that 3DG1 and join it to the mesh)
-- [ ] Better side panel in general - Fast64 has a nice side panel, I wish we did
+- [ ] Better side panel in general - Fast64 has a nice side panel, I wish we did - we are getting there
 - [x] Button to select twisted faces (shaped has this and I think it'd be useful)
-- [ ] Better shape header/colbox setup - this is all a bit fragmented right now and I wish it sucked much less
+- [x] Better shape header/colbox setup - this is all a bit fragmented right now and I wish it sucked much less
 - [ ] possibly move export dialog options to menu bar?
 
 ## OTHER
