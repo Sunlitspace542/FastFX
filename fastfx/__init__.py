@@ -38,6 +38,8 @@ from .ui import (
     OBJECT_OT_select_twisted_faces,
     OBJECT_OT_toggle_backface_culling,
     VIEW3D_PT_fastfx_tools,
+    register_edge_material_overlay,
+    unregister_edge_material_overlay,
 )
 
 
@@ -79,9 +81,11 @@ def register():
         bpy.utils.register_class(cls)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
+    register_edge_material_overlay()
 
 
 def unregister():
+    unregister_edge_material_overlay()
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
     for cls in reversed(classes):

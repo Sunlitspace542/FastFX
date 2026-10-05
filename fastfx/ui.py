@@ -1,9 +1,11 @@
 import bpy
 import bmesh
+import blf
 import math
 import os
 import re
 import tempfile
+from bpy_extras import view3d_utils
 
 from .common import VertexOperation, hex_to_rgb
 from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
@@ -15,6 +17,127 @@ from .superfx import super_fx_node_group
 # FastFX menu panel functions.
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
+
+_edge_material_overlay_handle = None
+
+
+def _edge_material_label(material):
+    if material is None:
+        return None
+    name = re.sub(r"\.\d{3}$", "", material.name)
+    return name if name.startswith("FX") else None
+
+
+def _draw_edge_material_labels():
+    context = bpy.context
+    obj = context.active_object
+    region = context.region
+    region_3d = context.region_data
+    if (
+        context.area is None
+        or context.area.type != 'VIEW_3D'
+        or region is None
+        or region.type != 'WINDOW'
+        or region_3d is None
+        or obj is None
+        or obj.type != 'MESH'
+    ):
+        return
+
+    edge_labels = []
+    if context.mode == 'EDIT_MESH' and obj.mode == 'EDIT':
+        bm = bmesh.from_edit_mesh(obj.data)
+        layer = bm.edges.layers.int.get(EDGE_COLOR_ATTRIBUTE)
+        if layer is not None:
+            for edge in bm.edges:
+                color_index = edge[layer]
+                if color_index >= 0 and not edge.link_faces:
+                    edge_labels.append((edge.verts[0].co, edge.verts[1].co, f"FX{color_index}"))
+
+        for face in bm.faces:
+            if len(face.verts) != 2:
+                continue
+            material_index = face.material_index
+            if material_index < len(obj.material_slots):
+                label = _edge_material_label(obj.material_slots[material_index].material)
+                if label:
+                    edge_labels.append((face.verts[0].co, face.verts[1].co, label))
+    else:
+        mesh = obj.data
+        edge_color_attribute = mesh.attributes.get(EDGE_COLOR_ATTRIBUTE)
+        if (
+            edge_color_attribute is not None
+            and edge_color_attribute.domain == 'EDGE'
+            and edge_color_attribute.data_type == 'INT'
+        ):
+            face_edge_keys = {
+                tuple(sorted(edge_key))
+                for poly in mesh.polygons
+                for edge_key in poly.edge_keys
+            }
+            for edge, color_value in zip(mesh.edges, edge_color_attribute.data):
+                edge_key = tuple(sorted(edge.vertices))
+                if color_value.value >= 0 and edge_key not in face_edge_keys:
+                    v1, v2 = edge.vertices
+                    edge_labels.append((
+                        mesh.vertices[v1].co,
+                        mesh.vertices[v2].co,
+                        f"FX{color_value.value}",
+                    ))
+
+        for poly in mesh.polygons:
+            if len(poly.vertices) != 2 or poly.material_index >= len(obj.material_slots):
+                continue
+            label = _edge_material_label(obj.material_slots[poly.material_index].material)
+            if label:
+                v1, v2 = poly.vertices
+                edge_labels.append((mesh.vertices[v1].co, mesh.vertices[v2].co, label))
+
+    font_id = 0
+    if bpy.app.version >= (4, 0, 0):
+        blf.size(font_id, 12)
+    else:
+        blf.size(font_id, 12, 72)
+    blf.enable(font_id, blf.SHADOW)
+    blf.shadow(font_id, 3, 0.0, 0.0, 0.0, 1.0)
+    blf.shadow_offset(font_id, 1, -1)
+
+    for start, end, label in edge_labels:
+        start_2d = view3d_utils.location_3d_to_region_2d(
+            region, region_3d, obj.matrix_world @ start
+        )
+        end_2d = view3d_utils.location_3d_to_region_2d(
+            region, region_3d, obj.matrix_world @ end
+        )
+        if start_2d is None or end_2d is None:
+            continue
+
+        color_index = int(label[2:]) if label[2:].isdigit() else 0
+        color = hex_to_rgb(id_0_c_rgb.get(color_index, "#FFFFFF"))
+        text_width, _ = blf.dimensions(font_id, label)
+        midpoint_x = (start_2d.x + end_2d.x) / 2
+        midpoint_y = (start_2d.y + end_2d.y) / 2
+        blf.position(font_id, midpoint_x - text_width / 2, midpoint_y + 4, 0)
+        blf.color(font_id, *color)
+        blf.draw(font_id, label)
+
+    blf.disable(font_id, blf.SHADOW)
+
+
+def register_edge_material_overlay():
+    global _edge_material_overlay_handle
+    if _edge_material_overlay_handle is None:
+        _edge_material_overlay_handle = bpy.types.SpaceView3D.draw_handler_add(
+            _draw_edge_material_labels, (), 'WINDOW', 'POST_PIXEL'
+        )
+
+
+def unregister_edge_material_overlay():
+    global _edge_material_overlay_handle
+    if _edge_material_overlay_handle is not None:
+        bpy.types.SpaceView3D.draw_handler_remove(_edge_material_overlay_handle, 'WINDOW')
+        _edge_material_overlay_handle = None
+
 
 # =========================
 # FastFX Menu Panel -  Palette assignment (fancy)
@@ -267,9 +390,9 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
 # FastFX Menu Panel - Assign colors to loose edges
 # =========================
 class OBJECT_OT_assign_edge_material(bpy.types.Operator):
-    """Assign the active FE material to selected loose edges for 3DG1 export"""
+    """Assign the active FX material to selected loose edges for 3DG1 export"""
     bl_idname = "object.assign_edge_material"
-    bl_label = "Assign FE Material to Loose Edges"
+    bl_label = "Assign FX Material to Loose Edges"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -284,12 +407,12 @@ class OBJECT_OT_assign_edge_material(bpy.types.Operator):
         obj = context.object
         material = obj.active_material
         if material is None:
-            self.report({'WARNING'}, "Select an FE material in the active material slot")
+            self.report({'WARNING'}, "Select an FX material in the active material slot")
             return {'CANCELLED'}
 
         material_name = re.sub(r"\.\d{3}$", "", material.name)
-        if not material_name.startswith("FE") or not material_name[2:].isdigit():
-            self.report({'WARNING'}, "The active material must be named FE followed by a color index")
+        if not material_name.startswith("FX") or not material_name[2:].isdigit():
+            self.report({'WARNING'}, "The active material must be named FX followed by a color index")
             return {'CANCELLED'}
         color_index = int(material_name[2:])
 
@@ -315,7 +438,7 @@ class OBJECT_OT_assign_edge_material(bpy.types.Operator):
 
         bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
         skipped_count = len(selected_edges) - len(loose_edges)
-        message = f"Assigned FE{color_index} to {len(loose_edges)} loose edge(s)"
+        message = f"Assigned FX{color_index} to {len(loose_edges)} loose edge(s)"
         if skipped_count:
             message += f"; skipped {skipped_count} edge(s) used by faces"
         self.report({'INFO'}, message)
@@ -469,7 +592,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
         layout.operator(OBJECT_OT_assign_edge_material.bl_idname)
-        layout.label(text="Uses the active FE material on selected loose edges")
+        layout.label(text="Uses the active FX material on selected loose edges")
         layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")
