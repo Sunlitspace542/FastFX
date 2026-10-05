@@ -418,4 +418,42 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.label(text="BSP/GZS Tools")
         layout.operator("object.add_shape_header_properties")
 
+        obj = context.active_object
+        if obj is None:
+            return
 
+        if obj.type == 'MESH':
+            shape_header_fields = (
+                ("zsort_priority", "Z-Sort Priority"),
+                ("scale", "Scale"),
+                ("colbox_label", "Colbox Label"),
+                ("color_palette", "Color Palette"),
+                ("shadow_shape", "Shadow Shape"),
+                ("close_lod_shape", "Close LOD Shape"),
+                ("mid_lod_shape", "Mid LOD Shape"),
+                ("far_lod_shape", "Far LOD Shape"),
+            )
+            box = layout.box()
+            box.label(text="ShapeHdr Properties")
+            if "zsort_priority" in obj:
+                for key, label in shape_header_fields:
+                    if key in obj:
+                        box.prop(obj, f'["{key}"]', text=label)
+            else:
+                box.label(text="Add ShapeHdr Properties to edit these values")
+        elif obj.type == 'EMPTY' and "colbox_label" in obj:
+            colbox_fields = (
+                ("colbox_label", "Label"),
+                ("colbox_linked_label", "Linked Label"),
+                ("colbox_offset", "Offset"),
+                ("colbox_rotation", "Rotation"),
+                ("colbox_dimensions", "Dimensions"),
+                ("colbox_flags_set", "Flags Set"),
+                ("colbox_flags_clear", "Flags Clear"),
+                ("colbox_scale", "Scale"),
+            )
+            box = layout.box()
+            box.label(text="Colbox Properties")
+            for key, label in colbox_fields:
+                if key in obj:
+                    box.prop(obj, f'["{key}"]', text=label)

@@ -84,7 +84,7 @@ There is no support yet for exporting animations in this format.
 FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Choose BSP to generate a BSP tree for Z-sorting, or BSP (treeless) to force a flat face list; GZS export is also available. Face sorting and point-pair compression are applied during the 3DG1 export stage.
 
 Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds some editable shape header properties to the selected object.  
-You can edit these properties by selecting the object and going to the Properties section of the Item panel.
+You can edit these properties in the ``ShapeHdr Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties.
   
 Explanation:  
 - ``zsort_priority`` - Z-sorting priority of the shape when rendered with other shapes. Can usually be left as-is.  
@@ -172,7 +172,7 @@ There is a chance Blender may crash when using "Generate Colbox for Mesh". Save 
 You have been warned.
 ```
 
-A colbox's properties can be accessed from the item panel -> Properties. It is laid out like this:
+A colbox's properties can be accessed in the ``Colbox Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties. It is laid out like this:
 
 - dimensions (x, y, z)
 - flags to clear (can be HF1 - HF8 or 0 for none)
