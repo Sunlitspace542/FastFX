@@ -121,16 +121,33 @@ def _object_name_sort_key(obj):
     return natural_name, obj.name
 
 
-def write_3dan(filepath, objects, frame_number):
+def sort_animation_objects(objects):
+    """Return animation frame objects in natural object-name order."""
+    return sorted(objects, key=_object_name_sort_key)
+
+
+def write_3dan(filepath, objects, frame_number, validate_signed_16bit=False):
     """
     Writes the 3DAN file format.
 
     :param filepath: The output file path.
     :param objects: List of Blender objects (with meshes) representing animation frames.
     :param frame_number: Total number of frames.
+    :param validate_signed_16bit: Reject points outside SHAPED's signed 16-bit coordinate range.
     """
     # Sort object names naturally so Frame2 comes before Frame10.
-    sorted_objects = sorted(objects, key=_object_name_sort_key)
+    sorted_objects = sort_animation_objects(objects)
+
+    if validate_signed_16bit:
+        for obj in sorted_objects[:frame_number]:
+            for point_index, vertex in enumerate(obj.data.vertices):
+                x, y, z = (int(round(coord)) for coord in vertex.co)
+                for axis, coordinate in (("x", x), ("y", z), ("z", -y)):
+                    if not -32768 <= coordinate <= 32767:
+                        raise ValueError(
+                            f"Frame '{obj.name}' point {point_index} {axis} coordinate {coordinate} "
+                            "is outside the signed 16-bit range (-32768 to 32767)."
+                        )
 
     with open(filepath, "w") as f:
         # Header

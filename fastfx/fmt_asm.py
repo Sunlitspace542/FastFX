@@ -6,6 +6,7 @@ import bpy
 from bpy_extras.io_utils import ImportHelper
 
 from .common import hex_to_rgb
+from .fmt_3dan import sort_animation_objects, write_3dan
 from .fmt_3dg1 import write_3dg1
 from .palette import id_0_c_rgb
 from .shaped import ShapeHeader, load as load_shape, write as write_shape
@@ -186,6 +187,52 @@ def export_to_format(filepath, obj, sort_mode, output_format, no_simple123, comp
             raise ValueError(f"Unsupported ASM export format: {output_format}")
 
 
+def export_animated_to_format(filepath, objects, output_format, no_simple123, tree=True):
+    """Export animation frame objects through a temporary 3DAN file and SHAPED."""
+    output_path = Path(filepath)
+    shape_name = output_path.stem
+    frame_objects = sort_animation_objects(objects)
+    if not frame_objects:
+        raise ValueError("No mesh objects found for animation export.")
+
+    first_mesh = frame_objects[0].data
+    vertex_count = len(first_mesh.vertices)
+    topology = tuple(tuple(polygon.vertices) for polygon in first_mesh.polygons)
+    for obj in frame_objects:
+        mesh = obj.data
+        if len(mesh.vertices) != vertex_count:
+            raise ValueError(
+                f"Frame '{obj.name}' has {len(mesh.vertices)} vertices; expected {vertex_count}."
+            )
+        if tuple(tuple(polygon.vertices) for polygon in mesh.polygons) != topology:
+            raise ValueError(f"Frame '{obj.name}' has different face topology from frame '{frame_objects[0].name}'.")
+
+    with TemporaryDirectory() as temporary:
+        source_path = Path(temporary) / "animation.3dan"
+        write_3dan(source_path, frame_objects, len(frame_objects), validate_signed_16bit=True)
+        shape = load_shape(source_path)
+        base_object = frame_objects[0]
+        shape.header = ShapeHeader(
+            name=shape_name,
+            zsort_priority=base_object.get("zsort_priority", "0"),
+            scale=base_object.get("scale", "0"),
+            colbox=base_object.get("colbox_label", "0"),
+            colour_table=base_object.get("color_palette", "id_0_c"),
+            shadow=base_object.get("shadow_shape", "0"),
+            simple1=base_object.get("close_lod_shape", "0"),
+            simple2=base_object.get("mid_lod_shape", "0"),
+            simple3=base_object.get("far_lod_shape", "0"),
+            simplified=no_simple123,
+        )
+
+        if output_format == "bsp":
+            write_shape(shape, output_path, "bsp", tree=tree)
+        elif output_format == "gzs":
+            write_shape(shape, output_path, "gzs")
+        else:
+            raise ValueError(f"Unsupported animated ASM export format: {output_format}")
+
+
 # =========================
 # ASM BSP Export Operators
 # =========================
@@ -349,3 +396,57 @@ class ExportToGZS(bpy.types.Operator):
         layout.prop(self, "sort_mode", text="Sort Mode")
         layout.prop(self, "no_simple123", text="Simplified ShapeHdr")
         layout.prop(self, "compress_point_pairs", text="Compress point pairs")
+
+
+class ExportAnimatedToASM(bpy.types.Operator):
+    """Export animated mesh objects to Star Fox ASM through SHAPED."""
+    bl_idname = "export_mesh.animated_asm"
+    bl_label = "Export Animated ASM"
+    bl_options = {'PRESET'}
+
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+    filter_glob: bpy.props.StringProperty(default="*.asm;*.bsp;*.gzs", options={'HIDDEN'})
+    output_format: bpy.props.EnumProperty(
+        items=[
+            ('bsp', "BSP", "Compile animation as BSP with a tree"),
+            ('bsp_treeless', "BSP (treeless)", "Compile animation as a flat BSP face list"),
+            ('gzs', "GZS", "Compile animation as GZS"),
+        ],
+        default='bsp',
+        options={'HIDDEN'},
+    )
+    no_simple123: bpy.props.BoolProperty(
+        name="Simplified ShapeHdr",
+        description="Exclude LODs from the shape header when enabled",
+        default=False,
+    )
+
+    def execute(self, context):
+        frame_objects = [obj for obj in context.scene.objects if obj.type == "MESH"]
+        if not frame_objects:
+            self.report({'ERROR'}, "No mesh objects found for animation export.")
+            return {'CANCELLED'}
+
+        output_format = "gzs" if self.output_format == "gzs" else "bsp"
+        tree = self.output_format == "bsp"
+        try:
+            export_animated_to_format(
+                self.filepath,
+                frame_objects,
+                output_format,
+                self.no_simple123,
+                tree=tree,
+            )
+        except Exception as exc:
+            self.report({'ERROR'}, f"Failed to export animated {self.output_format.upper()}: {exc}")
+            return {'CANCELLED'}
+
+        self.report({'INFO'}, f"Exported animated {self.output_format.upper()} to: {self.filepath}")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+    def draw(self, context):
+        self.layout.prop(self, "no_simple123", text="Simplified ShapeHdr")

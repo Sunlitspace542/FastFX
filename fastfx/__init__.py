@@ -18,7 +18,7 @@ bl_info = {
 
 from .fmt_3dan import Export3DAN, Import3DANOperator
 from .fmt_3dg1 import Export3DG1, Import3DG1
-from .fmt_asm import ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
+from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
 from .colboxes import (
     OBJECT_OT_export_colboxes,
     OBJECT_OT_generate_colbox,
@@ -27,7 +27,7 @@ from .colboxes import (
     OBJECT_OT_update_colbox_offsets,
 )
 from .common import VertexOperation
-from .menus import TOPBAR_MT_fastfx_asm, menu_func_export, menu_func_import
+from .menus import TOPBAR_MT_fastfx_asm, TOPBAR_MT_fastfx_asm_animated, menu_func_export, menu_func_import
 from .superfx import OBJECT_OT_create_super_fx
 from .ui import (
     AddShapeHeaderPropertiesOperator,
@@ -65,7 +65,9 @@ classes = (
     ExportToBSP,
     ExportToBSPTreeless,
     ExportToGZS,
+    ExportAnimatedToASM,
     TOPBAR_MT_fastfx_asm,
+    TOPBAR_MT_fastfx_asm_animated,
     AddShapeHeaderPropertiesOperator,
 )
 

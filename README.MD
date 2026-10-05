@@ -9,7 +9,7 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 
 # Features
 - 3DG1 format importer/exporter
-- ASM BSP (treeless) and GZS export through the bundled SHAPED model compiler, plus static BSP/GZS import - no animations yet
+- ASM BSP (tree or treeless) and GZS export for static and animated shapes through the bundled SHAPED model compiler, plus static BSP/GZS import
 - Custom Super FX material by Euclidium98 to help preview what the final product will look like (simple face coloring is also an option, used by default)
 - Proper 2-pointed face/edge support
 - Faces sorted on export (3DG1 export only)
@@ -28,8 +28,8 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 ## Exporting:
 - 3DG1 - Fundoshi-kun  
 - 3DAN - Animated Fundoshi-kun
-- Star Fox ASM BSP format - static export with optional BSP tree generation or a treeless flat face list, no animations yet
-- Star Fox ASM GZS format (BSP format variant) - static export only, no animations, limited face sorting capability  
+- Star Fox ASM BSP format - static and animated export with optional BSP tree generation or a treeless flat face list
+- Star Fox ASM GZS format (BSP format variant) - static and animated export
 
 # Installation
 Run `build_addon.ps1` (Windows PowerShell) / `build.sh` (Linux) to make the addon ZIP, or download a release if one exists. In Blender, go to ``Edit -> Preferences -> Add-ons -> Install...``  
@@ -76,11 +76,6 @@ You may need to correct the order of the animation jump tables in the BSP/GZS af
 ## Converting 3DG1/3DAN to Star Fox BSP Format
 
 ## Method 1: Via FastFX
-```diff  
--WARNING!-
-FastFX currently only supports exporting static models to BSP/GZS format.
-There is no support yet for exporting animations in this format.
-```
 FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Coordinates outside the signed 16-bit range (-32768 to 32767) are rejected to prevent SHAPED from wrapping them. Choose BSP to generate a BSP tree for Z-sorting, or BSP (treeless) to force a flat face list; GZS export is also available. Face sorting and point-pair compression are applied during the 3DG1 export stage.
 
 Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds some editable shape header properties to the selected object.  
@@ -108,6 +103,8 @@ Face sorting breakdown:
 There is also a drop-down in the export dialog regarding use of a simplified shape header that excludes LOD information. This is for compatibility with Star Fox EX.  
 If you are not using this plugin with that game, you can leave this option set to 'Off'.  
 Save the file.  
+
+For animated ASM export, use the ``Star Fox ASM (Animated)`` submenu. It gathers all mesh objects in the scene and orders them naturally by **object name**, so name the frames ``Frame0``, ``Frame1``, and so on (``Frame2`` sorts before ``Frame10``). Each frame must have the same vertex count and face topology; ShapeHdr properties and polygon materials are taken from the first frame in that order. The SHAPED compiler supports up to 128 frames and 500 points, and coordinates outside the signed 16-bit range (-32768 to 32767) are rejected.
 
 ## Method 2: SHAPED.EXE
 Get Shaped [here](https://github.com/Sunlitspace542/FastFX/releases/tag/shaped).  
