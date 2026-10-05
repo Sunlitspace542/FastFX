@@ -12,6 +12,11 @@ from .fmt_3dg1 import write_3dg1
 from .palette import id_0_c_rgb
 from .shaped import ShapeHeader, load as load_shape, write as write_shape
 
+# FastFX
+# File: fmt_asm.py
+# Functions dealing with ASM BSP/GZS import/export.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
 
 _POINT_DIRECTIVE = re.compile(r"\b(PointsX?[bw])\s+(\d+)", re.IGNORECASE)
 _POINT_VALUE = re.compile(r"\bp[bw]\s+(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)", re.IGNORECASE)
@@ -158,13 +163,6 @@ def _parse_asm_points(lines):
             raise ValueError(f"Point data is missing index {missing[0]} in animation frame {frame_index}.")
         frames.append([frame_points[index] for index in range(point_count)])
     return frames
-
-
-# FastFX
-# File: fmt_asm.py
-# Functions dealing with ASM BSP/GZS import/export.
-# Copyright (c) 2026 Sunlit
-# Released under the MIT License.
 
 # =========================
 # ASM BSP/GZS Importer Operator
