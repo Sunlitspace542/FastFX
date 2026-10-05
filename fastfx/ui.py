@@ -416,7 +416,7 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
 class OBJECT_OT_assign_edge_material(bpy.types.Operator):
     """Assign the active FX material to selected loose edges for 3DG1 export"""
     bl_idname = "object.assign_edge_material"
-    bl_label = "Assign FX Material to Loose Edges"
+    bl_label = "Assign FX Material to Edges"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -616,7 +616,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
         layout.operator(OBJECT_OT_assign_edge_material.bl_idname)
-        layout.label(text="Uses the active FX material on selected loose edges")
+        layout.label(text="Uses the active FX material on selected edges")
         layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")
