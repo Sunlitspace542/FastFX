@@ -21,6 +21,7 @@ from .superfx import super_fx_node_group
 # Released under the MIT License.
 
 _edge_material_overlay_handle = None
+_edge_material_line_overlay_handle = None
 
 
 def register_edge_material_overlay_settings():
@@ -48,28 +49,7 @@ def _edge_material_label(material):
     return name if name.startswith("FX") else None
 
 
-def _draw_edge_material_labels():
-    context = bpy.context
-    scene = context.scene
-    show_labels = scene.fastfx_show_edge_material_labels
-    show_lines = scene.fastfx_show_edge_material_lines
-    if not show_labels and not show_lines:
-        return
-
-    obj = context.active_object
-    region = context.region
-    region_3d = context.region_data
-    if (
-        context.area is None
-        or context.area.type != 'VIEW_3D'
-        or region is None
-        or region.type != 'WINDOW'
-        or region_3d is None
-        or obj is None
-        or obj.type != 'MESH'
-    ):
-        return
-
+def _edge_material_segments(context, obj):
     edge_labels = []
     if context.mode == 'EDIT_MESH' and obj.mode == 'EDIT':
         bm = bmesh.from_edit_mesh(obj.data)
@@ -119,8 +99,78 @@ def _draw_edge_material_labels():
                 v1, v2 = poly.vertices
                 edge_labels.append((mesh.vertices[v1].co, mesh.vertices[v2].co, label))
 
+    return edge_labels
+
+
+def _draw_edge_material_lines():
+    context = bpy.context
+    if not context.scene.fastfx_show_edge_material_lines:
+        return
+
+    obj = context.active_object
+    if (
+        context.area is None
+        or context.area.type != 'VIEW_3D'
+        or context.region is None
+        or context.region.type != 'WINDOW'
+        or context.region_data is None
+        or obj is None
+        or obj.type != 'MESH'
+    ):
+        return
+
+    segments = _edge_material_segments(context, obj)
+    if not segments:
+        return
+
+    shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+    gpu.state.depth_test_set('LESS_EQUAL')
+    gpu.state.blend_set('ALPHA')
+    gpu.state.line_width_set(3.0)
+    try:
+        shader.bind()
+        for start, end, label in segments:
+            color_index = int(label[2:]) if label[2:].isdigit() else 0
+            color = hex_to_rgb(id_0_c_rgb.get(color_index, "#FFFFFF"))
+            batch = batch_for_shader(
+                shader,
+                'LINES',
+                {
+                    "pos": (
+                        (obj.matrix_world @ start)[:],
+                        (obj.matrix_world @ end)[:],
+                    )
+                },
+            )
+            shader.uniform_float("color", color)
+            batch.draw(shader)
+    finally:
+        gpu.state.line_width_set(1.0)
+        gpu.state.blend_set('NONE')
+        gpu.state.depth_test_set('NONE')
+
+
+def _draw_edge_material_labels():
+    context = bpy.context
+    if not context.scene.fastfx_show_edge_material_labels:
+        return
+
+    obj = context.active_object
+    region = context.region
+    region_3d = context.region_data
+    if (
+        context.area is None
+        or context.area.type != 'VIEW_3D'
+        or region is None
+        or region.type != 'WINDOW'
+        or region_3d is None
+        or obj is None
+        or obj.type != 'MESH'
+    ):
+        return
+
     projected_edges = []
-    for start, end, label in edge_labels:
+    for start, end, label in _edge_material_segments(context, obj):
         start_2d = view3d_utils.location_3d_to_region_2d(
             region, region_3d, obj.matrix_world @ start
         )
@@ -134,25 +184,7 @@ def _draw_edge_material_labels():
         color = hex_to_rgb(id_0_c_rgb.get(color_index, "#FFFFFF"))
         projected_edges.append((start_2d, end_2d, label, color))
 
-    if show_lines and projected_edges:
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
-        gpu.state.blend_set('ALPHA')
-        gpu.state.line_width_set(3.0)
-        try:
-            shader.bind()
-            for start_2d, end_2d, _, color in projected_edges:
-                batch = batch_for_shader(
-                    shader,
-                    'LINES',
-                    {"pos": (start_2d[:], end_2d[:])},
-                )
-                shader.uniform_float("color", color)
-                batch.draw(shader)
-        finally:
-            gpu.state.line_width_set(1.0)
-            gpu.state.blend_set('NONE')
-
-    if show_labels and projected_edges:
+    if projected_edges:
         font_id = 0
         if bpy.app.version >= (4, 0, 0):
             blf.size(font_id, 12)
@@ -172,18 +204,25 @@ def _draw_edge_material_labels():
 
 
 def register_edge_material_overlay():
-    global _edge_material_overlay_handle
+    global _edge_material_overlay_handle, _edge_material_line_overlay_handle
     if _edge_material_overlay_handle is None:
         _edge_material_overlay_handle = bpy.types.SpaceView3D.draw_handler_add(
             _draw_edge_material_labels, (), 'WINDOW', 'POST_PIXEL'
         )
+    if _edge_material_line_overlay_handle is None:
+        _edge_material_line_overlay_handle = bpy.types.SpaceView3D.draw_handler_add(
+            _draw_edge_material_lines, (), 'WINDOW', 'POST_VIEW'
+        )
 
 
 def unregister_edge_material_overlay():
-    global _edge_material_overlay_handle
+    global _edge_material_overlay_handle, _edge_material_line_overlay_handle
     if _edge_material_overlay_handle is not None:
         bpy.types.SpaceView3D.draw_handler_remove(_edge_material_overlay_handle, 'WINDOW')
         _edge_material_overlay_handle = None
+    if _edge_material_line_overlay_handle is not None:
+        bpy.types.SpaceView3D.draw_handler_remove(_edge_material_line_overlay_handle, 'WINDOW')
+        _edge_material_line_overlay_handle = None
 
 
 # =========================
