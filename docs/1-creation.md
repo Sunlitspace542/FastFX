@@ -1,3 +1,4 @@
+[Return to main page](MANUAL.md)
 # 1. Creating Models
 Make a model in Blender. The 3DG1/3DAN and ASM formats can only accept whole numbers for vertex positions, also limited to the 16-bit coordinate range for ASM export, so it is strongly recommended you enable snapping to the nearest increment in Blender.
 

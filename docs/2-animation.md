@@ -7,11 +7,10 @@ The way animations in Star Fox work is comparable to stop motion or claymation. 
 
 Note that this procedure is very janky and manual and may be completely reworked in the future. It's good enough for simple things (e.g. moving doors/gates), but more complex animations can get tedious quickly.  
 
-First, create a model and export it as 3DG1 so the model is preprocessed for animation and the faces are pre-sorted as desired, as the animation exporters no **NOT** sort faces, and expect you to have done all this beforehand.
-
-Create a new Blender document and import the prior 3DG1. Rename it to ``Frame0`` for the first frame.  
-Second, press Shift+D, then 0 to reset the position, then ENTER to duplicate it. Rename this one to ``Frame1``. Go into edit mode and reposition the vertices for that frame.  
-Third, Duplicate that frame as before, rename it so its frame number is one greater than the previous, make your changes to the vertices, and repeat until you have all your frames.  
+1. Create a model and export it as 3DG1 so the model is preprocessed for animation and the faces are pre-sorted as desired, as the animation exporters no **NOT** sort faces, and expect you to have done all this beforehand.
+2. Create a new Blender document and import the prior 3DG1. Rename it to ``Frame0`` for the first frame.  
+3. Press Shift+D, then 0 to reset the position, then ENTER to duplicate it. Rename this one to ``Frame1``. Go into edit mode and reposition the vertices for that frame.  
+4. Duplicate that frame as before, rename it so its frame number is one greater than the previous, make your changes to the vertices, and repeat until you have all your frames.  
 
 ## Exporting Animations
 Select all the frame objects in Blender. They should all be in order from Frame 0 to whatever your last frame is. Usually Blender will sort the object list for you.  

@@ -1,6 +1,6 @@
 # 3. Exporting models
 
-# A. To 3DG1/3DAN
+## A. To 3DG1/3DAN
 
 To export to 3DG1, select all frame objects, and go to `File -> Export -> 3DG1/3DGI/Fundoshi-Kun (.txt/.3dg1/.obj)` to export.
 
@@ -15,7 +15,7 @@ Compress point pairs: Whether or not to have the exporter sort points into mirro
 
 To export to 3DAN, select all frame objects, and go to `File -> Export -> 3DAN/3DGI/Animated Fundoshi-Kun (.anm)` to export. There are no export options in the file picker dialog.
 
-# B. To ASM
+## B. To ASM
 
 ## Method 1: Via FastFX
 FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Coordinates outside the signed 16-bit range (-32768 to 32767) are rejected to prevent SHAPED from wrapping them. Choose BSP to generate a BSP tree for Z-sorting, or BSP (treeless) to force a flat face list; GZS export is also available. Face sorting and point-pair compression are applied during the 3DG1 export stage.
