@@ -1,3 +1,4 @@
+[Return to User's Manual index](MANUAL.md)
 # 3. Importing Shapes Into Blender
 Currently, this plugin only supports importing 6 formats:  
 - 3DG1/3DGI

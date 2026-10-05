@@ -1,3 +1,4 @@
+[Return to User's Manual index](MANUAL.md)
 # 8. Notes and Errata
 
 ## Notes
@@ -5,3 +6,4 @@
 
 ## Errata
 - If using `Generate Colbox for Mesh`, there is a slight chance that Blender will crash. Save often.
+- Using 2-pointed faces/2-gons is very janky and it is recommended you use plain edges instead. 2-gons are only used when importing a shape.

@@ -1,3 +1,4 @@
+[Return to User's Manual index](MANUAL.md)
 # 2. Animations
 ```diff  
 -IMPORTANT!-

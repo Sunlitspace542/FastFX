@@ -1,3 +1,4 @@
+[Return to User's Manual index](MANUAL.md)
 # 5. Collision Boxes
 
 ## Importing Collision Boxes

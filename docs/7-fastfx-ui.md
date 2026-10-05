@@ -1,3 +1,4 @@
+[Return to User's Manual index](MANUAL.md)
 # 7. FastFX Sidebar
 FastFX adds a panel on the right hand side of the screen called ``FastFX`` with extra utilities.  
 
