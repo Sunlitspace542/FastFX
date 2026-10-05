@@ -81,7 +81,7 @@ You may need to correct the order of the animation jump tables in the BSP/GZS af
 FastFX currently only supports exporting static models to BSP/GZS format.
 There is no support yet for exporting animations in this format.
 ```
-FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Choose BSP to generate a BSP tree for Z-sorting, or BSP (treeless) to force a flat face list; GZS export is also available. Face sorting and point-pair compression are applied during the 3DG1 export stage.
+FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Coordinates outside the signed 16-bit range (-32768 to 32767) are rejected to prevent SHAPED from wrapping them. Choose BSP to generate a BSP tree for Z-sorting, or BSP (treeless) to force a flat face list; GZS export is also available. Face sorting and point-pair compression are applied during the 3DG1 export stage.
 
 Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds some editable shape header properties to the selected object.  
 You can edit these properties in the ``ShapeHdr Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties.

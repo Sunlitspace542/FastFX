@@ -182,7 +182,7 @@ def read_3dg1(filepath, context):
 # =========================
 # 3DG1 Exporter
 # =========================
-def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True):
+def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True, validate_signed_16bit=False):
     """
     Exports a mesh object to 3DG1 format with customizable sorting modes and compression optimization.
 
@@ -190,6 +190,7 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True):
     :param obj: Blender mesh object to export.
     :param sort_mode: Sorting mode ("distance", "material", "none").
     :param compress_point_pairs: Whether to reorder vertices into compression-friendly pairs.
+    :param validate_signed_16bit: Reject points outside SHAPED's signed 16-bit coordinate range.
     """
     # Open the file for writing
     with open(filepath, "w") as file:
@@ -197,6 +198,15 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True):
         original_vertices = [(
             round(v.co.x), round(v.co.y), round(v.co.z)
         ) for v in obj.data.vertices]
+
+        if validate_signed_16bit:
+            for point_index, (x, y, z) in enumerate(original_vertices):
+                for axis, coordinate in (("x", x), ("y", z), ("z", -y)):
+                    if not -32768 <= coordinate <= 32767:
+                        raise ValueError(
+                            f"Point {point_index} {axis} coordinate {coordinate} is outside "
+                            "the signed 16-bit range (-32768 to 32767)."
+                        )
 
         if compress_point_pairs:
             new_vertices, index_map = pair_points_for_compression(original_vertices)
@@ -290,5 +300,4 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True):
         file.write(chr(0x1A))
 
     return {'FINISHED'}
-
 

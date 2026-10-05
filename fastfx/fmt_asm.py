@@ -163,7 +163,7 @@ def export_to_format(filepath, obj, sort_mode, output_format, no_simple123, comp
 
     with TemporaryDirectory() as temporary:
         source_path = Path(temporary) / "model.3dg1"
-        write_3dg1(source_path, obj, sort_mode, compress_point_pairs)
+        write_3dg1(source_path, obj, sort_mode, compress_point_pairs, validate_signed_16bit=True)
         shape = load_shape(source_path)
         shape.header = ShapeHeader(
             name=shape_name,
