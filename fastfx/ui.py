@@ -23,6 +23,24 @@ from .superfx import super_fx_node_group
 _edge_material_overlay_handle = None
 
 
+def register_edge_material_overlay_settings():
+    bpy.types.Scene.fastfx_show_edge_material_labels = bpy.props.BoolProperty(
+        name="Show Material Labels",
+        description="Show FX material names over assigned edges and 2-point faces",
+        default=True,
+    )
+    bpy.types.Scene.fastfx_show_edge_material_lines = bpy.props.BoolProperty(
+        name="Show Colored Edge Lines",
+        description="Draw palette-colored lines over assigned edges and 2-point faces",
+        default=True,
+    )
+
+
+def unregister_edge_material_overlay_settings():
+    del bpy.types.Scene.fastfx_show_edge_material_labels
+    del bpy.types.Scene.fastfx_show_edge_material_lines
+
+
 def _edge_material_label(material):
     if material is None:
         return None
@@ -32,6 +50,12 @@ def _edge_material_label(material):
 
 def _draw_edge_material_labels():
     context = bpy.context
+    scene = context.scene
+    show_labels = scene.fastfx_show_edge_material_labels
+    show_lines = scene.fastfx_show_edge_material_lines
+    if not show_labels and not show_lines:
+        return
+
     obj = context.active_object
     region = context.region
     region_3d = context.region_data
@@ -95,15 +119,6 @@ def _draw_edge_material_labels():
                 v1, v2 = poly.vertices
                 edge_labels.append((mesh.vertices[v1].co, mesh.vertices[v2].co, label))
 
-    font_id = 0
-    if bpy.app.version >= (4, 0, 0):
-        blf.size(font_id, 12)
-    else:
-        blf.size(font_id, 12, 72)
-    blf.enable(font_id, blf.SHADOW)
-    blf.shadow(font_id, 3, 0.0, 0.0, 0.0, 1.0)
-    blf.shadow_offset(font_id, 1, -1)
-
     projected_edges = []
     for start, end, label in edge_labels:
         start_2d = view3d_utils.location_3d_to_region_2d(
@@ -119,7 +134,7 @@ def _draw_edge_material_labels():
         color = hex_to_rgb(id_0_c_rgb.get(color_index, "#FFFFFF"))
         projected_edges.append((start_2d, end_2d, label, color))
 
-    if projected_edges:
+    if show_lines and projected_edges:
         shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
         gpu.state.blend_set('ALPHA')
         gpu.state.line_width_set(3.0)
@@ -137,15 +152,23 @@ def _draw_edge_material_labels():
             gpu.state.line_width_set(1.0)
             gpu.state.blend_set('NONE')
 
-    for start_2d, end_2d, label, color in projected_edges:
-        text_width, _ = blf.dimensions(font_id, label)
-        midpoint_x = (start_2d.x + end_2d.x) / 2
-        midpoint_y = (start_2d.y + end_2d.y) / 2
-        blf.position(font_id, midpoint_x - text_width / 2, midpoint_y + 4, 0)
-        blf.color(font_id, *color)
-        blf.draw(font_id, label)
-
-    blf.disable(font_id, blf.SHADOW)
+    if show_labels and projected_edges:
+        font_id = 0
+        if bpy.app.version >= (4, 0, 0):
+            blf.size(font_id, 12)
+        else:
+            blf.size(font_id, 12, 72)
+        blf.enable(font_id, blf.SHADOW)
+        blf.shadow(font_id, 3, 0.0, 0.0, 0.0, 1.0)
+        blf.shadow_offset(font_id, 1, -1)
+        for start_2d, end_2d, label, color in projected_edges:
+            text_width, _ = blf.dimensions(font_id, label)
+            midpoint_x = (start_2d.x + end_2d.x) / 2
+            midpoint_y = (start_2d.y + end_2d.y) / 2
+            blf.position(font_id, midpoint_x - text_width / 2, midpoint_y + 4, 0)
+            blf.color(font_id, *color)
+            blf.draw(font_id, label)
+        blf.disable(font_id, blf.SHADOW)
 
 
 def register_edge_material_overlay():
@@ -616,7 +639,10 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
         layout.operator(OBJECT_OT_assign_edge_material.bl_idname)
-        layout.label(text="Uses the active FX material on selected edges")
+        overlay_box = layout.box()
+        overlay_box.label(text="Edge Material Overlay")
+        overlay_box.prop(context.scene, "fastfx_show_edge_material_labels")
+        overlay_box.prop(context.scene, "fastfx_show_edge_material_lines")
         layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")

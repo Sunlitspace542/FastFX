@@ -8,7 +8,8 @@ Categories are named by their source files.
 - [x] Make point sorting for horizontal mirroring optimization on export optional, deduplicate point pairing code from bsp/gzs and 3dg1 code and consolidate into a shared function
 - [ ] Possibly combine 3DG1/3DAN import into one menu option because the formats are similar (use header magic to tell apart, to tell animated/static 3DGI apart maybe check for if there are 2 lines with 1 number each (2 lines means animated))
 - [ ] Look into improving point sorting algorithm to create as long of a pointsXb/pointsXw block as possible (not having to jump in/out of a compressed block as often probably renders faster)
-- [ ] Allow materials to be applied to plain edges (and maybe even render the color on them)
+- [x] Allow materials to be applied to plain edges (and maybe even render the color on them)
+- [ ] Shape naming (sanitization, where to derive it from, etc. Get from properties of frame 0 if animated?)
 
 ## fmt_3dan
 - [ ] Animations - We really need a better approach for handling these; Blender supports vertex animation through AnimAll (addon included by default), can we communicate with this for animation import/export?
