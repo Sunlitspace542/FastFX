@@ -2,10 +2,11 @@ import bpy
 import bmesh
 import math
 import os
+import re
 import tempfile
 
 from .common import VertexOperation, hex_to_rgb
-from .fmt_3dg1 import read_3dg1
+from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
 from .superfx import super_fx_node_group
 
@@ -263,6 +264,64 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
         return {'FINISHED'}
 
 # =========================
+# FastFX Menu Panel - Assign colors to loose edges
+# =========================
+class OBJECT_OT_assign_edge_material(bpy.types.Operator):
+    """Assign the active FE material to selected loose edges for 3DG1 export"""
+    bl_idname = "object.assign_edge_material"
+    bl_label = "Assign FE Material to Loose Edges"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.object is not None
+            and context.object.type == 'MESH'
+            and context.mode == 'EDIT_MESH'
+        )
+
+    def execute(self, context):
+        obj = context.object
+        material = obj.active_material
+        if material is None:
+            self.report({'WARNING'}, "Select an FE material in the active material slot")
+            return {'CANCELLED'}
+
+        material_name = re.sub(r"\.\d{3}$", "", material.name)
+        if not material_name.startswith("FE") or not material_name[2:].isdigit():
+            self.report({'WARNING'}, "The active material must be named FE followed by a color index")
+            return {'CANCELLED'}
+        color_index = int(material_name[2:])
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        selected_edges = [edge for edge in bm.edges if edge.select]
+        if not selected_edges:
+            self.report({'WARNING'}, "Select one or more edges in Edit Mode")
+            return {'CANCELLED'}
+
+        loose_edges = [edge for edge in selected_edges if not edge.link_faces]
+        if not loose_edges:
+            self.report({'WARNING'}, "Selected edges belong to faces; only loose edges can be assigned")
+            return {'CANCELLED'}
+
+        layer = bm.edges.layers.int.get(EDGE_COLOR_ATTRIBUTE)
+        if layer is None:
+            layer = bm.edges.layers.int.new(EDGE_COLOR_ATTRIBUTE)
+            for edge in bm.edges:
+                edge[layer] = -1
+
+        for edge in loose_edges:
+            edge[layer] = color_index
+
+        bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
+        skipped_count = len(selected_edges) - len(loose_edges)
+        message = f"Assigned FE{color_index} to {len(loose_edges)} loose edge(s)"
+        if skipped_count:
+            message += f"; skipped {skipped_count} edge(s) used by faces"
+        self.report({'INFO'}, message)
+        return {'FINISHED'}
+
+# =========================
 # FastFX Menu Panel - 2-point face primitive
 # =========================
 class OBJECT_OT_add_2_point_face(bpy.types.Operator):
@@ -409,6 +468,8 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
         layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
+        layout.operator(OBJECT_OT_assign_edge_material.bl_idname)
+        layout.label(text="Uses the active FE material on selected loose edges")
         layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")

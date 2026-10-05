@@ -12,6 +12,8 @@ from .palette import id_0_c_rgb
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
 
+EDGE_COLOR_ATTRIBUTE = "fastfx_edge_color_index"
+
 # =========================
 # 3DG1 Import Operator
 # =========================
@@ -221,8 +223,31 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True, v
         mesh = obj.data
         mesh.calc_loop_triangles()
 
+        edge_color_attribute = mesh.attributes.get(EDGE_COLOR_ATTRIBUTE)
+        if (
+            edge_color_attribute is not None
+            and edge_color_attribute.domain == 'EDGE'
+            and edge_color_attribute.data_type == 'INT'
+        ):
+            face_edge_keys = {
+                tuple(sorted(edge_key))
+                for poly in mesh.polygons
+                for edge_key in poly.edge_keys
+            }
+            for edge, color_value in zip(mesh.edges, edge_color_attribute.data):
+                edge_key = tuple(sorted(edge.vertices))
+                if color_value.value >= 0 and edge_key not in face_edge_keys:
+                    v1, v2 = edge.vertices
+                    edges.append((
+                        index_map[v1],
+                        index_map[v2],
+                        color_value.value,
+                    ))
+
         for poly in mesh.polygons:
             material_index = poly.material_index
+            if material_index >= len(obj.material_slots):
+                continue
             material = obj.material_slots[material_index].material
             if material:
                 material_name = re.sub(r"\.\d{3}$", "", material.name)
@@ -300,4 +325,3 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True, v
         file.write(chr(0x1A))
 
     return {'FINISHED'}
-

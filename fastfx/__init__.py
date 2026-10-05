@@ -32,6 +32,7 @@ from .superfx import OBJECT_OT_create_super_fx
 from .ui import (
     AddShapeHeaderPropertiesOperator,
     OBJECT_OT_add_2_point_face,
+    OBJECT_OT_assign_edge_material,
     OBJECT_OT_apply_material_colors,
     OBJECT_OT_apply_material_colors_simple,
     OBJECT_OT_select_twisted_faces,
@@ -49,6 +50,7 @@ classes = (
     VertexOperation,
     OBJECT_OT_toggle_backface_culling,
     OBJECT_OT_add_2_point_face,
+    OBJECT_OT_assign_edge_material,
     OBJECT_OT_apply_material_colors,
     OBJECT_OT_apply_material_colors_simple,
     OBJECT_OT_select_twisted_faces,

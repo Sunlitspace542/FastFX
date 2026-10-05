@@ -8,6 +8,7 @@ Categories are named by their source files.
 - [x] Make point sorting for horizontal mirroring optimization on export optional, deduplicate point pairing code from bsp/gzs and 3dg1 code and consolidate into a shared function
 - [ ] Possibly combine 3DG1/3DAN import into one menu option because the formats are similar (use header magic to tell apart, to tell animated/static 3DGI apart maybe check for if there are 2 lines with 1 number each (2 lines means animated))
 - [ ] Look into improving point sorting algorithm to create as long of a pointsXb/pointsXw block as possible (not having to jump in/out of a compressed block as often probably renders faster)
+- [ ] Allow materials to be applied to plain edges (and maybe even render the color on them)
 
 ## fmt_3dan
 - [ ] Animations - We really need a better approach for handling these; Blender supports vertex animation through AnimAll (addon included by default), can we communicate with this for animation import/export?
@@ -18,7 +19,8 @@ Categories are named by their source files.
 ## fmt_asm
 - [x] BSP tree generation - the BSP algorithm has been cracked thanks to kando throwing SHAPED.EXE at a clanker, this really should be integrated
 - [x] Enforce CRLF line endings on output files - this is to deal with UNIX being UNIX when the files written need to be able to be read by a geriatric assembler stuck on DOS that does not know what LF alone means
-- [ ] Finally add BSP/GZS animation import/export? - shaped can do this, but animation in blender needs some looking at
+- [x] Finally add BSP/GZS animation export
+- [ ] BSP/GZS animation import
 
 ## menus
 - [x] maybe group BSP/GZS export buttons under a shared category (aesthetic thing)

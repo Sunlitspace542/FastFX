@@ -42,6 +42,7 @@ Make a model in Blender. The Fundoshi-kun 3DG1 format can only accept whole numb
 Materials must be named in the format ``FX#``, where ``#`` is the color index of that material. See ``extras/Color Reference.png`` for a chart of colors and their IDs.  
 You can also look at the ``id_0_c_rgb`` dictionary in ``fastfx/palette.py`` itself for color descriptions. Use the utility panel to apply the proper color palette (see Utility Panel section below).  
 2-pointed faces (AKA stray edges or colored edges) are also supported. use ``FE#`` instead of ``FX#`` as the material name. Faces using that material naming scheme will be converted to edges when exporting. Generated edges are also deduplicated based on if two edges are at the same position and have the same color. A 3DG1 shape file is also included to allow you to import a generic 2-pointed face to use.  
+For new 2-point faces, select loose edges in Edit Mode, choose an ``FE#`` material as the active material, and click ``Assign FE Material to Loose Edges`` in the FastFX sidebar. Edges used by faces are skipped. These colored loose edges export as 2-point faces and are deduplicated with edges converted from existing 2-point faces. Blender does not render mesh edges as material surfaces, so these assigned loose edges are for export rather than material-colored viewport rendering.
 
 <!-- EOL -->
 
