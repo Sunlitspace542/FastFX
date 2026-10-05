@@ -22,6 +22,10 @@
       "options": {
         "cwd": "${workspaceFolder}"
       },
+      "group": {
+        "kind":"build",
+        "isDefault": true
+      },
       "problemMatcher": []
     }
   ]
