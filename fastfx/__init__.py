@@ -11,7 +11,7 @@ bl_info = {
     "version": (1, 0),
     "blender": (3, 0, 0),
     "location": "File > Import-Export , 3DView",
-    "description": "Import/Export Fundoshi-kun (3DG1) format shapes and other model data for Star Fox 1/2/EX.",
+    "description": "Import/Export shapes and collision box data for Star Fox 1/2/EX.",
     "author": "Sunlit",
     "category": "Import-Export",
 }
