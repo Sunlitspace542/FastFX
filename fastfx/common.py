@@ -37,27 +37,31 @@ def distance_from_origin(point):
 # Vertex Pairing for Compression
 # =========================
 def pair_points_for_compression(vertices, prefer_closest_fallback=False):
-    """Pair vertices to optimize for compact format encoding.
+    """Place exact inverse-X pairs first, followed by non-mirrored vertices.
 
-    The default behavior prioritizes exact inverse-X matches, which is the strategy
-    used by the 3DG1 export path. If prefer_closest_fallback is enabled, the code
-    also keeps the nearest-neighbor fallback behavior used by the ASM exports.
+    Exact inverse-X pairs are grouped at the start so downstream writers can
+    encode them in a contiguous ``PointsX`` run. When requested, nearest-
+    neighbor fallback pairs follow the mirrored pairs.
     """
     sorted_indices = sorted(range(len(vertices)), key=lambda i: distance_from_origin(vertices[i]))
-    new_vertices = []
-    index_map = {}
+    remaining_indices = list(sorted_indices)
+    mirrored_pairs = []
+    fallback_pairs = []
+    unpaired_indices = []
 
-    while sorted_indices:
-        current_index = sorted_indices.pop(0)
+    while remaining_indices:
+        current_index = remaining_indices.pop(0)
         current_point = vertices[current_index]
         best_match = None
         best_distance = float('inf')
+        exact_match = False
 
         # Try to find a pair with an inverse-X point
-        for candidate_index in sorted_indices:
+        for candidate_index in remaining_indices:
             candidate_point = vertices[candidate_index]
             if current_point[1:] == candidate_point[1:] and current_point[0] == -candidate_point[0]:
                 best_match = candidate_index
+                exact_match = True
                 break
 
             if prefer_closest_fallback:
@@ -67,14 +71,20 @@ def pair_points_for_compression(vertices, prefer_closest_fallback=False):
                     best_distance = dist
                     best_match = candidate_index
 
-        # Pair and map indices
-        new_vertices.append(current_point)
-        index_map[current_index] = len(new_vertices) - 1
-
         if best_match is not None:
-            new_vertices.append(vertices[best_match])
-            index_map[best_match] = len(new_vertices) - 1
-            sorted_indices.remove(best_match)
+            pair = (current_index, best_match)
+            (mirrored_pairs if exact_match else fallback_pairs).append(pair)
+            remaining_indices.remove(best_match)
+        else:
+            unpaired_indices.append(current_index)
+
+    ordered_indices = [
+        index
+        for pair in mirrored_pairs + fallback_pairs
+        for index in pair
+    ] + unpaired_indices
+    new_vertices = [vertices[index] for index in ordered_indices]
+    index_map = {old_index: new_index for new_index, old_index in enumerate(ordered_indices)}
 
     return new_vertices, index_map
 
@@ -124,4 +134,3 @@ class VertexOperation(bpy.types.Operator):
         bm.free()
 
         return {'FINISHED'}
-

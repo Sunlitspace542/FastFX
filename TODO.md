@@ -6,8 +6,8 @@ Categories are named by their source files.
 
 ## common
 - [x] Make point sorting for horizontal mirroring optimization on export optional, deduplicate point pairing code from bsp/gzs and 3dg1 code and consolidate into a shared function
-- [ ] Possibly combine 3DG1/3DAN import into one menu option because the formats are similar (use header magic to tell apart, to tell animated/static 3DGI apart maybe check for if there are 2 lines with 1 number each (2 lines means animated))
-- [ ] Look into improving point sorting algorithm to create as long of a pointsXb/pointsXw block as possible (not having to jump in/out of a compressed block as often probably renders faster)
+- [x] Possibly combine 3DG1/3DAN import into one menu option because the formats are similar (use header magic to tell apart, to tell animated/static 3DGI apart maybe check for if there are 2 lines with 1 number each (2 lines means animated))
+- [x] Look into improving point sorting algorithm to create as long of a pointsXb/pointsXw block as possible (not having to jump in/out of a compressed block as often probably renders faster)
 - [x] Allow materials to be applied to plain edges (and maybe even render the color on them)
 - [x] Shape naming (sanitization, where to derive it from, etc. Get from properties of frame 0 if animated?)
 

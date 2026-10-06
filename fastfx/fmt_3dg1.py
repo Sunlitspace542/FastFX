@@ -4,6 +4,7 @@ import os
 import re
 
 from .common import hex_to_rgb, distance_from_origin, pair_points_for_compression
+from .fmt_3dan import Import3DANOperator
 from .palette import id_0_c_rgb
 
 # FastFX
@@ -17,23 +18,61 @@ EDGE_COLOR_ATTRIBUTE = "fastfx_edge_color_index"
 # =========================
 # 3DG1 Import Operator
 # =========================
-class Import3DG1(bpy.types.Operator):
-    """Import a 3DG1 File"""
-    bl_idname = "import_mesh.3dg1"
-    bl_label = "Import 3DG1/Fundoshi-kun"
+class Import3DGI(bpy.types.Operator):
+    """Import static and animated 3DG1/3DGI files."""
+    bl_idname = "import_mesh.3dgi"
+    bl_label = "Import 3DG1/3DGI/3DAN"
     bl_options = {'PRESET', 'UNDO'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 
-    # Filter to show only supported files in the file browser
-    filter_glob: bpy.props.StringProperty(default="*.txt;*.3dg1;*.obj", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.txt;*.3dg1;*.anm;*.3dan*.obj;*.3dgi", options={'HIDDEN'})
 
     def execute(self, context):
-        return read_3dg1(self.filepath, context)
+        try:
+            format_kind = detect_3dgi_format(self.filepath)
+            if format_kind == "static":
+                return read_3dg1(self.filepath, context)
+            Import3DANOperator.import_3dan(self, self.filepath, context)
+        except Exception as exc:
+            self.report({'ERROR'}, f"Failed to import model: {exc}")
+            return {'CANCELLED'}
+        return {'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+
+def detect_3dgi_format(filepath):
+    """Detect static versus animated 3DGI files from their scalar headers."""
+    with open(filepath, "r") as file:
+        magic = file.readline().strip()
+        if magic == "3DG1":
+            return "static"
+        if magic == "3DAN":
+            return "animated"
+        if magic != "3DGI":
+            raise ValueError(f"Unsupported model file magic: {magic or '(empty)'}")
+
+        scalar_lines = 0
+        for line in file:
+            values = line.split()
+            if not values:
+                continue
+            if len(values) != 1:
+                break
+            try:
+                int(values[0])
+            except ValueError:
+                break
+            scalar_lines += 1
+            if scalar_lines == 2:
+                return "animated"
+
+        if scalar_lines == 1:
+            return "static"
+        raise ValueError("3DGI file must have one scalar header line for static data or two for animation.")
 
 
 # =========================

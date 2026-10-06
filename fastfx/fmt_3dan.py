@@ -63,6 +63,7 @@ class Import3DANOperator(bpy.types.Operator):
         while index < len(lines):
             line = lines[index].strip()
             if not line:
+                index += 1
                 continue
             if line == chr(0x1A):  # EOF marker
                 break

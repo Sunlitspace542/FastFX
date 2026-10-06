@@ -16,8 +16,8 @@ bl_info = {
     "category": "Import-Export",
 }
 
-from .fmt_3dan import Export3DAN, Import3DANOperator
-from .fmt_3dg1 import Export3DG1, Import3DG1
+from .fmt_3dan import Export3DAN
+from .fmt_3dg1 import Export3DG1, Import3DGI
 from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
 from .colboxes import (
     OBJECT_OT_export_colboxes,
@@ -49,7 +49,7 @@ from .ui import (
 # Registration
 # =========================
 classes = (
-    Import3DG1,
+    Import3DGI,
     Export3DG1,
     VertexOperation,
     OBJECT_OT_toggle_backface_culling,
@@ -66,7 +66,6 @@ classes = (
     OBJECT_OT_update_colbox_offsets,
     OBJECT_OT_generate_colbox,
     ImportBSPOperator,
-    Import3DANOperator,
     Export3DAN,
     ExportToBSP,
     ExportToBSPTreeless,

@@ -12,7 +12,7 @@ Face sorting (drop-down):
 - Material Order: sorts faces by the order of the material list in Blender. The last material in the list is drawn first. This is how M2FX handles sorting faces.  
 - No Sorting: No sorting operations are performed. Blender's internal hierarchy is used for the face order.  
 
-Compress point pairs: Whether or not to have the exporter sort points into mirrored pairs for better data compression along the X-axis.  
+Compress point pairs: Whether the exporter should sort exact X-mirrored pairs together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
 
 To export to 3DAN, select all frame objects, and go to `File -> Export -> 3DAN/3DGI/Animated Fundoshi-Kun (.anm)` to export. There are no export options in the file picker dialog.
 
@@ -38,7 +38,7 @@ Face sorting (drop-down):
 - No Sorting: No sorting operations are performed. Blender's internal hierarchy is used for the face order.  
 
 Simplified ShapeHdr: If checked, the shape header is written with LOD parameters omitted. This is meant for compatibility with Star Fox EX.  
-Compress point pairs: If checked, points are sorted into X-mirrored pairs for better data compression along the X-axis.  
+Compress point pairs: If checked, exact X-mirrored pairs are sorted together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
 
 For animated ASM export, select all frame mesh objects and use the ``Star Fox ASM (Animated)`` submenu. It gathers all mesh objects in the scene and orders them naturally by **object name**, so name the frames ``Frame0``, ``Frame1``, and so on (``Frame2`` sorts before ``Frame10``).
 
