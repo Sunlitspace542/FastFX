@@ -54,9 +54,7 @@ def _parse_point_macro(lines, line_index, next_point_index):
         row = lines[cursor]
         value_match = _POINT_VALUE.search(row.split(";", 1)[0])
         x, y, z = map(int, value_match.groups())
-        comment = row.partition(";")[2]
-        index_match = re.match(r"\s*(\d+)", comment)
-        point_index = int(index_match.group(1)) if index_match else next_point_index
+        point_index = next_point_index
 
         # Convert Star Fox coordinates to Blender coordinates.
         points[point_index] = (-x, -z, -y)
@@ -110,7 +108,7 @@ def _parse_asm_points(lines):
                     raise ValueError(f"Animated frame label {target} was not found.")
 
                 frame_points = {}
-                frame_next_point_index = block_next_point_index
+                frame_next_point_index = next_point_index
                 while cursor < len(lines):
                     content = lines[cursor].split(";", 1)[0].strip()
                     if re.match(r"jump\s+\.EB[\w]*\b", content, re.IGNORECASE):
