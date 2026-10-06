@@ -392,14 +392,6 @@ class AddShapeHeaderPropertiesOperator(bpy.types.Operator):
         for key, value in shape_header_defaults:
             if key not in obj:
                 obj[key] = value
-        obj.id_properties_ui("assembly_name").update(
-            description=(
-                "Assembly ShapeHdr name; blank uses the export filename. "
-                "Invalid characters become underscores, and names starting "
-                "with a number are prefixed with an underscore. For animation, "
-                "only the first sorted frame object's properties are used."
-            )
-        )
 
         self.report({'INFO'}, f"ShapeHdr properties assigned to {obj.name}")
         return {'FINISHED'}
