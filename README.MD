@@ -18,7 +18,7 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 
 # Supported Formats
 ## Importing
-- 3DG1 - Fundoshi-kun - point coordinates are integers  
+- 3DG1/3DGI - Fundoshi-kun - point coordinates are integers  
 - 3DG1 - Model to FX - point coordinates are floats, has extra spacing in between lines in the face list  
 - 3DG1 - Blender 2.4 - point coordinates are floats, uses BGR format hex colors for face colors, provided for backwards compatibility with old files.  
 - 3DAN/3DGI - Animated Fundoshi-kun
