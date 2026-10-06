@@ -8,7 +8,7 @@ Categories are named by their source files.
 - N/A
 
 ## fmt_3dan
-- [ ] Animations - We really need a better approach for handling these; Blender supports vertex animation through AnimAll (addon included by default), can we communicate with this for animation import/export?
+- [ ] Animations - We really need a better approach for handling these; Blender supports vertex animation through AnimAll (addon included by default), can we communicate with this for animation import/export or implement our own equivalent solution for vertex animation?
 
 ## fmt_3dg1
 - N/A
@@ -26,7 +26,7 @@ Categories are named by their source files.
 
 ## ui
 - [ ] Better side panel in general - Fast64 has a nice side panel, I wish we did - we are getting there
-- [ ] possibly move export dialog options to menu bar?
+- [ ] possibly move export dialog options to sidebar?
 
 ## OTHER
 - [ ] Slope data import/export for Star Fox 2? Almost no one will use it but it's relevant to have

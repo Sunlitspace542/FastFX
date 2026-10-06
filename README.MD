@@ -3,9 +3,10 @@ This Blender addon allows one to Import/Export shapes and collision box data for
 **Blender 3.x is required.** Later Blender versions *might* work to some degree, YMMV.  
 
 # Credits
-Super FX material: Euclidium98  
-`id_0_c` palette documentation: CoolK  
-Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxView) by Bisquick  
+- Euclidium98 - Super FX material, creating Model to FX, which influenced the design of this addon  
+- CoolK - `id_0_c` palette documentation  
+- Bisquick - Created [SFView](https://github.com/JDrocks450/StarfoxView), used to generate the simple color palette table
+- Kandowontu - Prompting Codex to reverse engineer SHAPED.EXE, creating the codebase that the model compiler library this addon uses is based on
 
 # Features
 - 3DG1 format importer/exporter
@@ -37,3 +38,8 @@ Locate and open ``fastfx.zip``. an addon called FastFX should appear in the wind
 
 # Usage
 For usage instructions, see [the FastFX user's manual](docs/MANUAL.md).
+
+# Disclosure
+This addon was made with AI assistance, with direct intervention, fixes, and components provided by me as needed.  
+I have thoroughly tested the addon throughout development and all design decisions, concepts, and initial reverse engineering of file formats were provided by me, unless otherwise specified.
+It works well enough for my purposes, at least.  
