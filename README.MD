@@ -9,7 +9,7 @@ Simple color palette data from [SFView](https://github.com/JDrocks450/StarfoxVie
 
 # Features
 - 3DG1 format importer/exporter
-- ASM BSP (tree or treeless) and GZS export for static and animated shapes through the bundled SHAPED model compiler, plus static BSP/GZS import
+- ASM BSP (tree or treeless) and GZS export for static and animated shapes through the bundled SHAPED model compiler, plus static and animated BSP/GZS import
 - Custom Super FX material by Euclidium98 to help give a rough idea of what the final product might look like (simple face coloring is also an option, used by default)
 - Proper 2-pointed face/edge support (use actual 2-gons or tag stray edges with colors, toggle color/label overlays for edges)
 - Faces sorted on export (3DG1 export only)
