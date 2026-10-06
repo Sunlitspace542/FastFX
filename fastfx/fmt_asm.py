@@ -22,6 +22,16 @@ _POINT_DIRECTIVE = re.compile(r"\b(PointsX?[bw])\s+(\d+)", re.IGNORECASE)
 _POINT_VALUE = re.compile(r"\bp[bw]\s+(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)", re.IGNORECASE)
 
 
+def _asm_symbol_name(name):
+    """Return a valid assembler symbol for the ShapeHdr name."""
+    sanitized = re.sub(r"[^A-Za-z0-9_]+", "_", str(name))
+    if not sanitized:
+        sanitized = "S"
+    if sanitized[0].isdigit():
+        sanitized = f"_{sanitized}"
+    return sanitized
+
+
 def _parse_point_macro(lines, line_index, next_point_index):
     """Read one Points/PointsX block and return decoded points and next line."""
     directive_line = lines[line_index].split(";", 1)[0]
@@ -280,7 +290,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
 def export_to_format(filepath, obj, sort_mode, output_format, no_simple123, compress_point_pairs=True, tree=True):
     """Export a Blender mesh through a temporary 3DG1 file and the SHAPED compiler."""
     output_path = Path(filepath)
-    shape_name = output_path.stem
+    shape_name = _asm_symbol_name(obj.get("assembly_name") or output_path.stem)
 
     # Format of the Shape header is as follows:
     # ShapeHdr  pointptr,bank,faceptr,0,sortz,0,0,scale,colboxptr,xmax,ymax,zmax,radius,colptr,shadowptr,simple1ptr,simple2ptr,simple3ptr,<Name>
@@ -316,10 +326,11 @@ def export_to_format(filepath, obj, sort_mode, output_format, no_simple123, comp
 def export_animated_to_format(filepath, objects, output_format, no_simple123, tree=True):
     """Export animation frame objects through a temporary 3DAN file and SHAPED."""
     output_path = Path(filepath)
-    shape_name = output_path.stem
     frame_objects = sort_animation_objects(objects)
     if not frame_objects:
         raise ValueError("No mesh objects found for animation export.")
+    base_object = frame_objects[0]
+    shape_name = _asm_symbol_name(base_object.get("assembly_name") or output_path.stem)
 
     first_mesh = frame_objects[0].data
     vertex_count = len(first_mesh.vertices)
@@ -337,7 +348,6 @@ def export_animated_to_format(filepath, objects, output_format, no_simple123, tr
         source_path = Path(temporary) / "animation.3dan"
         write_3dan(source_path, frame_objects, len(frame_objects), validate_signed_16bit=True)
         shape = load_shape(source_path)
-        base_object = frame_objects[0]
         shape.header = ShapeHeader(
             name=shape_name,
             zsort_priority=base_object.get("zsort_priority", "0"),

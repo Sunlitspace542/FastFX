@@ -204,6 +204,19 @@ write(model, "ship.asm", "gzs")
 A negative colour-table value enables the vertex-normal block in GZS and BSP
 output. The selected table name becomes the header's `colour_table` pointer.
 
+## Blender assembly name
+
+The FastFX add-on exposes an optional **Assembly Name** field in an object's
+ShapeHdr properties. A blank value uses the export filename stem. Both custom
+names and filename-derived names are sanitized for assembler symbols: runs of
+characters other than an ASCII letter, digit, or underscore become an
+underscore, and names beginning with a digit are prefixed with an underscore.
+The assembly name does not change the exported filename.
+
+For animated exports, the ShapeHdr properties (including **Assembly Name**) on
+the first frame object after the add-on's object-name sort are used; properties
+on the remaining frame objects do not affect the export.
+
 ## Standalone testing frontend
 
 The small command-line frontend loads a model, prints its summary, and exports

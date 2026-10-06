@@ -378,14 +378,28 @@ class AddShapeHeaderPropertiesOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
         # Set ShapeHdr properties on the object
-        obj["zsort_priority"] = "0"
-        obj["scale"] = "0"
-        obj["colbox_label"] = "0"
-        obj["color_palette"] = "id_0_c"
-        obj["shadow_shape"] = "0"
-        obj["close_lod_shape"] = "0"
-        obj["mid_lod_shape"] =  "0"
-        obj["far_lod_shape"] =  "0"
+        shape_header_defaults = (
+            ("assembly_name", ""),
+            ("zsort_priority", "0"),
+            ("scale", "0"),
+            ("colbox_label", "0"),
+            ("color_palette", "id_0_c"),
+            ("shadow_shape", "0"),
+            ("close_lod_shape", "0"),
+            ("mid_lod_shape", "0"),
+            ("far_lod_shape", "0"),
+        )
+        for key, value in shape_header_defaults:
+            if key not in obj:
+                obj[key] = value
+        obj.id_properties_ui("assembly_name").update(
+            description=(
+                "Assembly ShapeHdr name; blank uses the export filename. "
+                "Invalid characters become underscores, and names starting "
+                "with a number are prefixed with an underscore. For animation, "
+                "only the first sorted frame object's properties are used."
+            )
+        )
 
         self.report({'INFO'}, f"ShapeHdr properties assigned to {obj.name}")
         return {'FINISHED'}
@@ -709,6 +723,8 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
             box = layout.box()
             box.label(text="ShapeHdr Properties")
             if "zsort_priority" in obj:
+                if "assembly_name" in obj:
+                    box.prop(obj, '["assembly_name"]', text="Assembly Name")
                 for key, label in shape_header_fields:
                     if key in obj:
                         box.prop(obj, f'["{key}"]', text=label)

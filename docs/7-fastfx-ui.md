@@ -56,7 +56,8 @@ This section allows you to enable/disable the edge color and label overlays if d
 ### ShapeHdr/Colbox Properties
 Click on an object which has ShapeHdr properties added, or a colbox, and its properties will appear in this area.  
 
-ShapeHdr Properties Explanation:  
+ShapeHdr Properties Explanation: 
+- Assembly Name - Name to use for the shape's assembler labels. Leave blank to fall back to the export filename. Names can only contain alphanumeric characters and underscores. If the name begins with a number, an underscore will be inserted at the start of the name.
 - Z-Sort Priority - Z-sorting priority of the shape when rendered amongst other shapes. Can usually be left as-is. Default is 0.  
 - Scale - Scale factor of the shape when rendered in game (equivalent to `1<<n` or `2^n`).  
 - Colbox Label - Assembler label pointing to the collision box to use for this shape. 0 falls back to the shape dimensions computed in the header when compiled.  
