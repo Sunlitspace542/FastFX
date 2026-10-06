@@ -118,7 +118,7 @@ def import_colboxes_from_clipboard():
                      dimensions[2] / obj.empty_display_size)
 
         # Adjust location based on offset and scale
-        scaled_offset = [o * (2 ** scale) for o in offset]
+        scaled_offset = [o * (2 ** 0) for o in offset] #[o * (2 ** scale) for o in offset]
         obj.location = scaled_offset
 
         # Invert X again so the properties are correct for manual exporting
