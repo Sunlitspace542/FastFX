@@ -93,6 +93,6 @@ Your shape header should now look like this:
 Additionally, if you are going to import the shape into Star Fox EX, you must remove the last 3 parameters before the shape name field in the header. The end result should look like this:  
 ``	ShapeHdr	MYSHIP_4_P,0,MYSHIP_4_F,0,0,0,0,0,playerB_col,36,14,80,80,id_0_c,0,<MYSHIP_4>``
   
-Also scan the file for any instances of `-nan`. these are due to funny math calculations, usually concerning face normals. These should be replaced with zeroes.
+Also scan the file for any instances of `-nan`. These are due to funny math calculations as a result of shaped having a very imprecise math library, and usually appear in face normals. These should be replaced with zeroes.
   
 Save the file.  
