@@ -41,5 +41,5 @@ For usage instructions, see [the FastFX user's manual](docs/MANUAL.md).
 
 # Disclosure
 This addon was made with AI assistance, with direct intervention, fixes, and components provided by me as needed.  
-I have thoroughly tested the addon throughout development and all design decisions, concepts, and initial reverse engineering of file formats were provided by me, unless otherwise specified.
+I have thoroughly tested the addon throughout development and all design decisions, concepts, and initial reverse engineering of file formats were provided by me, unless otherwise specified.  
 It works well enough for my purposes, at least.  
