@@ -3,12 +3,12 @@
 FastFX adds a panel on the right hand side of the screen called ``FastFX`` with extra utilities.  
 
 ## Game Preset
-Choose ``Star Fox`` or ``Star Fox 2`` at the top of the sidebar. The default ``Star Fox`` preset hides slope tools, slope labels, and the slope-data export menu. ``Star Fox 2`` exposes these features. In Star Fox 2 mode, the ShapeHdr ``Close LOD Shape`` field is displayed as ``Slope Data Label``; it still uses the same underlying object property for export compatibility.
+Choose ``Star Fox`` or ``Star Fox 2`` at the top of the sidebar. The default ``Star Fox`` preset hides slope tools, slope labels, and the slope-data export menu. ``Star Fox 2`` exposes these features. In Star Fox 2 mode, the ShapeHdr ``Close LOD Shape`` field is repurposed to point to slope data for the shape. Its label changes to ``Slope Label`` to reflect this.
 
-## Material Configuration:
+## Material Configuration
 ``Toggle Backface Culling`` toggles backface culling on all materials. This allows for a more accurate representation of the shape in Blender, as Star Fox doesn't draw polygons as double-sided.  
 
-## Color Palette (Fancy):
+## Color Palette (Fancy)
 **PLEASE NOTE**: these features are only known to work on Blender 3.x.  
   
 ``Create Super FX node group`` creates the node group needed for the Super FX material. You only need to click this once per .blend file.  
@@ -16,7 +16,7 @@ Choose ``Star Fox`` or ``Star Fox 2`` at the top of the sidebar. The default ``S
 ``Apply Material Palette (Fancy)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using the Super FX material. The node group must exist first.  
   
 
-## Color Palette (Simple):
+## Color Palette (Simple)
 ``Apply Material Palette (Simple)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using simple flat colors.  
   
 

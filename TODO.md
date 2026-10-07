@@ -29,6 +29,6 @@ Categories are named by their source files.
 - [ ] possibly move export dialog options to sidebar?
 
 ## OTHER
-- [ ] Slope data import/export for Star Fox 2? Almost no one will use it but it's relevant to have
+- [x] Slope data import/export for Star Fox 2? Almost no one will use it but it's relevant to have
 - [ ] Figure out some way to determine how textures will be mapped on a face beforehand (some way to show which way is "up")?
 - [ ] CAD/NCA import - wowjinxy's 3ddraw clone rewrite thing is able to read these, add functionality to import them eventually maybe

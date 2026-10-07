@@ -5,5 +5,6 @@
 - Sorting faces on export - Star Fox's renderer does not have a Z-buffer, and relies on the face order being precalculated by the face order and BSP tree if one exists. FastFX pre-sorts faces on export based on their distance from the origin by default. It's pretty good, but there is a chance you may still need to manually sort faces in the 3DG1/BSP afterwards. Remember that whatever comes last in the material list and the output file's face list is drawn first.  
 
 ## Errata
-- If using `Generate Colbox for Mesh`, there is a slight chance that Blender will crash. Save often.
+- If using `Generate Colbox for Mesh`, there is a very slight chance that Blender will crash. Save often.
 - Using 2-pointed faces/2-gons is very janky and it is recommended you use plain edges instead. 2-gons are only used when importing a shape.
+- You may sometimes get an error when attempting to use ``Assign FX Material to Edges`` or ``Assign Slope Data``. Just try again and it should eventually go through.

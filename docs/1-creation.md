@@ -16,8 +16,6 @@ For new 2-point faces, select loose edges in Edit Mode, choose an ``FX#`` materi
 
 These colored loose edges export as 2-point faces and are deduplicated with edges converted from existing 2-point faces.
 
-You may sometimes get an error when attempting to apply materials to loose edges in this way. Just try again and it should eventually go through.
-
 ### Legacy 2-gon features
 You can also create 2-gons directly using the ``Add 2-Point Face`` option in the FastFX sidebar, though this is a legacy feature, and working with real 2-gons in Blender has its quirks and issues. 2-gons are only used when importing a shape or on older projects from before edge tagging was added.
 
@@ -31,9 +29,9 @@ To convert faces on a model into edges, use ``FE#`` instead of ``FX#`` as the ma
 
 Generated edges are also deduplicated based on if two edges are at the same position and have the same color.  
 
-## Slope data
-Slope records can be assigned to mesh faces and exported as assembler source for SFCAD/SHAPED slope data. In Edit Mode, select the faces, choose ``GROUND``, ``WATER``, ``ICE``, or ``GRASS`` in the FastFX sidebar, then click ``Assign Slope Data``. Choose ``Custom`` to enter another assembler slope type name. Custom names must be valid assembler identifiers.
+# 1a. Creating Slope Data (Star Fox 2)
+Slope records can be assigned to mesh faces and exported as assembler source for SFCAD slope data. In Edit Mode, select the faces, choose ``GROUND``, ``WATER``, ``ICE``, or ``GRASS`` in the FastFX sidebar, then click ``Assign Slope Data``. Choose ``Custom`` to enter another assembler slope type name. Custom names must be valid assembler identifiers.
 
 Enable ``Export Slope Polygon`` when the face also needs a ``SLOPEPOLY`` outline. For animated slopes, apply slope settings to the corresponding face on every frame mesh; slope types can differ between frames, while the animation and polygon toggles must match. Faces must have at least three vertices and define a non-degenerate slope plane; vertical planes cannot produce the center height required by the reference slope format. Assigned slope types are shown over the faces in the viewport and can be cleared from selected faces with ``Clear Slope Data``.
 
-For a static shape, select the mesh and choose ``File -> Export -> Slope Data -> Static Slope Data``. Both ``.slo`` and ``.asm`` output are supported.
+For a static shape, select the mesh and choose ``File -> Export -> Star Fox 2 Slope Data -> Static Slope Data``. Both ``.slo`` and ``.asm`` output are supported.

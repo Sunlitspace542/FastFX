@@ -734,7 +734,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         overlay_box.prop(context.scene, "fastfx_show_edge_material_lines")
         if is_starfox2:
             slope_box = layout.box()
-            slope_box.label(text="Slope Data")
+            slope_box.label(text="Slope Data (Star Fox 2)")
             slope_box.prop(scene, "fastfx_slope_type")
             if scene.fastfx_slope_type == "CUSTOM":
                 slope_box.prop(scene, "fastfx_custom_slope_type")
