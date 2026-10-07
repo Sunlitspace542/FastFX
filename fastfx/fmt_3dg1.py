@@ -85,45 +85,21 @@ class Export3DG1(bpy.types.Operator):
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
-    sort_mode: bpy.props.EnumProperty(
-        name="Sort Mode",
-        description="Choose how to sort faces and edges in the exported file",
-        items=[
-            ('distance', "Distance from Origin", "Sort by distance from the origin"),
-            ('material', "Material Order", "Sort by material order. Last material is drawn first"),
-            ('none', "No Sorting", "No sorting; use Blender's internal order")
-        ],
-        default='distance'
-    )
-    compress_point_pairs: bpy.props.BoolProperty(
-        name="Compress point pairs",
-        description="Pair vertices for compact format compression during export",
-        default=True
-    )
-
     def execute(self, context):
         obj = context.object
         if obj is None or obj.type != 'MESH':
             self.report({'ERROR'}, "Selected object is not a mesh")
             return {'CANCELLED'}
 
-        write_3dg1(self.filepath, obj, self.sort_mode, self.compress_point_pairs)
-        self.report({'INFO'}, f"Exported to {self.filepath} with sorting mode: {self.sort_mode}")
+        sort_mode = context.scene.fastfx_export_sort_mode
+        compress_point_pairs = context.scene.fastfx_export_compress_point_pairs
+        write_3dg1(self.filepath, obj, sort_mode, compress_point_pairs)
+        self.report({'INFO'}, f"Exported to {self.filepath} with sorting mode: {sort_mode}")
         return {'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        # Add custom help text
-        layout.label(text="3DG1/Fundoshi-Kun Export Options", icon='INFO')
-
-        # Add dropdown for sort mode
-        layout.prop(self, "sort_mode", text="Sort Mode")
-        layout.prop(self, "compress_point_pairs", text="Compress point pairs")
 
 # =========================
 # 3DG1 Importer

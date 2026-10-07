@@ -57,6 +57,35 @@ def unregister_edge_material_overlay_settings():
     del bpy.types.Scene.fastfx_show_edge_material_lines
 
 
+def register_export_options_settings():
+    bpy.types.Scene.fastfx_export_sort_mode = bpy.props.EnumProperty(
+        name="Sort Mode",
+        description="Choose how to sort faces and edges in exported models",
+        items=[
+            ("distance", "Distance from Origin", "Sort by distance from the origin"),
+            ("material", "Material Order", "Sort by material order; last material is drawn first"),
+            ("none", "No Sorting", "Keep Blender's internal face and edge order"),
+        ],
+        default="distance",
+    )
+    bpy.types.Scene.fastfx_export_compress_point_pairs = bpy.props.BoolProperty(
+        name="Compress Point Pairs",
+        description="Group exact X-mirrored vertex pairs together for compact encoding",
+        default=True,
+    )
+    bpy.types.Scene.fastfx_export_simplified_shapehdr = bpy.props.BoolProperty(
+        name="Simplified ShapeHdr (ASM)",
+        description="Exclude LODs from the ASM shape header",
+        default=False,
+    )
+
+
+def unregister_export_options_settings():
+    del bpy.types.Scene.fastfx_export_sort_mode
+    del bpy.types.Scene.fastfx_export_compress_point_pairs
+    del bpy.types.Scene.fastfx_export_simplified_shapehdr
+
+
 def _edge_material_label(material):
     if material is None:
         return None
@@ -715,6 +744,11 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         scene = context.scene
         is_starfox2 = scene.fastfx_game_preset == "STARFOX2"
         layout.prop(scene, "fastfx_game_preset")
+        export_box = layout.box()
+        export_box.label(text="Export Options")
+        export_box.prop(scene, "fastfx_export_sort_mode")
+        export_box.prop(scene, "fastfx_export_compress_point_pairs")
+        export_box.prop(scene, "fastfx_export_simplified_shapehdr")
         layout.label(text="Material Configuration")
         layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
         layout.label(text="Color Palette (Fancy)")

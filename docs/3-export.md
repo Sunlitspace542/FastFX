@@ -5,7 +5,7 @@
 
 To export to 3DG1, select all frame objects, and go to `File -> Export -> 3DG1/3DGI/Fundoshi-Kun (.txt/.3dg1/.obj)` to export.
 
-If exporting to 3DG1, there will be options on the right hand side of the file picker dialog.  
+Export options are in the FastFX sidebar under **Export Options**.
 
 Face sorting (drop-down):  
 - Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting as it tends to yield decent results.
@@ -30,7 +30,7 @@ Explanation of the 3 supported assembly formats:
 - Star Fox ASM BSP (treeless) - The same as BSP, but faces are written as a flat list with no BSP tree information.  
 - Star Fox ASM GZS - Similar to treeless BSP, having no BSP tree information, but with a slightly different format and worse Z-sorting.  
 
-Once you select the format, there will be options on the right hand side of the file picker dialog. These options are applied in the 3DG1 export stage.  
+The FastFX sidebar's **Export Options** are applied during the 3DG1 export stage.
 
 Face sorting (drop-down):  
 - Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting as it tends to yield decent results.  
@@ -46,7 +46,7 @@ Each frame must have the same vertex count and face topology; ShapeHdr propertie
 
 The SHAPED compiler supports up to 128 frames and 500 points, and coordinates outside the signed 16-bit range (-32768 to 32767) are rejected.
 
-Only the Simplified ShapeHdr option is available when exporting animated assembly shapes. It is expected that you already exported your shape to 3DG1 and reimported before animating so the shape is correctly preprocessed for animation.
+The **Simplified ShapeHdr** setting in the FastFX sidebar also applies to animated ASM exports. Sort mode and point-pair compression are not used by animated ASM export because it uses the 3DAN path. It is expected that you already exported your shape to 3DG1 and reimported before animating so the shape is correctly preprocessed for animation.
 
 ## Method 2: WinShaped CLI (the slightly better manual way)
 Get WinShaped [here](https://github.com/Sunlitspace542/WinShaped/releases).

@@ -53,8 +53,10 @@ from .ui import (
     VIEW3D_PT_fastfx_tools,
     register_edge_material_overlay,
     register_edge_material_overlay_settings,
+    register_export_options_settings,
     unregister_edge_material_overlay,
     unregister_edge_material_overlay_settings,
+    unregister_export_options_settings,
 )
 
 
@@ -100,6 +102,7 @@ def register():
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     register_edge_material_overlay_settings()
+    register_export_options_settings()
     register_slope_settings()
     register_edge_material_overlay()
 
@@ -107,6 +110,7 @@ def register():
 def unregister():
     unregister_edge_material_overlay()
     unregister_slope_settings()
+    unregister_export_options_settings()
     unregister_edge_material_overlay_settings()
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)

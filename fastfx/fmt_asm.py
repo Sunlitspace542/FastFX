@@ -377,34 +377,22 @@ class ExportToBSP(bpy.types.Operator):
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
-    sort_mode: bpy.props.EnumProperty(
-        name="Sort Mode",
-        description="Choose how to sort faces and edges in the exported file",
-        items=[
-            ('distance', "Distance from Origin", "Sort by distance from the origin"),
-            ('material', "Material Order", "Sort by material order. Last material is drawn first"),
-            ('none', "No Sorting", "No sorting; use Blender's internal order")
-        ],
-        default='distance'
-    )
-    no_simple123: bpy.props.BoolProperty(
-        name="Simplified ShapeHdr",
-        description="Exclude LODs from the shape header when enabled",
-        default=False
-    )
-    compress_point_pairs: bpy.props.BoolProperty(
-        name="Compress point pairs",
-        description="Pair vertices for compact format compression during export",
-        default=True
-    )
-
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
         try:
-            export_to_format(self.filepath, obj, self.sort_mode, "bsp", self.no_simple123, self.compress_point_pairs, tree=True)
+            scene = context.scene
+            export_to_format(
+                self.filepath,
+                obj,
+                scene.fastfx_export_sort_mode,
+                "bsp",
+                scene.fastfx_export_simplified_shapehdr,
+                scene.fastfx_export_compress_point_pairs,
+                tree=True,
+            )
         except Exception as exc:
             self.report({'ERROR'}, f"Failed to export BSP: {exc}")
             return {'CANCELLED'}
@@ -415,14 +403,6 @@ class ExportToBSP(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text="ASM BSP Export Options", icon='INFO')
-        layout.prop(self, "sort_mode", text="Sort Mode")
-        layout.prop(self, "no_simple123", text="Simplified ShapeHdr")
-        layout.prop(self, "compress_point_pairs", text="Compress point pairs")
-
-
 class ExportToBSPTreeless(bpy.types.Operator):
     """Export to Star Fox ASM BSP Format without a BSP tree"""
     bl_idname = "export_mesh.bsp_treeless"
@@ -430,34 +410,22 @@ class ExportToBSPTreeless(bpy.types.Operator):
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
-    sort_mode: bpy.props.EnumProperty(
-        name="Sort Mode",
-        description="Choose how to sort faces and edges in the exported file",
-        items=[
-            ('distance', "Distance from Origin", "Sort by distance from the origin"),
-            ('material', "Material Order", "Sort by material order. Last material is drawn first"),
-            ('none', "No Sorting", "No sorting; use Blender's internal order")
-        ],
-        default='distance'
-    )
-    no_simple123: bpy.props.BoolProperty(
-        name="Simplified ShapeHdr",
-        description="Exclude LODs from the shape header when enabled",
-        default=False
-    )
-    compress_point_pairs: bpy.props.BoolProperty(
-        name="Compress point pairs",
-        description="Pair vertices for compact format compression during export",
-        default=True
-    )
-
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
         try:
-            export_to_format(self.filepath, obj, self.sort_mode, "bsp", self.no_simple123, self.compress_point_pairs, tree=False)
+            scene = context.scene
+            export_to_format(
+                self.filepath,
+                obj,
+                scene.fastfx_export_sort_mode,
+                "bsp",
+                scene.fastfx_export_simplified_shapehdr,
+                scene.fastfx_export_compress_point_pairs,
+                tree=False,
+            )
         except Exception as exc:
             self.report({'ERROR'}, f"Failed to export treeless BSP: {exc}")
             return {'CANCELLED'}
@@ -467,14 +435,6 @@ class ExportToBSPTreeless(bpy.types.Operator):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text="ASM BSP Export Options", icon='INFO')
-        layout.prop(self, "sort_mode", text="Sort Mode")
-        layout.prop(self, "no_simple123", text="Simplified ShapeHdr")
-        layout.prop(self, "compress_point_pairs", text="Compress point pairs")
-
 
 # =========================
 # ASM GZS Export Operator
@@ -486,34 +446,21 @@ class ExportToGZS(bpy.types.Operator):
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
-    sort_mode: bpy.props.EnumProperty(
-        name="Sort Mode",
-        description="Choose how to sort faces and edges in the exported file",
-        items=[
-            ('distance', "Distance from Origin", "Sort by distance from the origin"),
-            ('material', "Material Order", "Sort by material order. Last material is drawn first"),
-            ('none', "No Sorting", "No sorting; use Blender's internal order")
-        ],
-        default='distance'
-    )
-    no_simple123: bpy.props.BoolProperty(
-        name="Simplified ShapeHdr",
-        description="Exclude LODs from the shape header when enabled",
-        default=False
-    )
-    compress_point_pairs: bpy.props.BoolProperty(
-        name="Compress point pairs",
-        description="Pair vertices for compact format compression during export",
-        default=True
-    )
-
     def execute(self, context):
         obj = context.object
         if not obj or obj.type != 'MESH':
             self.report({'ERROR'}, "Please select a mesh object.")
             return {'CANCELLED'}
         try:
-            export_to_format(self.filepath, obj, self.sort_mode, "gzs", self.no_simple123, self.compress_point_pairs)
+            scene = context.scene
+            export_to_format(
+                self.filepath,
+                obj,
+                scene.fastfx_export_sort_mode,
+                "gzs",
+                scene.fastfx_export_simplified_shapehdr,
+                scene.fastfx_export_compress_point_pairs,
+            )
         except Exception as exc:
             self.report({'ERROR'}, f"Failed to export GZS: {exc}")
             return {'CANCELLED'}
@@ -523,14 +470,6 @@ class ExportToGZS(bpy.types.Operator):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text="ASM GZS Export Options", icon='INFO')
-        layout.prop(self, "sort_mode", text="Sort Mode")
-        layout.prop(self, "no_simple123", text="Simplified ShapeHdr")
-        layout.prop(self, "compress_point_pairs", text="Compress point pairs")
-
 
 class ExportAnimatedToASM(bpy.types.Operator):
     """Export animated mesh objects to Star Fox ASM through SHAPED."""
@@ -549,12 +488,6 @@ class ExportAnimatedToASM(bpy.types.Operator):
         default='bsp',
         options={'HIDDEN'},
     )
-    no_simple123: bpy.props.BoolProperty(
-        name="Simplified ShapeHdr",
-        description="Exclude LODs from the shape header when enabled",
-        default=False,
-    )
-
     def execute(self, context):
         frame_objects = [obj for obj in context.scene.objects if obj.type == "MESH"]
         if not frame_objects:
@@ -568,7 +501,7 @@ class ExportAnimatedToASM(bpy.types.Operator):
                 self.filepath,
                 frame_objects,
                 output_format,
-                self.no_simple123,
+                context.scene.fastfx_export_simplified_shapehdr,
                 tree=tree,
             )
         except Exception as exc:
@@ -581,6 +514,3 @@ class ExportAnimatedToASM(bpy.types.Operator):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
-    def draw(self, context):
-        self.layout.prop(self, "no_simple123", text="Simplified ShapeHdr")
