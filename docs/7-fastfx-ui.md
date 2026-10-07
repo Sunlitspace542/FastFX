@@ -42,6 +42,8 @@ If your model becomes greatly distorted after using these tools, try scaling it 
 ## Slope Data
 In Edit Mode, select one or more faces with at least three vertices, choose a built-in or custom slope type, configure optional ``SLOPEPOLY`` and animation output, and click ``Assign Slope Data``. Click ``Clear Slope Data`` to remove slope assignments from selected faces. Slope types appear as labels over the faces when ``Show Slope Labels`` is enabled.
 
+When faces are selected in Edit Mode, the panel displays the active face's assigned slope type, polygon, and animation settings without changing Blender data during redraw. With multiple selected faces, the active face supplies the displayed settings. The controls under ``Settings to Assign`` remain the values used when assigning or updating slope data.
+
 In the Star Fox 2 preset, use ``File -> Export -> Star Fox 2 Slope Data -> Static Slope Data`` for one mesh. For animation, assign slopes on each frame mesh, select all frames with the first frame active, then use ``Animated Slope Data``. Only matching frame topology can be exported. Both exporters accept ``.slo`` or ``.asm`` filenames.
 
 ## Edge Material Overlay

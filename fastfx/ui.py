@@ -12,7 +12,7 @@ from gpu_extras.batch import batch_for_shader
 from .common import VertexOperation, hex_to_rgb
 from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
-from .slopes import slope_face_labels
+from .slopes import selected_slope_settings, slope_face_labels
 from .superfx import super_fx_node_group
 
 # FastFX
@@ -735,6 +735,27 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         if is_starfox2:
             slope_box = layout.box()
             slope_box.label(text="Slope Data (Star Fox 2)")
+            selected_slope = selected_slope_settings(context)
+            if selected_slope is not None:
+                selection, settings = selected_slope
+                if not selection[0]:
+                    slope_box.label(text="Select a face to view its slope data")
+                elif settings is None:
+                    slope_box.label(text="Active face has no slope data")
+                else:
+                    slope_box.label(text="--Active Face Settings--")
+                    slope_box.label(text=f"Slope Type: {settings['slope_type']}")
+                    if settings["custom_slope_type"]:
+                        slope_box.label(
+                            text=f"Custom Type: {settings['custom_slope_type']}"
+                        )
+                    slope_box.label(
+                        text=f"Slope Polygon: {'On' if settings['slope_poly'] else 'Off'}"
+                    )
+                    slope_box.label(
+                        text=f"Animated: {'On' if settings['slope_animation'] else 'Off'}"
+                    )
+            slope_box.label(text="--Settings to Assign--")
             slope_box.prop(scene, "fastfx_slope_type")
             if scene.fastfx_slope_type == "CUSTOM":
                 slope_box.prop(scene, "fastfx_custom_slope_type")

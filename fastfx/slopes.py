@@ -80,6 +80,66 @@ def slope_type_name(mesh, code):
     raise ValueError(f"Unknown slope type id {code}")
 
 
+def selected_slope_settings(context):
+    obj = context.object
+    if (
+        obj is None
+        or obj.type != 'MESH'
+        or context.mode != 'EDIT_MESH'
+        or obj.mode != 'EDIT'
+    ):
+        return None
+
+    bm = bmesh.from_edit_mesh(obj.data)
+    bm.faces.ensure_lookup_table()
+    bm.faces.index_update()
+    selected_faces = [face for face in bm.faces if face.select]
+    active_face = next(
+        (
+            element
+            for element in reversed(tuple(bm.select_history))
+            if isinstance(element, bmesh.types.BMFace) and element.select
+        ),
+        None,
+    )
+    if active_face is None and selected_faces:
+        active_face = selected_faces[-1]
+
+    selection = (
+        tuple(face.index for face in selected_faces),
+        active_face.index if active_face is not None else None,
+    )
+    if active_face is None:
+        return selection, None
+
+    layers = {
+        name: bm.faces.layers.int.get(name)
+        for name in (
+            SLOPE_ENABLED_ATTRIBUTE,
+            SLOPE_TYPE_ATTRIBUTE,
+            SLOPE_POLY_ATTRIBUTE,
+            SLOPE_ANIMATION_ATTRIBUTE,
+        )
+    }
+    if any(layer is None for layer in layers.values()):
+        return selection, None
+    if active_face[layers[SLOPE_ENABLED_ATTRIBUTE]] != 1:
+        return selection, None
+
+    slope_name = slope_type_name(
+        obj.data,
+        active_face[layers[SLOPE_TYPE_ATTRIBUTE]],
+    )
+    return selection, {
+        "slope_type": slope_name if slope_name in {"GROUND", "WATER", "ICE", "GRASS"} else "CUSTOM",
+        "custom_slope_type": (
+            "" if slope_name in {"GROUND", "WATER", "ICE", "GRASS"} else slope_name
+        ),
+        "slope_poly": bool(active_face[layers[SLOPE_POLY_ATTRIBUTE]]),
+        "slope_animation": bool(active_face[layers[SLOPE_ANIMATION_ATTRIBUTE]]),
+    }
+
+
 def slope_face_labels(context, obj):
     labels = []
     if context.mode == 'EDIT_MESH' and obj.mode == 'EDIT':
