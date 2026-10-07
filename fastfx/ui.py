@@ -21,6 +21,10 @@ from .superfx import super_fx_node_group
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
 
+# =========================
+# FastFX Menu Panel/UI - Edge Material Overlay
+# =========================
+
 _edge_material_overlay_handle = None
 _edge_material_line_overlay_handle = None
 
