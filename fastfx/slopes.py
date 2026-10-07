@@ -6,6 +6,12 @@ import re
 
 from .fmt_3dan import sort_animation_objects
 
+# FastFX
+# File: slopes.py
+# Functions dealing with slope data creation.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
+
 SLOPE_ENABLED_ATTRIBUTE = "fastfx_slope_enabled"
 SLOPE_TYPE_ATTRIBUTE = "fastfx_slope_type"
 SLOPE_POLY_ATTRIBUTE = "fastfx_slope_poly"
