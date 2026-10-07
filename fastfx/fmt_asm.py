@@ -32,6 +32,14 @@ def _asm_symbol_name(name):
     return sanitized
 
 
+def _simplified_shapehdr_for_scene(scene):
+    if scene.fastfx_game_preset == "STARFOX2":
+        return False
+    if scene.fastfx_game_preset == "STARFOXEX":
+        return True
+    return scene.fastfx_export_simplified_shapehdr
+
+
 def _parse_point_macro(lines, line_index, next_point_index):
     """Read one Points/PointsX block and return decoded points and next line."""
     directive_line = lines[line_index].split(";", 1)[0]
@@ -389,7 +397,7 @@ class ExportToBSP(bpy.types.Operator):
                 obj,
                 scene.fastfx_export_sort_mode,
                 "bsp",
-                scene.fastfx_export_simplified_shapehdr,
+                _simplified_shapehdr_for_scene(scene),
                 scene.fastfx_export_compress_point_pairs,
                 tree=True,
             )
@@ -422,7 +430,7 @@ class ExportToBSPTreeless(bpy.types.Operator):
                 obj,
                 scene.fastfx_export_sort_mode,
                 "bsp",
-                scene.fastfx_export_simplified_shapehdr,
+                _simplified_shapehdr_for_scene(scene),
                 scene.fastfx_export_compress_point_pairs,
                 tree=False,
             )
@@ -458,7 +466,7 @@ class ExportToGZS(bpy.types.Operator):
                 obj,
                 scene.fastfx_export_sort_mode,
                 "gzs",
-                scene.fastfx_export_simplified_shapehdr,
+                _simplified_shapehdr_for_scene(scene),
                 scene.fastfx_export_compress_point_pairs,
             )
         except Exception as exc:
@@ -501,7 +509,7 @@ class ExportAnimatedToASM(bpy.types.Operator):
                 self.filepath,
                 frame_objects,
                 output_format,
-                context.scene.fastfx_export_simplified_shapehdr,
+                _simplified_shapehdr_for_scene(context.scene),
                 tree=tree,
             )
         except Exception as exc:

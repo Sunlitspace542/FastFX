@@ -5,6 +5,17 @@ FastFX adds a panel on the right hand side of the screen called ``FastFX`` with 
 ## Game Preset
 Choose ``Star Fox`` or ``Star Fox 2`` at the top of the sidebar. The default ``Star Fox`` preset hides slope tools, slope labels, and the slope-data export menu. ``Star Fox 2`` exposes these features. In Star Fox 2 mode, the ShapeHdr ``Close LOD Shape`` field is repurposed to point to slope data for the shape. Its label changes to ``Slope Label`` to reflect this.
 
+## Export Options
+``Face sorting`` (drop-down):  
+- Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting as it tends to yield decent results.  
+- Material Order: sorts faces by the order of the material list in Blender. The last material in the list is drawn first. This is how M2FX handles sorting faces.  
+- No Sorting: No sorting operations are performed. Blender's internal hierarchy is used for the face order.  
+
+``Simplified ShapeHdr``: If checked, the shape header is written with LOD parameters omitted. This is meant for compatibility with Star Fox EX.  
+This setting is affected by the selected game preset. Star Fox 2 forces it off because a ShapeHdr LOD parameter is repurposed as the slope data pointer; Star Fox EX forces it on. The control is disabled for both presets.
+
+``Compress point pairs``: If checked, exact X-mirrored pairs are sorted together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
+
 ## Material Configuration
 ``Toggle Backface Culling`` toggles backface culling on all materials. This allows for a more accurate representation of the shape in Blender, as Star Fox doesn't draw polygons as double-sided.  
 

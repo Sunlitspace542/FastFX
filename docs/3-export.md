@@ -32,13 +32,14 @@ Explanation of the 3 supported assembly formats:
 
 The FastFX sidebar's **Export Options** are applied during the 3DG1 export stage.
 
-Face sorting (drop-down):  
+``Face sorting`` (drop-down):  
 - Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting as it tends to yield decent results.  
 - Material Order: sorts faces by the order of the material list in Blender. The last material in the list is drawn first. This is how M2FX handles sorting faces.  
 - No Sorting: No sorting operations are performed. Blender's internal hierarchy is used for the face order.  
 
-Simplified ShapeHdr: If checked, the shape header is written with LOD parameters omitted. This is meant for compatibility with Star Fox EX.  
-Compress point pairs: If checked, exact X-mirrored pairs are sorted together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
+``Simplified ShapeHdr``: If checked, the shape header is written with LOD parameters omitted. This is meant for compatibility with Star Fox EX. This setting cannot be modified if the game preset is set to Star Fox 2 or Star Fox EX (see chapter 7).  
+  
+``Compress point pairs``: If checked, exact X-mirrored pairs are sorted together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
 
 For animated ASM export, select all frame mesh objects and use the ``Star Fox ASM (Animated)`` submenu. It gathers all mesh objects in the scene and orders them naturally by **object name**, so name the frames ``Frame0``, ``Frame1``, and so on (``Frame2`` sorts before ``Frame10``).
 

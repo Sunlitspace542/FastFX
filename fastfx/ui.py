@@ -29,6 +29,13 @@ _edge_material_overlay_handle = None
 _edge_material_line_overlay_handle = None
 
 
+def _update_preset_shapehdr(scene, context):
+    if scene.fastfx_game_preset == "STARFOX2":
+        scene.fastfx_export_simplified_shapehdr = False
+    elif scene.fastfx_game_preset == "STARFOXEX":
+        scene.fastfx_export_simplified_shapehdr = True
+
+
 def register_edge_material_overlay_settings():
     bpy.types.Scene.fastfx_game_preset = bpy.props.EnumProperty(
         name="Game Preset",
@@ -36,8 +43,10 @@ def register_edge_material_overlay_settings():
         items=[
             ("STARFOX", "Star Fox", "Hide Star Fox 2 slope tools and labels"),
             ("STARFOX2", "Star Fox 2", "Show Star Fox 2 slope tools and labels"),
+            ("STARFOXEX", "Star Fox EX", "Force simplified ASM ShapeHdr output"),
         ],
         default="STARFOX",
+        update=_update_preset_shapehdr,
     )
     bpy.types.Scene.fastfx_show_edge_material_labels = bpy.props.BoolProperty(
         name="Show Material Labels",
@@ -748,7 +757,9 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         export_box.label(text="Export Options")
         export_box.prop(scene, "fastfx_export_sort_mode")
         export_box.prop(scene, "fastfx_export_compress_point_pairs")
-        export_box.prop(scene, "fastfx_export_simplified_shapehdr")
+        simplified_row = export_box.row()
+        simplified_row.enabled = scene.fastfx_game_preset not in {"STARFOX2", "STARFOXEX"}
+        simplified_row.prop(scene, "fastfx_export_simplified_shapehdr")
         layout.label(text="Material Configuration")
         layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
         layout.label(text="Color Palette (Fancy)")
@@ -828,6 +839,12 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
                 if "assembly_name" in obj:
                     box.prop(obj, '["assembly_name"]', text="Assembly Name")
                 for key, label in shape_header_fields:
+                    if scene.fastfx_game_preset == "STARFOXEX" and key in {
+                        "close_lod_shape",
+                        "mid_lod_shape",
+                        "far_lod_shape",
+                    }:
+                        continue
                     if key in obj:
                         if key == "close_lod_shape" and is_starfox2:
                             label = "Slope Label"
