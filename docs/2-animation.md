@@ -19,4 +19,7 @@ Go to ``File -> Export -> 3DAN/3DGI/Animated Fundoshi-kun (.anm)`` to export the
 To export as assembly, use the `File -> Export -> Star Fox ASM (Animated)` submenu.  
 For more detailed information on exporting animations, see chapter 3.  
 
+### Exporting animated slope data
+Assign slope data to each animated face on every frame mesh. The slope type can differ per frame, so you can change the slope assignment while editing each frame. ``Animate Slope Data`` must be enabled for the same faces on every frame; optional ``Export Slope Polygon`` must also match for each animated face. Select all frame meshes, make the first frame active, then choose ``File -> Export -> Slope Data -> Animated Slope Data``. Frames must have matching vertex counts and face topology; they are ordered naturally by object name (for example, ``Frame0``, ``Frame1``, ``Frame2``). The exporter writes one ``SLOPEANIM`` sequence per animated face using that face's settings and geometry from each frame. Both ``.slo`` and ``.asm`` output are supported.
+
 There is a rare chance that you may need to correct the order of the animation jump tables in the assembly after conversion to assembly if the animation frame order is incorrect. The addon has measures to try to prevent this, but things could still come out wrong.  

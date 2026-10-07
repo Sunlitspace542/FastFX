@@ -3,6 +3,7 @@ import bpy
 from .fmt_3dan import Export3DAN
 from .fmt_3dg1 import Export3DG1, Import3DGI
 from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
+from .slopes import ExportSlopeData
 
 # FastFX
 # File: menus.py
@@ -11,7 +12,7 @@ from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, Expo
 # Released under the MIT License.
 
 # =========================
-# ASM Export Submenu
+# ASM Export Submenus
 # =========================
 class TOPBAR_MT_fastfx_asm(bpy.types.Menu):
     bl_idname = "TOPBAR_MT_fastfx_asm"
@@ -36,6 +37,28 @@ class TOPBAR_MT_fastfx_asm_animated(bpy.types.Menu):
         operator.output_format = 'gzs'
 
 # =========================
+# Slope Data Export Submenu
+# =========================
+class TOPBAR_MT_fastfx_slopes(bpy.types.Menu):
+    bl_idname = "TOPBAR_MT_fastfx_slopes"
+    bl_label = "Star Fox 2 Slope Data"
+
+    def draw(self, context):
+        if context.scene.fastfx_game_preset != "STARFOX2":
+            return
+        operator = self.layout.operator(
+            ExportSlopeData.bl_idname,
+            text="Static Slope Data (.asm/.slo)",
+        )
+        operator.animated = False
+        operator = self.layout.operator(
+            ExportSlopeData.bl_idname,
+            text="Animated Slope Data (.asm/.slo)",
+        )
+        operator.animated = True
+
+
+# =========================
 # Menu Functions
 # =========================
 def menu_func_import(self, context):
@@ -47,3 +70,5 @@ def menu_func_export(self, context):
     self.layout.operator(Export3DAN.bl_idname, text="3DAN/3DGI/Animated Fundoshi-kun (.anm)")
     self.layout.menu(TOPBAR_MT_fastfx_asm.bl_idname, text=TOPBAR_MT_fastfx_asm.bl_label)
     self.layout.menu(TOPBAR_MT_fastfx_asm_animated.bl_idname, text=TOPBAR_MT_fastfx_asm_animated.bl_label)
+    if context.scene.fastfx_game_preset == "STARFOX2":
+        self.layout.menu(TOPBAR_MT_fastfx_slopes.bl_idname, text=TOPBAR_MT_fastfx_slopes.bl_label)

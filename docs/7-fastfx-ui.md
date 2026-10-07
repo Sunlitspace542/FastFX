@@ -2,6 +2,9 @@
 # 7. FastFX Sidebar
 FastFX adds a panel on the right hand side of the screen called ``FastFX`` with extra utilities.  
 
+## Game Preset
+Choose ``Star Fox`` or ``Star Fox 2`` at the top of the sidebar. The default ``Star Fox`` preset hides slope tools, slope labels, and the slope-data export menu. ``Star Fox 2`` exposes these features. In Star Fox 2 mode, the ShapeHdr ``Close LOD Shape`` field is displayed as ``Slope Data Label``; it still uses the same underlying object property for export compatibility.
+
 ## Material Configuration:
 ``Toggle Backface Culling`` toggles backface culling on all materials. This allows for a more accurate representation of the shape in Blender, as Star Fox doesn't draw polygons as double-sided.  
 
@@ -35,6 +38,11 @@ If your model becomes greatly distorted after using these tools, try scaling it 
   
 
 ``Assign FX Material to Edges`` assigns a selected FX# material in the material pane to a selected plain edge in edit mode. You may sometimes get an error when attempting to apply materials to loose edges in this way. Just try again and it should eventually go through.  
+
+## Slope Data
+In Edit Mode, select one or more faces with at least three vertices, choose a built-in or custom slope type, configure optional ``SLOPEPOLY`` and animation output, and click ``Assign Slope Data``. Click ``Clear Slope Data`` to remove slope assignments from selected faces. Slope types appear as labels over the faces when ``Show Slope Labels`` is enabled.
+
+In the Star Fox 2 preset, use ``File -> Export -> Star Fox 2 Slope Data -> Static Slope Data`` for one mesh. For animation, assign slopes on each frame mesh, select all frames with the first frame active, then use ``Animated Slope Data``. Only matching frame topology can be exported. Both exporters accept ``.slo`` or ``.asm`` filenames.
 
 ## Edge Material Overlay
 This section allows you to enable/disable the edge color and label overlays if desired.  

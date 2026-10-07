@@ -12,6 +12,7 @@ from gpu_extras.batch import batch_for_shader
 from .common import VertexOperation, hex_to_rgb
 from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
+from .slopes import slope_face_labels
 from .superfx import super_fx_node_group
 
 # FastFX
@@ -25,6 +26,15 @@ _edge_material_line_overlay_handle = None
 
 
 def register_edge_material_overlay_settings():
+    bpy.types.Scene.fastfx_game_preset = bpy.props.EnumProperty(
+        name="Game Preset",
+        description="Choose which game's editing features to show",
+        items=[
+            ("STARFOX", "Star Fox", "Hide Star Fox 2 slope tools and labels"),
+            ("STARFOX2", "Star Fox 2", "Show Star Fox 2 slope tools and labels"),
+        ],
+        default="STARFOX",
+    )
     bpy.types.Scene.fastfx_show_edge_material_labels = bpy.props.BoolProperty(
         name="Show Material Labels",
         description="Show FX material names over assigned edges and 2-point faces",
@@ -38,6 +48,7 @@ def register_edge_material_overlay_settings():
 
 
 def unregister_edge_material_overlay_settings():
+    del bpy.types.Scene.fastfx_game_preset
     del bpy.types.Scene.fastfx_show_edge_material_labels
     del bpy.types.Scene.fastfx_show_edge_material_lines
 
@@ -152,7 +163,12 @@ def _draw_edge_material_lines():
 
 def _draw_edge_material_labels():
     context = bpy.context
-    if not context.scene.fastfx_show_edge_material_labels:
+    show_edge_labels = context.scene.fastfx_show_edge_material_labels
+    show_slope_labels = (
+        context.scene.fastfx_game_preset == "STARFOX2"
+        and context.scene.fastfx_show_slope_labels
+    )
+    if not show_edge_labels and not show_slope_labels:
         return
 
     obj = context.active_object
@@ -169,22 +185,40 @@ def _draw_edge_material_labels():
     ):
         return
 
-    projected_edges = []
-    for start, end, label in _edge_material_segments(context, obj):
-        start_2d = view3d_utils.location_3d_to_region_2d(
-            region, region_3d, obj.matrix_world @ start
-        )
-        end_2d = view3d_utils.location_3d_to_region_2d(
-            region, region_3d, obj.matrix_world @ end
-        )
-        if start_2d is None or end_2d is None:
-            continue
+    projected_labels = []
+    if show_edge_labels:
+        for start, end, label in _edge_material_segments(context, obj):
+            start_2d = view3d_utils.location_3d_to_region_2d(
+                region, region_3d, obj.matrix_world @ start
+            )
+            end_2d = view3d_utils.location_3d_to_region_2d(
+                region, region_3d, obj.matrix_world @ end
+            )
+            if start_2d is None or end_2d is None:
+                continue
 
-        color_index = int(label[2:]) if label[2:].isdigit() else 0
-        color = hex_to_rgb(id_0_c_rgb.get(color_index, "#FFFFFF"))
-        projected_edges.append((start_2d, end_2d, label, color))
+            color_index = int(label[2:]) if label[2:].isdigit() else 0
+            color = hex_to_rgb(id_0_c_rgb.get(color_index, "#FFFFFF"))
+            midpoint = (start_2d + end_2d) / 2
+            projected_labels.append((midpoint, label, color, 4))
 
-    if projected_edges:
+    if show_slope_labels:
+        slope_colors = {
+            "GROUND": "#62D66B",
+            "WATER": "#55AFFF",
+            "ICE": "#75E5FF",
+            "GRASS": "#B8E65C",
+        }
+        for center, label in slope_face_labels(context, obj):
+            position = view3d_utils.location_3d_to_region_2d(
+                region, region_3d, obj.matrix_world @ center
+            )
+            if position is None:
+                continue
+            color = hex_to_rgb(slope_colors.get(label, "#E6A0FF"))
+            projected_labels.append((position, label, color, 0))
+
+    if projected_labels:
         font_id = 0
         if bpy.app.version >= (4, 0, 0):
             blf.size(font_id, 12)
@@ -193,11 +227,14 @@ def _draw_edge_material_labels():
         blf.enable(font_id, blf.SHADOW)
         blf.shadow(font_id, 3, 0.0, 0.0, 0.0, 1.0)
         blf.shadow_offset(font_id, 1, -1)
-        for start_2d, end_2d, label, color in projected_edges:
+        for position, label, color, vertical_offset in projected_labels:
             text_width, _ = blf.dimensions(font_id, label)
-            midpoint_x = (start_2d.x + end_2d.x) / 2
-            midpoint_y = (start_2d.y + end_2d.y) / 2
-            blf.position(font_id, midpoint_x - text_width / 2, midpoint_y + 4, 0)
+            blf.position(
+                font_id,
+                position.x - text_width / 2,
+                position.y + vertical_offset,
+                0,
+            )
             blf.color(font_id, *color)
             blf.draw(font_id, label)
         blf.disable(font_id, blf.SHADOW)
@@ -671,6 +708,9 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
+        is_starfox2 = scene.fastfx_game_preset == "STARFOX2"
+        layout.prop(scene, "fastfx_game_preset")
         layout.label(text="Material Configuration")
         layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
         layout.label(text="Color Palette (Fancy)")
@@ -688,6 +728,17 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         overlay_box.label(text="Edge Material Overlay")
         overlay_box.prop(context.scene, "fastfx_show_edge_material_labels")
         overlay_box.prop(context.scene, "fastfx_show_edge_material_lines")
+        if is_starfox2:
+            slope_box = layout.box()
+            slope_box.label(text="Slope Data")
+            slope_box.prop(scene, "fastfx_slope_type")
+            if scene.fastfx_slope_type == "CUSTOM":
+                slope_box.prop(scene, "fastfx_custom_slope_type")
+            slope_box.prop(scene, "fastfx_slope_poly")
+            slope_box.prop(scene, "fastfx_slope_animation")
+            slope_box.operator("object.assign_slope_data")
+            slope_box.operator("object.clear_slope_data")
+            slope_box.prop(scene, "fastfx_show_slope_labels")
         layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")
@@ -719,6 +770,8 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
                     box.prop(obj, '["assembly_name"]', text="Assembly Name")
                 for key, label in shape_header_fields:
                     if key in obj:
+                        if key == "close_lod_shape" and is_starfox2:
+                            label = "Slope Label"
                         box.prop(obj, f'["{key}"]', text=label)
             else:
                 box.label(text="Add ShapeHdr Properties to edit these values")

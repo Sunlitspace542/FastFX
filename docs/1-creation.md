@@ -30,3 +30,10 @@ The line and label overlays can be toggled independently in the FastFX sidebar u
 To convert faces on a model into edges, use ``FE#`` instead of ``FX#`` as the material name. Please note that ``FE#`` materials are reserved for this feature only and should not be used otherwise. Faces using that material naming scheme will be converted to edges when exporting.
 
 Generated edges are also deduplicated based on if two edges are at the same position and have the same color.  
+
+## Slope data
+Slope records can be assigned to mesh faces and exported as assembler source for SFCAD/SHAPED slope data. In Edit Mode, select the faces, choose ``GROUND``, ``WATER``, ``ICE``, or ``GRASS`` in the FastFX sidebar, then click ``Assign Slope Data``. Choose ``Custom`` to enter another assembler slope type name. Custom names must be valid assembler identifiers.
+
+Enable ``Export Slope Polygon`` when the face also needs a ``SLOPEPOLY`` outline. For animated slopes, apply slope settings to the corresponding face on every frame mesh; slope types can differ between frames, while the animation and polygon toggles must match. Faces must have at least three vertices and define a non-degenerate slope plane; vertical planes cannot produce the center height required by the reference slope format. Assigned slope types are shown over the faces in the viewport and can be cleared from selected faces with ``Clear Slope Data``.
+
+For a static shape, select the mesh and choose ``File -> Export -> Slope Data -> Static Slope Data``. Both ``.slo`` and ``.asm`` output are supported.

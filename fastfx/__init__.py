@@ -19,6 +19,13 @@ bl_info = {
 from .fmt_3dan import Export3DAN
 from .fmt_3dg1 import Export3DG1, Import3DGI
 from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
+from .slopes import (
+    ExportSlopeData,
+    OBJECT_OT_assign_slope_data,
+    OBJECT_OT_clear_slope_data,
+    register_slope_settings,
+    unregister_slope_settings,
+)
 from .colboxes import (
     OBJECT_OT_export_colboxes,
     OBJECT_OT_generate_colbox,
@@ -27,7 +34,13 @@ from .colboxes import (
     OBJECT_OT_update_colbox_offsets,
 )
 from .common import VertexOperation
-from .menus import TOPBAR_MT_fastfx_asm, TOPBAR_MT_fastfx_asm_animated, menu_func_export, menu_func_import
+from .menus import (
+    TOPBAR_MT_fastfx_asm,
+    TOPBAR_MT_fastfx_asm_animated,
+    TOPBAR_MT_fastfx_slopes,
+    menu_func_export,
+    menu_func_import,
+)
 from .superfx import OBJECT_OT_create_super_fx
 from .ui import (
     AddShapeHeaderPropertiesOperator,
@@ -55,6 +68,8 @@ classes = (
     OBJECT_OT_toggle_backface_culling,
     OBJECT_OT_add_2_point_face,
     OBJECT_OT_assign_edge_material,
+    OBJECT_OT_assign_slope_data,
+    OBJECT_OT_clear_slope_data,
     OBJECT_OT_apply_material_colors,
     OBJECT_OT_apply_material_colors_simple,
     OBJECT_OT_select_twisted_faces,
@@ -67,12 +82,14 @@ classes = (
     OBJECT_OT_generate_colbox,
     ImportBSPOperator,
     Export3DAN,
+    ExportSlopeData,
     ExportToBSP,
     ExportToBSPTreeless,
     ExportToGZS,
     ExportAnimatedToASM,
     TOPBAR_MT_fastfx_asm,
     TOPBAR_MT_fastfx_asm_animated,
+    TOPBAR_MT_fastfx_slopes,
     AddShapeHeaderPropertiesOperator,
 )
 
@@ -83,11 +100,13 @@ def register():
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     register_edge_material_overlay_settings()
+    register_slope_settings()
     register_edge_material_overlay()
 
 
 def unregister():
     unregister_edge_material_overlay()
+    unregister_slope_settings()
     unregister_edge_material_overlay_settings()
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
