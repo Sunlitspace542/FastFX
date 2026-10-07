@@ -492,7 +492,7 @@ def write_slope_data(filepath, objects, animated=False):
                     frame_index,
                 ))
 
-    with open(filepath, "w", encoding="utf-8", newline="\n") as output:
+    with open(filepath, "w", encoding="utf-8", newline="\r\n") as output:
         output.write(";------ Created with FastFX ------\n")
         output.write(f"{root_name}_slo\n")
         output.write(f"\tSLOPES\t{len(records)}\n")

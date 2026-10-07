@@ -8,10 +8,10 @@ import bpy
 
 bl_info = {
     "name": "FastFX",
-    "version": (1, 0),
+    "version": (1, 0, 1),
     "blender": (3, 0, 0),
     "location": "File > Import-Export , 3DView",
-    "description": "Import/Export shapes and collision box data for Star Fox 1/2/EX.",
+    "description": "Import/Export shapes, collision box, and slope data for Star Fox 1/2/EX.",
     "author": "Sunlit",
     "category": "Import-Export",
 }
