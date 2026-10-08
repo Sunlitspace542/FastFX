@@ -11,6 +11,7 @@ This Blender addon allows one to Import/Export shapes, collision boxes, and slop
 # Features
 - 3DG1 format importer/exporter
 - ASM BSP (tree or treeless) and GZS export for static and animated shapes through the bundled SHAPED model compiler, plus static and animated BSP/GZS import
+- 3ddraw/Iwamoto 3D-CAD `.cad`/`.nca` importer
 - Star Fox 2 slope data tools with built-in or custom slope types and static/animated export
 - Custom Super FX material by Euclidium98 to help give a rough idea of what the final product might look like (simple face coloring is also an option, used by default)
 - Proper 2-pointed face/edge support (use actual 2-gons or tag stray edges with colors, toggle color/label overlays for edges)
@@ -26,6 +27,7 @@ This Blender addon allows one to Import/Export shapes, collision boxes, and slop
 - 3DAN/3DGI - Animated Fundoshi-kun
 - Star Fox ASM BSP format - either with a BSP tree or treeless, static and animated
 - Star Fox ASM GZS format (BSP format variant) - static and animated
+- Iwamoto 3D-CAD `.cad` and `.nca` files
 
 ## Exporting
 - 3DG1 - Fundoshi-kun  
