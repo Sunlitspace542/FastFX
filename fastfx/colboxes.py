@@ -1,5 +1,6 @@
 import bpy
 import math
+import re
 
 # FastFX
 # File: colboxes.py
@@ -16,8 +17,12 @@ class OBJECT_OT_import_colboxes_clipboard(bpy.types.Operator):
     bl_label = "Import Colboxes From Clipboard"
 
     def execute(self, context):
-        import_colboxes_from_clipboard()
-        self.report({'INFO'}, f"Collision box(es) imported successfully!")
+        try:
+            imported_count = import_colboxes_from_clipboard()
+        except (ValueError, TypeError, IndexError, RuntimeError) as exc:
+            self.report({'ERROR'}, f"Failed to import colboxes: {exc}")
+            return {'CANCELLED'}
+        self.report({'INFO'}, f"Imported {imported_count} collision box(es)")
         return {'FINISHED'}
 
 # =========================
@@ -29,41 +34,93 @@ class OBJECT_OT_export_colboxes(bpy.types.Operator):
     bl_label = "Export Colboxes to Clipboard"
 
     def execute(self, context):
-        export_colboxes(context)
-        self.report({'INFO'}, f"Collision box(es) exported successfully!")
+        try:
+            export_colboxes(context)
+        except (ValueError, TypeError, IndexError, RuntimeError) as exc:
+            self.report({'ERROR'}, f"Failed to export colboxes: {exc}")
+            return {'CANCELLED'}
+        self.report({'INFO'}, "Collision box(es) exported successfully!")
         return {'FINISHED'}
+
+
+def register_colbox_export_settings():
+    bpy.types.Scene.fastfx_export_animated_colbox = bpy.props.BoolProperty(
+        name="Export as Animated Colbox",
+        description="Treat selected <prefix>_frame1, <prefix>_frame2, ... empties as one animated colbox",
+        default=False,
+    )
+
+
+def unregister_colbox_export_settings():
+    del bpy.types.Scene.fastfx_export_animated_colbox
+
 
 # =========================
 # Colbox exporter
 # =========================
 def export_colboxes(context):
-    colbox_data = []
+    selected_colboxes = [obj for obj in context.selected_objects if obj.type == 'EMPTY']
+    if context.scene.fastfx_export_animated_colbox:
+        colbox_data = _export_animated_colbox(selected_colboxes)
+    else:
+        colbox_data = [_format_static_colbox(obj) for obj in selected_colboxes]
 
-    for obj in context.selected_objects:
-        if obj.type != 'EMPTY':
-            continue
-
-        # Fetch custom collision box properties
-        label = obj.get("colbox_label", obj.name)
-        linked_label = obj.get("colbox_linked_label", "0")
-        offset = obj.get("colbox_offset", [0, 0, 0])
-        rotation = obj.get("colbox_rotation", "norot")
-        dimensions = obj.get("colbox_dimensions", [1, 1, 1])
-        flags_set = obj.get("colbox_flags_set", "0")
-        flags_clear = obj.get("colbox_flags_clear", "0")
-        scale = obj.get("colbox_scale", 1)
-
-        # Create collision box string
-        colbox_str = f"{label}\tcolbox\t{linked_label}," \
-                     f"{offset[0]},{offset[1]},{offset[2]}," \
-                     f"{rotation}," \
-                     f"{dimensions[0]},{dimensions[1]},{dimensions[2]}," \
-                     f"{flags_set},{flags_clear},{scale}"
-        colbox_data.append(colbox_str)
-
-    # Copy all collision boxes to the clipboard
     bpy.context.window_manager.clipboard = "\n".join(colbox_data)
     return {'FINISHED'}
+
+
+def _colbox_definition(obj):
+    linked_label = obj.get("colbox_linked_label", "0")
+    offset = obj.get("colbox_offset", [0, 0, 0])
+    rotation = obj.get("colbox_rotation", "norot")
+    dimensions = obj.get("colbox_dimensions", [1, 1, 1])
+    flags_set = obj.get("colbox_flags_set", "0")
+    flags_clear = obj.get("colbox_flags_clear", "0")
+    scale = obj.get("colbox_scale", 1)
+    return (
+        f"{linked_label},{offset[0]},{offset[1]},{offset[2]},"
+        f"{rotation},{dimensions[0]},{dimensions[1]},{dimensions[2]},"
+        f"{flags_set},{flags_clear},{scale}"
+    )
+
+
+def _format_static_colbox(obj):
+    label = obj.get("colbox_label", obj.name)
+    return f"{label}\tcolbox\t{_colbox_definition(obj)}"
+
+
+def _export_animated_colbox(objects):
+    frame_pattern = re.compile(r"^(?P<prefix>.+)_frame(?P<frame>[1-9]\d*)$", re.IGNORECASE)
+    frames = {}
+    prefix = None
+    for obj in objects:
+        match = frame_pattern.fullmatch(obj.name)
+        if match is None:
+            raise ValueError(
+                f"Animated colbox object '{obj.name}' must be named <prefix>_frame1, "
+                "<prefix>_frame2, and so on."
+            )
+        object_prefix = match.group("prefix")
+        if prefix is None:
+            prefix = object_prefix
+        elif object_prefix != prefix:
+            raise ValueError("All selected animated colboxes must share the same name prefix.")
+
+        frame_number = int(match.group("frame"))
+        if frame_number in frames:
+            raise ValueError(f"Animated colbox frame {frame_number} is selected more than once.")
+        frames[frame_number] = obj
+
+    if prefix is None:
+        raise ValueError("Select at least one animated colbox frame to export.")
+
+    expected_frames = list(range(1, len(frames) + 1))
+    if sorted(frames) != expected_frames:
+        raise ValueError("Animated colbox frame names must be contiguous and start at frame 1.")
+
+    output = [prefix, f"\tcolframes {len(frames)}"]
+    output.extend(f"\tcolbox\t{_colbox_definition(frames[index])}" for index in expected_frames)
+    return output
 
 # =========================
 # Colbox importer
@@ -71,77 +128,101 @@ def export_colboxes(context):
 def import_colboxes_from_clipboard():
     clipboard_content = bpy.context.window_manager.clipboard
     lines = clipboard_content.splitlines()
+    imported_count = 0
+    index = 0
 
-    for line in lines:
+    while index < len(lines):
+        line = lines[index]
         if not line.strip():
+            index += 1
             continue  # Skip empty lines
 
-        # Parse the colbox definition
+        stripped = line.strip()
+        if "\t" not in stripped:
+            label = stripped
+            if index + 1 < len(lines) and re.fullmatch(
+                r"colframes\s+\d+", lines[index + 1].strip(), re.IGNORECASE
+            ):
+                frame_count = int(lines[index + 1].strip().split()[1])
+                if frame_count < 1:
+                    raise ValueError(f"Animated colbox '{label}' must have at least one frame.")
+                index += 2
+                frame_index = 1
+                while frame_index <= frame_count:
+                    while index < len(lines) and not lines[index].strip():
+                        index += 1
+                    if index >= len(lines):
+                        raise ValueError(
+                            f"Animated colbox '{label}' declares {frame_count} frames "
+                            f"but only has {frame_index - 1} definitions."
+                        )
+                    data = _parse_animated_colbox_line(lines[index], label, frame_index)
+                    _create_colbox(f"{label}_frame{frame_index}", data)
+                    imported_count += 1
+                    frame_index += 1
+                    index += 1
+                continue
+
         parts = line.split("\t")
-        if len(parts) != 3 or parts[1] != "colbox":
-            print(f"Invalid colbox line: {line}")
-            continue
+        if len(parts) != 3 or parts[1].strip() != "colbox":
+            raise ValueError(f"Invalid colbox line: {line}")
+        _create_colbox(parts[0].strip(), parts[2].split(","))
+        imported_count += 1
+        index += 1
 
-        label = parts[0]
-        colbox_data = parts[2].split(",")
+    return imported_count
 
-        # Extract individual fields
-        linked_label = colbox_data[0]
-        offset = list(map(int, colbox_data[1:4]))
-        rotation = colbox_data[4]
-        dimensions = list(map(int, colbox_data[5:8]))
-        flags_set = colbox_data[8]
-        flags_clear = colbox_data[9]
-        scale = int(colbox_data[10]) if len(colbox_data) > 10 else 0  # Default to 0 if scale is missing
 
-        # Invert X (Blender Z)
-        offset[0] = offset[0] * -1
+def _parse_animated_colbox_line(line, label, frame_index):
+    parts = line.strip().split("\t")
+    if len(parts) != 2 or parts[0].strip() != "colbox":
+        raise ValueError(
+            f"Expected colbox definition {frame_index} for animated colbox '{label}'."
+        )
+    return parts[1].split(",")
 
-        # Invert Y (Blender Z)
-        offset[1] = offset[1] * -1
 
-        # Swap Y and Z axes for Blender
-        offset[1], offset[2] = offset[2], offset[1]
-        dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
+def _create_colbox(label, colbox_data):
+    if len(colbox_data) < 10:
+        raise ValueError(f"Colbox '{label}' has an incomplete definition.")
 
-        # Find or create an object for the colbox
-        obj = bpy.data.objects.get(label) or bpy.data.objects.new(label, None)
-        bpy.context.collection.objects.link(obj)
+    linked_label = colbox_data[0]
+    offset = list(map(int, colbox_data[1:4]))
+    rotation = colbox_data[4]
+    dimensions = list(map(int, colbox_data[5:8]))
+    flags_set = colbox_data[8]
+    flags_clear = colbox_data[9]
+    scale = int(colbox_data[10]) if len(colbox_data) > 10 else 0
 
-        # Set the object type to EMPTY and its display type to CUBE
-        obj.empty_display_type = 'CUBE'
+    offset[0] = -offset[0]
+    offset[1] = -offset[1]
+    offset[1], offset[2] = offset[2], offset[1]
+    dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
 
-        # Size the empty to match the dimensions
-        obj.empty_display_size = max(dimensions)  # Use the largest dimension for uniform scaling
-        obj.scale = (dimensions[0] / obj.empty_display_size, 
-                     dimensions[1] / obj.empty_display_size, 
-                     dimensions[2] / obj.empty_display_size)
+    obj = bpy.data.objects.get(label) or bpy.data.objects.new(label, None)
+    bpy.context.collection.objects.link(obj)
+    obj.empty_display_type = 'CUBE'
+    obj.empty_display_size = max(dimensions)
+    obj.scale = (
+        dimensions[0] / obj.empty_display_size,
+        dimensions[1] / obj.empty_display_size,
+        dimensions[2] / obj.empty_display_size,
+    )
+    obj.location = offset
 
-        # Adjust location based on offset and scale
-        scaled_offset = [o * (2 ** 0) for o in offset] #[o * (2 ** scale) for o in offset]
-        obj.location = scaled_offset
+    offset[0] = -offset[0]
+    offset[2] = -offset[2]
+    offset[1], offset[2] = offset[2], offset[1]
+    dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
 
-        # Invert X again so the properties are correct for manual exporting
-        offset[0] = offset[0] * -1
-
-        # Invert Z again so the properties are correct for manual exporting
-        offset[2] = offset[2] * -1
-
-        # Swap Y and Z axes back for same reason
-        offset[1], offset[2] = offset[2], offset[1]
-        dimensions[1], dimensions[2] = dimensions[2], dimensions[1]
-
-        # Store colbox data in the object
-        obj["colbox_label"] = label
-        obj["colbox_linked_label"] = linked_label
-        obj["colbox_offset"] = offset
-        obj["colbox_rotation"] = rotation
-        obj["colbox_dimensions"] = dimensions
-        obj["colbox_flags_set"] = flags_set
-        obj["colbox_flags_clear"] = flags_clear
-        obj["colbox_scale"] = scale
-
-    return {'FINISHED'}
+    obj["colbox_label"] = label
+    obj["colbox_linked_label"] = linked_label
+    obj["colbox_offset"] = offset
+    obj["colbox_rotation"] = rotation
+    obj["colbox_dimensions"] = dimensions
+    obj["colbox_flags_set"] = flags_set
+    obj["colbox_flags_clear"] = flags_clear
+    obj["colbox_scale"] = scale
 
 # =========================
 # Update colbox visual from its properties
@@ -335,5 +416,3 @@ def generate_colbox_from_mesh(obj):
 
     print(f"Collision box '{colbox_label}' created for mesh '{obj.name}'.")
     return colbox
-
-

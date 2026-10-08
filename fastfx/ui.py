@@ -812,6 +812,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         layout.label(text="Collision Box Tools")
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")
+        layout.prop(scene, "fastfx_export_animated_colbox")
         layout.operator("object.update_colboxes")
         layout.operator("object.update_colbox_offsets")
         layout.operator("object.generate_colbox")

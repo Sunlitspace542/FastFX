@@ -32,6 +32,8 @@ from .colboxes import (
     OBJECT_OT_import_colboxes_clipboard,
     OBJECT_OT_update_colboxes,
     OBJECT_OT_update_colbox_offsets,
+    register_colbox_export_settings,
+    unregister_colbox_export_settings,
 )
 from .common import VertexOperation
 from .menus import (
@@ -103,6 +105,7 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     register_edge_material_overlay_settings()
     register_export_options_settings()
+    register_colbox_export_settings()
     register_slope_settings()
     register_edge_material_overlay()
 
@@ -110,6 +113,7 @@ def register():
 def unregister():
     unregister_edge_material_overlay()
     unregister_slope_settings()
+    unregister_colbox_export_settings()
     unregister_export_options_settings()
     unregister_edge_material_overlay_settings()
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)

@@ -11,9 +11,28 @@ The collision box format is as follows:
 For example, properly sanitized and formatted colbox definitions for the player would look like:
 ```
 playerB_col	colbox	playerLW_col,0,0,0,norot,10,10,20,HF1,0,0
-playerLW_col	colbox	playerRW_col,-33,13,0,rotz,5,5,10,HF2,0
-playerRW_col	colbox	0,33,13,0,rotz,5,5,10,HF3,0
+playerLW_col	colbox	playerRW_col,-33,13,0,rotz,5,5,10,HF2,0,0
+playerRW_col	colbox	0,33,13,0,rotz,5,5,10,HF3,0,0
 ```
+
+Animated colboxes use one label, a `colframes` frame count, then one standard
+`colbox` definition per frame. Definitions are ordered from frame 1:
+
+```
+flap_col
+	colframes 4
+	colbox	0,0,12,40,norot,40,58,40,HF1,0,0
+	colbox	0,0,12,40,norot,40,58,40,HF1,0,0
+	colbox	0,0,25,20,norot,40,5,10,HF1,0,0
+	colbox	0,0,25,20,norot,40,5,10,HF1,0,0
+```
+
+Importing this block creates one editable Empty per frame, named
+`flap_col_frame1`, `flap_col_frame2`, and so on. To export an animated colbox,
+select all its frame empties and enable **Export as Animated Colbox** in the
+FastFX sidebar. All selected colboxes must have the same `<prefix>_frameN`
+name pattern, with frame numbers starting at 1 and forming a contiguous
+sequence.
 
 ## Editing Collision Boxes
 ```diff  

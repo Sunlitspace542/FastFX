@@ -76,8 +76,9 @@ class Import3DANOperator(bpy.types.Operator):
         
         # Create Blender objects
         for frame, frame_points in enumerate(points):
-            mesh = bpy.data.meshes.new(f"Frame{frame}")
-            obj = bpy.data.objects.new(f"Frame{frame}", mesh)
+            frame_name = f"{base_name}_frame{frame}"
+            mesh = bpy.data.meshes.new(frame_name)
+            obj = bpy.data.objects.new(frame_name, mesh)
             context.collection.objects.link(obj)
 
             mesh.from_pydata(frame_points, [], [poly[0] for poly in polygons])
