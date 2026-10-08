@@ -1,6 +1,7 @@
 import bpy
 
 from .fmt_3dan import Export3DAN
+from .fmt_cad import ImportCADOperator
 from .fmt_3dg1 import Export3DG1, Import3DGI
 from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
 from .slopes import ExportSlopeData
@@ -63,6 +64,7 @@ class TOPBAR_MT_fastfx_slopes(bpy.types.Menu):
 # =========================
 def menu_func_import(self, context):
     self.layout.operator(Import3DGI.bl_idname, text="3DG1/3DGI/3DAN/Fundoshi-kun (.txt/.3dg1/.anm/.3dan/.obj/.3dgi)")
+    self.layout.operator(ImportCADOperator.bl_idname, text="Iwamoto CAD/NCA (.cad/.nca)")
     self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm/.bsp/.gzs)")
 
 def menu_func_export(self, context):

@@ -17,6 +17,7 @@ bl_info = {
 }
 
 from .fmt_3dan import Export3DAN
+from .fmt_cad import ImportCADOperator
 from .fmt_3dg1 import Export3DG1, Import3DGI
 from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
 from .slopes import (
@@ -67,6 +68,7 @@ from .ui import (
 # =========================
 classes = (
     Import3DGI,
+    ImportCADOperator,
     Export3DG1,
     VertexOperation,
     OBJECT_OT_toggle_backface_culling,
