@@ -4,6 +4,7 @@ import os
 import re
 
 from .common import hex_to_rgb, distance_from_origin, pair_points_for_compression
+from .animation import animation_frame_coordinates, is_vertex_animation
 from .fmt_3dan import Import3DANOperator
 from .palette import id_0_c_rgb
 
@@ -93,7 +94,22 @@ class Export3DG1(bpy.types.Operator):
 
         sort_mode = context.scene.fastfx_export_sort_mode
         compress_point_pairs = context.scene.fastfx_export_compress_point_pairs
-        write_3dg1(self.filepath, obj, sort_mode, compress_point_pairs)
+        try:
+            vertex_coordinates = (
+                animation_frame_coordinates(obj, context.scene.fastfx_static_export_frame)
+                if is_vertex_animation(obj)
+                else None
+            )
+            write_3dg1(
+                self.filepath,
+                obj,
+                sort_mode,
+                compress_point_pairs,
+                vertex_coordinates=vertex_coordinates,
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            self.report({'ERROR'}, f"Failed to export 3DG1: {exc}")
+            return {'CANCELLED'}
         self.report({'INFO'}, f"Exported to {self.filepath} with sorting mode: {sort_mode}")
         return {'FINISHED'}
 
@@ -199,7 +215,14 @@ def read_3dg1(filepath, context):
 # =========================
 # 3DG1 Exporter
 # =========================
-def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True, validate_signed_16bit=False):
+def write_3dg1(
+    filepath,
+    obj,
+    sort_mode="distance",
+    compress_point_pairs=True,
+    validate_signed_16bit=False,
+    vertex_coordinates=None,
+):
     """
     Exports a mesh object to 3DG1 format with customizable sorting modes and compression optimization.
 
@@ -212,9 +235,18 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True, v
     # Open the file for writing
     with open(filepath, "w") as file:
         # Collect unique vertices and map them to indices
-        original_vertices = [(
-            round(v.co.x), round(v.co.y), round(v.co.z)
-        ) for v in obj.data.vertices]
+        source_coordinates = vertex_coordinates
+        if source_coordinates is None:
+            source_coordinates = [vertex.co for vertex in obj.data.vertices]
+        if len(source_coordinates) != len(obj.data.vertices):
+            raise ValueError(
+                f"Static export frame has {len(source_coordinates)} points; "
+                f"expected {len(obj.data.vertices)}."
+            )
+        original_vertices = [
+            tuple(round(coordinate) for coordinate in coordinates)
+            for coordinates in source_coordinates
+        ]
 
         if validate_signed_16bit:
             for point_index, (x, y, z) in enumerate(original_vertices):
@@ -285,7 +317,7 @@ def write_3dg1(filepath, obj, sort_mode="distance", compress_point_pairs=True, v
 
                     poly_vertices = [index_map[vertex] for vertex in poly.vertices]
                     centroid = tuple(
-                        sum(mesh.vertices[v].co[i] for v in poly.vertices) / len(poly.vertices)
+                        sum(source_coordinates[v][i] for v in poly.vertices) / len(poly.vertices)
                         for i in range(3)
                     )
                     polygons.append((poly_vertices, color_index, centroid, material_index))

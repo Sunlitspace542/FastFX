@@ -5,6 +5,7 @@ import os
 import re
 
 from .fmt_3dan import sort_animation_objects
+from .animation import is_vertex_animation
 
 # FastFX
 # File: slopes.py
@@ -17,6 +18,12 @@ SLOPE_TYPE_ATTRIBUTE = "fastfx_slope_type"
 SLOPE_POLY_ATTRIBUTE = "fastfx_slope_poly"
 SLOPE_ANIMATION_ATTRIBUTE = "fastfx_slope_animation"
 SLOPE_CUSTOM_TYPES_KEY = "fastfx_slope_custom_types"
+_SLOPE_FRAME_ATTRIBUTES = (
+    SLOPE_ENABLED_ATTRIBUTE,
+    SLOPE_TYPE_ATTRIBUTE,
+    SLOPE_POLY_ATTRIBUTE,
+    SLOPE_ANIMATION_ATTRIBUTE,
+)
 
 SLOPE_TYPES = {
     1: "GROUND",
@@ -68,6 +75,131 @@ def unregister_slope_settings():
     del bpy.types.Scene.fastfx_slope_poly
     del bpy.types.Scene.fastfx_slope_animation
     del bpy.types.Scene.fastfx_show_slope_labels
+
+
+def _animation_slope_attribute_name(attribute_name, frame_index):
+    return f"fastfx_anim_slope_{frame_index:04d}_{attribute_name}"
+
+
+def _read_slope_attribute(mesh, attribute_name):
+    attribute = mesh.attributes.get(attribute_name)
+    if attribute is None:
+        return [0] * len(mesh.polygons)
+    if attribute.domain != 'FACE' or attribute.data_type != 'INT':
+        raise ValueError(f"Mesh '{mesh.name}' has invalid slope attribute '{attribute_name}'")
+    return [item.value for item in attribute.data]
+
+
+def _write_slope_attribute(mesh, attribute_name, values):
+    attribute = mesh.attributes.get(attribute_name)
+    if attribute is None:
+        attribute = mesh.attributes.new(
+            name=attribute_name,
+            type='INT',
+            domain='FACE',
+        )
+    if attribute.domain != 'FACE' or attribute.data_type != 'INT':
+        raise ValueError(f"Mesh '{mesh.name}' has invalid slope attribute '{attribute_name}'")
+    if len(attribute.data) != len(values):
+        raise ValueError(f"Mesh '{mesh.name}' changed topology during animation.")
+    for item, value in zip(attribute.data, values):
+        item.value = value
+
+
+def initialize_animation_slope_frames(obj, frame_count):
+    mesh = obj.data
+    active_values = {
+        name: _read_slope_attribute(mesh, name)
+        for name in _SLOPE_FRAME_ATTRIBUTES
+    }
+    for frame_index in range(frame_count):
+        for name, values in active_values.items():
+            _write_slope_attribute(
+                mesh,
+                _animation_slope_attribute_name(name, frame_index),
+                values,
+            )
+    for name, values in active_values.items():
+        _write_slope_attribute(mesh, name, values)
+
+
+def switch_animation_slope_frame(obj, previous_frame, next_frame):
+    mesh = obj.data
+    for name in _SLOPE_FRAME_ATTRIBUTES:
+        _write_slope_attribute(
+            mesh,
+            _animation_slope_attribute_name(name, previous_frame),
+            _read_slope_attribute(mesh, name),
+        )
+    for name in _SLOPE_FRAME_ATTRIBUTES:
+        _write_slope_attribute(
+            mesh,
+            name,
+            _read_slope_attribute(
+                mesh,
+                _animation_slope_attribute_name(name, next_frame),
+            ),
+        )
+
+
+def add_animation_slope_frame(obj, source_frame):
+    mesh = obj.data
+    frame_count = len([
+        key for key in mesh.shape_keys.key_blocks
+        if key.name.startswith("FastFX_Frame_")
+    ])
+    new_frame = frame_count - 1
+    for name in _SLOPE_FRAME_ATTRIBUTES:
+        values = _read_slope_attribute(mesh, name)
+        _write_slope_attribute(
+            mesh,
+            _animation_slope_attribute_name(name, source_frame),
+            values,
+        )
+        _write_slope_attribute(
+            mesh,
+            _animation_slope_attribute_name(name, new_frame),
+            values,
+        )
+
+
+def remove_animation_slope_frame(obj, frame_index):
+    mesh = obj.data
+    frame_count = len([
+        key for key in mesh.shape_keys.key_blocks
+        if key.name.startswith("FastFX_Frame_")
+    ])
+    if frame_count <= 1:
+        return
+    next_frame = min(frame_index, frame_count - 2)
+    for name in _SLOPE_FRAME_ATTRIBUTES:
+        _write_slope_attribute(
+            mesh,
+            _animation_slope_attribute_name(name, frame_index),
+            _read_slope_attribute(mesh, name),
+        )
+        for source_index in range(frame_index + 1, frame_count):
+            source_name = _animation_slope_attribute_name(name, source_index)
+            target_name = _animation_slope_attribute_name(name, source_index - 1)
+            _write_slope_attribute(
+                mesh,
+                target_name,
+                _read_slope_attribute(mesh, source_name),
+            )
+        last_attribute = mesh.attributes.get(
+            _animation_slope_attribute_name(name, frame_count - 1)
+        )
+        if last_attribute is not None:
+            mesh.attributes.remove(last_attribute)
+        _write_slope_attribute(
+            mesh,
+            name,
+            _read_slope_attribute(
+                mesh,
+                _animation_slope_attribute_name(name, next_frame),
+            ),
+        )
+    obj["fastfx_animation_frame"] = next_frame
 
 
 def slope_type_name(mesh, code):
@@ -283,14 +415,20 @@ class OBJECT_OT_clear_slope_data(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def _mesh_slope_records(obj):
+def _mesh_slope_records(obj, frame_index=None):
     mesh = obj.data
-    attributes = (
-        mesh.attributes.get(SLOPE_ENABLED_ATTRIBUTE),
-        mesh.attributes.get(SLOPE_TYPE_ATTRIBUTE),
-        mesh.attributes.get(SLOPE_POLY_ATTRIBUTE),
-        mesh.attributes.get(SLOPE_ANIMATION_ATTRIBUTE),
-    )
+    from .animation import is_vertex_animation
+
+    if is_vertex_animation(obj) and frame_index is not None:
+        current_frame = obj.fastfx_animation_frame
+        attribute_names = tuple(
+            name if frame_index == current_frame else
+            _animation_slope_attribute_name(name, frame_index)
+            for name in _SLOPE_FRAME_ATTRIBUTES
+        )
+    else:
+        attribute_names = _SLOPE_FRAME_ATTRIBUTES
+    attributes = tuple(mesh.attributes.get(name) for name in attribute_names)
     if any(attribute is None for attribute in attributes):
         return []
     if any(attribute.domain != 'FACE' or attribute.data_type != 'INT' for attribute in attributes):
@@ -316,14 +454,21 @@ def _mesh_slope_records(obj):
     return records
 
 
-def _slope_coordinates(obj):
+def _slope_coordinates(obj, frame_index=None):
+    from .animation import animation_frame_coordinates, is_vertex_animation
+
+    coordinates = (
+        animation_frame_coordinates(obj, frame_index)
+        if frame_index is not None and is_vertex_animation(obj)
+        else [vertex.co for vertex in obj.data.vertices]
+    )
     return [
         (
-            int(round(-vertex.co.x)),
-            int(round(-vertex.co.z)),
-            int(round(-vertex.co.y)),
+            int(round(-coordinate[0])),
+            int(round(-coordinate[2])),
+            int(round(-coordinate[1])),
         )
-        for vertex in obj.data.vertices
+        for coordinate in coordinates
     ]
 
 
@@ -397,7 +542,15 @@ def write_slope_data(filepath, objects, animated=False):
     if any(obj.mode == 'EDIT' for obj in objects):
         raise ValueError("Switch selected meshes to Object Mode before exporting slope data")
 
-    frame_objects = sort_animation_objects(objects) if animated else [objects[0]]
+    from .animation import animation_frame_count, is_vertex_animation
+
+    shape_key_animation = (
+        animated and len(objects) == 1 and is_vertex_animation(objects[0])
+    )
+    if shape_key_animation:
+        frame_objects = [objects[0]] * animation_frame_count(objects[0])
+    else:
+        frame_objects = sort_animation_objects(objects) if animated else [objects[0]]
     if animated and len(frame_objects) < 2:
         raise ValueError("Select at least two animation frame meshes for animated slope export")
     if animated and objects[0] != frame_objects[0]:
@@ -417,7 +570,10 @@ def write_slope_data(filepath, objects, animated=False):
                 f"Frame '{frame_obj.name}' has different face topology from '{frame_objects[0].name}'"
             )
 
-    records_by_frame = [_mesh_slope_records(obj) for obj in frame_objects]
+    records_by_frame = [
+        _mesh_slope_records(obj, frame_index if shape_key_animation else None)
+        for frame_index, obj in enumerate(frame_objects)
+    ]
     records = records_by_frame[0]
     if not records:
         raise ValueError(f"No slope data is assigned to '{frame_objects[0].name}'")
@@ -443,7 +599,10 @@ def write_slope_data(filepath, objects, animated=False):
     if not _SLOPE_IDENTIFIER.fullmatch(root_name):
         raise ValueError("The output filename must start with a letter or underscore and contain only letters, digits, or underscores")
 
-    frame_vertices = [_slope_coordinates(obj) for obj in frame_objects]
+    frame_vertices = [
+        _slope_coordinates(obj, frame_index if shape_key_animation else None)
+        for frame_index, obj in enumerate(frame_objects)
+    ]
     slope_lines = []
     slope_poly_lines = []
     for slope_ordinal, slope_record in enumerate(records):
@@ -519,12 +678,18 @@ class ExportSlopeData(bpy.types.Operator):
 
     def execute(self, context):
         if self.animated:
-            objects = list(context.selected_objects)
-            if context.active_object is None or context.active_object not in objects:
-                self.report({'ERROR'}, "Select all animation frame meshes and make the first frame active")
-                return {'CANCELLED'}
-            objects.remove(context.active_object)
-            objects.insert(0, context.active_object)
+            if (
+                not context.scene.fastfx_use_legacy_animation_objects
+                and is_vertex_animation(context.active_object)
+            ):
+                objects = [context.active_object]
+            else:
+                objects = list(context.selected_objects)
+                if context.active_object is None or context.active_object not in objects:
+                    self.report({'ERROR'}, "Select all animation frame meshes and make the first frame active")
+                    return {'CANCELLED'}
+                objects.remove(context.active_object)
+                objects.insert(0, context.active_object)
         else:
             obj = context.active_object
             objects = [obj] if obj is not None else []

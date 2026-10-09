@@ -148,7 +148,14 @@ class Shape:
                 lines.append(f"{len(polygon.index)} {' '.join(map(str, polygon.index))} {polygon.colour}")
         _crlf(Path(path), "\n".join(lines) + "\n")
 
-    def export_gzs(self, path: str | Path, *, name: str | None = None, simplified_header: bool | None = None) -> None:
+    def export_gzs(
+        self,
+        path: str | Path,
+        *,
+        name: str | None = None,
+        simplified_header: bool | None = None,
+        mirror_animation: bool = False,
+    ) -> None:
         name = name or self.header.name or _asm_name(Path(path))
         group_faces = [[polygon for polygon in self.polygons if polygon.flags & (1 << group)] for group in range(8)]
         groups = [group for group, faces in enumerate(group_faces) if faces]
@@ -166,7 +173,7 @@ class Shape:
                 extra.append(center)
             entries.append((group, slot))
         lines = self._asm_header(name, extra, overrides, simplified_header)
-        lines += self._asm_points(name, extra, overrides)
+        lines += self._asm_points(name, extra, overrides, mirror_animation)
         lines.append(f"{name}_F")
         lines += self._vizis()
         if self.smooth_shade:
@@ -185,7 +192,15 @@ class Shape:
         lines += ["", "\tendshape", "", "\tendc"]
         _crlf(Path(path), "\n".join(lines) + "\n")
 
-    def export_bsp(self, path: str | Path, *, tree: bool = True, name: str | None = None, simplified_header: bool | None = None) -> None:
+    def export_bsp(
+        self,
+        path: str | Path,
+        *,
+        tree: bool = True,
+        name: str | None = None,
+        simplified_header: bool | None = None,
+        mirror_animation: bool = False,
+    ) -> None:
         """Write BSP assembler.
 
         Set ``tree=False`` to force a single ordered face list, even when the
@@ -193,7 +208,12 @@ class Shape:
         """
         name = name or self.header.name or _asm_name(Path(path))
         nodes, root, flat = self._build_bsp() if tree else ([], -1, True)
-        lines = self._asm_header(name, [], {}, simplified_header) + self._asm_points(name, [], {}) + [f"{name}_F"] + self._vizis()
+        lines = (
+            self._asm_header(name, [], {}, simplified_header)
+            + self._asm_points(name, [], {}, mirror_animation)
+            + [f"{name}_F"]
+            + self._vizis()
+        )
         if self.smooth_shade:
             lines += self._vertex_normals(name, [], {})
         if not tree:
@@ -247,7 +267,13 @@ class Shape:
     def _asm_active(self, index: int, frame: int, extra: list[Dot], overrides: dict[int, Dot]) -> bool:
         return index in overrides or index >= len(self.dots) or self.active(index, frame)
 
-    def _asm_points(self, name: str, extra: list[Dot], overrides: dict[int, Dot]) -> list[str]:
+    def _asm_points(
+        self,
+        name: str,
+        extra: list[Dot],
+        overrides: dict[int, Dot],
+        mirror_animation: bool = False,
+    ) -> list[str]:
         count = len(self.dots) + len(extra)
         frames = self.frame_count
         kind = [0] * count
@@ -273,8 +299,11 @@ class Shape:
                 lines += self._point_run(width, kind, pos, end, 0, extra, overrides)
             else:
                 letter = chr(ord("A") + block); block += 1
-                lines.append(f"\tFrames\t{frames}")
-                lines += [f"\tjumptab\t.A{frame}{letter}" for frame in range(frames)]
+                frame_order = list(range(frames))
+                if mirror_animation and frames > 2:
+                    frame_order.extend(range(frames - 2, 0, -1))
+                lines.append(f"\tFrames\t{len(frame_order)}")
+                lines += [f"\tjumptab\t.A{frame}{letter}" for frame in frame_order]
                 for frame in range(frames):
                     run = self._point_run(width, kind, pos, end, frame, extra, overrides)
                     run[0] = f".A{frame}{letter}" + run[0]
@@ -448,10 +477,19 @@ def load_colour_tables(shape: Shape, path: str | Path = "COLTABS.DAT") -> None:
             return
 
 
-def write(shape: Shape, path: str | Path, format: Literal["gzs", "bsp", "internal", "3dg1"], *, tree: bool = True, name: str | None = None, simplified_header: bool | None = None) -> None:
+def write(
+    shape: Shape,
+    path: str | Path,
+    format: Literal["gzs", "bsp", "internal", "3dg1"],
+    *,
+    tree: bool = True,
+    name: str | None = None,
+    simplified_header: bool | None = None,
+    mirror_animation: bool = False,
+) -> None:
     match format.lower():
-        case "gzs": shape.export_gzs(path, name=name, simplified_header=simplified_header)
-        case "bsp": shape.export_bsp(path, tree=tree, name=name, simplified_header=simplified_header)
+        case "gzs": shape.export_gzs(path, name=name, simplified_header=simplified_header, mirror_animation=mirror_animation)
+        case "bsp": shape.export_bsp(path, tree=tree, name=name, simplified_header=simplified_header, mirror_animation=mirror_animation)
         case "internal": shape.save_internal(path)
         case "3dg1": shape.save_3dg1(path)
         case _: raise ValueError(f"unsupported export format: {format}")

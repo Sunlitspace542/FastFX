@@ -17,6 +17,14 @@ bl_info = {
 }
 
 from .fmt_3dan import Export3DAN
+from .animation import (
+    OBJECT_OT_animation_add_frame,
+    OBJECT_OT_animation_playback,
+    OBJECT_OT_animation_remove_frame,
+    OBJECT_OT_animation_step_frame,
+    register_animation_settings,
+    unregister_animation_settings,
+)
 from .fmt_cad import ImportCADOperator
 from .fmt_3dg1 import Export3DG1, Import3DGI
 from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
@@ -75,6 +83,10 @@ classes = (
     ImportCADOperator,
     Export3DG1,
     VertexOperation,
+    OBJECT_OT_animation_add_frame,
+    OBJECT_OT_animation_remove_frame,
+    OBJECT_OT_animation_step_frame,
+    OBJECT_OT_animation_playback,
     OBJECT_OT_toggle_backface_culling,
     OBJECT_OT_add_2_point_face,
     OBJECT_OT_assign_edge_material,
@@ -115,6 +127,7 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     register_edge_material_overlay_settings()
     register_export_options_settings()
+    register_animation_settings()
     register_colbox_export_settings()
     register_slope_settings()
     register_edge_material_overlay()
@@ -123,6 +136,7 @@ def register():
 def unregister():
     unregister_edge_material_overlay()
     unregister_slope_settings()
+    unregister_animation_settings()
     unregister_colbox_export_settings()
     unregister_export_options_settings()
     unregister_edge_material_overlay_settings()

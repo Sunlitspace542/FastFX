@@ -10,6 +10,7 @@ from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
 
 from .common import VertexOperation, hex_to_rgb
+from .animation import animation_frame_count, is_vertex_animation
 from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
 from .slopes import selected_slope_settings, slope_face_labels
@@ -755,6 +756,7 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         scene = context.scene
 
         layout.prop(scene, "fastfx_game_preset")
+        layout.prop(scene, "fastfx_use_legacy_animation_objects")
         export_box = layout.box()
         export_box.label(text="Export Options")
         export_box.prop(scene, "fastfx_export_sort_mode")
@@ -762,6 +764,46 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         simplified_row = export_box.row()
         simplified_row.enabled = scene.fastfx_game_preset not in {"STARFOX2", "STARFOXEX"}
         simplified_row.prop(scene, "fastfx_export_simplified_shapehdr")
+        frame_row = export_box.row()
+        frame_row.enabled = is_vertex_animation(context.active_object)
+        frame_row.prop(scene, "fastfx_static_export_frame")
+
+        obj = context.active_object
+        if is_vertex_animation(obj):
+            animation_box = layout.box()
+            animation_box.label(text="Vertex Animation")
+            animation_box.label(
+                text=f"Frame {obj.fastfx_animation_frame + 1} of {animation_frame_count(obj)}"
+            )
+            controls = animation_box.row(align=True)
+            controls.enabled = obj.mode == "OBJECT"
+            previous = controls.operator(
+                "object.fastfx_animation_step_frame",
+                text="",
+                icon='BACK',
+            )
+            previous.direction = -1
+            controls.operator("object.fastfx_animation_playback", text="", icon=(
+                'PAUSE' if scene.fastfx_animation_playing else 'PLAY'
+            ))
+            following = controls.operator(
+                "object.fastfx_animation_step_frame",
+                text="",
+                icon='FORWARD',
+            )
+            following.direction = 1
+            frame_actions = animation_box.row(align=True)
+            frame_actions.enabled = (
+                obj.mode == "OBJECT" and not scene.fastfx_animation_playing
+            )
+            frame_actions.operator("object.fastfx_animation_add_frame", icon='ADD')
+            frame_actions.operator("object.fastfx_animation_remove_frame", icon='REMOVE')
+            animation_box.prop(scene, "fastfx_animation_loop")
+            mirror_row = animation_box.row()
+            mirror_row.enabled = scene.fastfx_animation_loop
+            mirror_row.prop(scene, "fastfx_animation_mirror")
+        elif obj is not None and obj.type == "MESH":
+            layout.operator("object.fastfx_animation_add_frame", text="Start Animation")
 
 
 class VIEW3D_PT_fastfx_material_configuration(bpy.types.Panel):

@@ -3,6 +3,12 @@ import os
 import re
 
 from .common import hex_to_rgb
+from .animation import (
+    animation_frame_coordinates,
+    animation_frame_count,
+    create_animation_object,
+    is_vertex_animation,
+)
 from .palette import id_0_c_rgb
 
 # FastFX
@@ -74,37 +80,38 @@ class Import3DANOperator(bpy.types.Operator):
             polygons.append((poly_points, color_index))
             index += 1
         
-        # Create Blender objects
-        for frame, frame_points in enumerate(points):
-            frame_name = f"{base_name}_frame{frame}"
-            mesh = bpy.data.meshes.new(frame_name)
-            obj = bpy.data.objects.new(frame_name, mesh)
-            context.collection.objects.link(obj)
+        polygons_data = [poly[0] for poly in polygons]
+        if frame_count > 1 and not context.scene.fastfx_use_legacy_animation_objects:
+            objects = [
+                create_animation_object(context, base_name, points, polygons_data)
+            ]
+        else:
+            objects = []
+            for frame, frame_points in enumerate(points):
+                frame_name = (
+                    f"{base_name}_frame{frame}"
+                    if frame_count > 1
+                    else base_name
+                )
+                mesh = bpy.data.meshes.new(frame_name)
+                mesh.from_pydata(frame_points, [], polygons_data)
+                mesh.update()
+                obj = bpy.data.objects.new(frame_name, mesh)
+                context.collection.objects.link(obj)
+                objects.append(obj)
 
-            mesh.from_pydata(frame_points, [], [poly[0] for poly in polygons])
-            mesh.update()
-
-            # Assign colors as materials
-            for poly, (_, color_index) in zip(mesh.polygons, polygons):
-                # Create a material name based on the color index
+        # Assign colors and materials to imported mesh objects.
+        for obj in objects:
+            for poly, (_, color_index) in zip(obj.data.polygons, polygons):
                 mat_name = f"FX{color_index}"
-                
-                # Check if the material already exists; otherwise, create it
                 material = bpy.data.materials.get(mat_name) or bpy.data.materials.new(name=mat_name)
-                material.use_nodes = True  # Enable nodes to customize material properties
-                
-                # Access the Principled BSDF node and set the material color
+                material.use_nodes = True
                 bsdf = material.node_tree.nodes.get("Principled BSDF")
                 if bsdf:
-                    hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Use a default color (white) if index is not mapped
-                    linear_rgb_color = hex_to_rgb(hex_color)  # Convert the hex color to linear RGB
-                    bsdf.inputs["Base Color"].default_value = linear_rgb_color  # Set color with alpha
-                
-                # Append the material to the mesh object
+                    hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")
+                    bsdf.inputs["Base Color"].default_value = hex_to_rgb(hex_color)
                 if obj.data.materials.find(material.name) == -1:
                     obj.data.materials.append(material)
-                
-                # Assign the material to the polygon
                 poly.material_index = obj.data.materials.find(material.name)
 
 
@@ -138,12 +145,29 @@ def write_3dan(filepath, objects, frame_number, validate_signed_16bit=False):
     :param validate_signed_16bit: Reject points outside SHAPED's signed 16-bit coordinate range.
     """
     # Sort object names naturally so Frame2 comes before Frame10.
-    sorted_objects = sort_animation_objects(objects)
+    animated_object = (
+        objects[0]
+        if len(objects) == 1 and is_vertex_animation(objects[0])
+        else None
+    )
+    if animated_object is not None:
+        sorted_objects = [animated_object]
+        frame_number = animation_frame_count(animated_object)
+    else:
+        sorted_objects = sort_animation_objects(objects)
+
+    if not sorted_objects:
+        raise ValueError("No mesh objects found for animation export.")
 
     if validate_signed_16bit:
-        for obj in sorted_objects[:frame_number]:
-            for point_index, vertex in enumerate(obj.data.vertices):
-                x, y, z = (int(round(coord)) for coord in vertex.co)
+        for frame_index, obj in enumerate(sorted_objects[:frame_number]):
+            coordinates = (
+                animation_frame_coordinates(animated_object, frame_index)
+                if animated_object is not None
+                else [vertex.co for vertex in obj.data.vertices]
+            )
+            for point_index, coordinate in enumerate(coordinates):
+                x, y, z = (int(round(value)) for value in coordinate)
                 for axis, coordinate in (("x", x), ("y", z), ("z", -y)):
                     if not -32768 <= coordinate <= 32767:
                         raise ValueError(
@@ -159,10 +183,13 @@ def write_3dan(filepath, objects, frame_number, validate_signed_16bit=False):
 
         # Write point data per frame
         for frame_index in range(frame_number):
-            mesh = sorted_objects[frame_index].data
-            for vertex in mesh.vertices:
+            if animated_object is not None:
+                coordinates = animation_frame_coordinates(animated_object, frame_index)
+            else:
+                coordinates = [vertex.co for vertex in sorted_objects[frame_index].data.vertices]
+            for coordinate in coordinates:
                 # Convert vertex coordinates to integers
-                x, y, z = (int(round(coord)) for coord in vertex.co)
+                x, y, z = (int(round(value)) for value in coordinate)
                 f.write(f"{x} {z} {-(y)}\n")  # Translate back to the 3DG1/3DAN coordinate system (Y is up/down)
 
         # Write polygon data (from the first frame's mesh)
@@ -202,20 +229,27 @@ class Export3DAN(bpy.types.Operator):
 
     def execute(self, context):
         filepath = self.filepath
-        objects = context.scene.objects
+        if context.scene.fastfx_use_legacy_animation_objects:
+            frame_objects = [
+                obj for obj in context.scene.objects if obj.type == "MESH"
+            ]
+            frame_number = len(frame_objects)
+            if not frame_objects:
+                self.report({'ERROR'}, "No objects found for export.")
+                return {'CANCELLED'}
+        else:
+            obj = context.active_object
+            if not is_vertex_animation(obj):
+                self.report({'ERROR'}, "Select an animated mesh object.")
+                return {'CANCELLED'}
+            frame_objects = [obj]
+            frame_number = animation_frame_count(obj)
 
-        # Collect objects for frames
-        frame_objects = [obj for obj in objects if obj.type == "MESH"]
-
-        if len(frame_objects) < 1:
-            self.report({'ERROR'}, "No objects found for export.")
+        try:
+            write_3dan(filepath, frame_objects, frame_number)
+        except (OSError, ValueError, RuntimeError) as exc:
+            self.report({'ERROR'}, f"Failed to export 3DAN: {exc}")
             return {'CANCELLED'}
-
-        # Assume the number of objects corresponds to the number of frames
-        frame_number = len(frame_objects)
-
-        # Export to 3DAN
-        write_3dan(filepath, frame_objects, frame_number)
 
         self.report({'INFO'}, f"Exported {frame_number} frames to {filepath}")
         return {'FINISHED'}

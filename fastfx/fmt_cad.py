@@ -4,6 +4,7 @@ import struct
 import bpy
 
 from .common import hex_to_rgb
+from .animation import create_animation_object
 from .palette import id_0_c_rgb
 
 # FastFX
@@ -182,14 +183,23 @@ def import_cad(filepath, context):
             bsdf.inputs["Base Color"].default_value = hex_to_rgb(hex_color)
         material_indices[color_index] = len(material_indices)
 
-    for frame_number, vertices in enumerate(frame_vertices):
-        object_name = f"{base_name}_frame{frame_number}" if animated else base_name
-        mesh = bpy.data.meshes.new(object_name)
-        mesh.from_pydata(vertices, [], polygons)
-        mesh.update()
-        obj = bpy.data.objects.new(object_name, mesh)
-        context.collection.objects.link(obj)
+    if animated and not context.scene.fastfx_use_legacy_animation_objects:
+        objects = [
+            create_animation_object(context, base_name, frame_vertices, polygons)
+        ]
+    else:
+        objects = []
+        for frame_number, vertices in enumerate(frame_vertices):
+            object_name = f"{base_name}_frame{frame_number}" if animated else base_name
+            mesh = bpy.data.meshes.new(object_name)
+            mesh.from_pydata(vertices, [], polygons)
+            mesh.update()
+            obj = bpy.data.objects.new(object_name, mesh)
+            context.collection.objects.link(obj)
+            objects.append(obj)
 
+    for obj in objects:
+        mesh = obj.data
         for color_index in sorted(material_indices):
             material_name = f"FX{color_index}"
             material = bpy.data.materials.get(material_name)

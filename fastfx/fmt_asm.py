@@ -7,6 +7,12 @@ import bpy
 from bpy_extras.io_utils import ImportHelper
 
 from .common import hex_to_rgb
+from .animation import (
+    animation_frame_count,
+    animation_frame_coordinates,
+    create_animation_object,
+    is_vertex_animation,
+)
 from .fmt_3dan import sort_animation_objects, write_3dan
 from .fmt_3dg1 import write_3dg1
 from .palette import id_0_c_rgb
@@ -108,7 +114,11 @@ def _parse_asm_points(lines):
 
             block_frames = []
             block_next_point_index = next_point_index
+            parsed_targets = {}
             for target in jump_targets:
+                if target in parsed_targets:
+                    block_frames.append(dict(parsed_targets[target]))
+                    continue
                 label_pattern = re.compile(rf"^\s*{re.escape(target)}(?:\s|$)", re.IGNORECASE)
                 while cursor < len(lines) and not label_pattern.match(lines[cursor].split(";", 1)[0]):
                     cursor += 1
@@ -134,6 +144,7 @@ def _parse_asm_points(lines):
                     else:
                         cursor += 1
                 block_frames.append(frame_points)
+                parsed_targets[target] = dict(frame_points)
                 if block_frames:
                     block_next_point_index = max(block_next_point_index, frame_next_point_index)
             next_point_index = block_next_point_index
@@ -195,7 +206,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         file_path = self.filepath
         try:
-            self.import_bsp(file_path)
+            self.import_bsp(file_path, context)
         except Exception as e:
             self.report({'ERROR'}, f"Failed to import BSP/GZS file: {e}")
             return {'CANCELLED'}
@@ -204,7 +215,7 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
 # =========================
 # ASM BSP/GZS Importer
 # =========================
-    def import_bsp(self, file_path):
+    def import_bsp(self, file_path, context):
         faces = []
         face_data = []  # Store faces with original order and material indices
         material_map = {}
@@ -263,24 +274,32 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
             faces = [face[1] for face in face_data]  # Extract reordered point indices
             material_indices = [face[2] for face in face_data]  # Extract reordered material indices
 
-            # Create a mesh object for each animation frame, matching the
-            # separate-frame-object convention used by the 3DAN importer.
             mesh_name = os.path.basename(file_path).split('.')[0]
-            for frame_index, frame_points in enumerate(points_by_frame):
-                object_name = mesh_name if len(points_by_frame) == 1 else f"{mesh_name}_Frame{frame_index}"
-                mesh = bpy.data.meshes.new(object_name)
-                obj = bpy.data.objects.new(object_name, mesh)
-                bpy.context.collection.objects.link(obj)
+            if len(points_by_frame) > 1 and not context.scene.fastfx_use_legacy_animation_objects:
+                objects = [
+                    create_animation_object(context, mesh_name, points_by_frame, faces)
+                ]
+            else:
+                objects = []
+                for frame_index, frame_points in enumerate(points_by_frame):
+                    object_name = (
+                        mesh_name
+                        if len(points_by_frame) == 1
+                        else f"{mesh_name}_Frame{frame_index}"
+                    )
+                    mesh = bpy.data.meshes.new(object_name)
+                    mesh.from_pydata(frame_points, [], faces)
+                    mesh.update()
+                    obj = bpy.data.objects.new(object_name, mesh)
+                    context.collection.objects.link(obj)
+                    objects.append(obj)
 
-                mesh.from_pydata(frame_points, [], faces)
-                mesh.update()
-
-                # Assign materials to the mesh
-                for material_name, material_index in material_map.items():
+            for obj in objects:
+                mesh = obj.data
+                for material_name in material_map:
                     material = bpy.data.materials.get(material_name)
                     if material:
                         mesh.materials.append(material)
-
                 for i, polygon in enumerate(mesh.polygons):
                     polygon.material_index = material_indices[i]
 
@@ -293,7 +312,16 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
             raise RuntimeError(f"Error processing BSP file: {e}")
 
 
-def export_to_format(filepath, obj, sort_mode, output_format, no_simple123, compress_point_pairs=True, tree=True):
+def export_to_format(
+    filepath,
+    obj,
+    sort_mode,
+    output_format,
+    no_simple123,
+    compress_point_pairs=True,
+    tree=True,
+    frame_index=0,
+):
     """Export a Blender mesh through a temporary 3DG1 file and the SHAPED compiler."""
     output_path = Path(filepath)
     shape_name = _asm_symbol_name(obj.get("assembly_name") or output_path.stem)
@@ -306,7 +334,19 @@ def export_to_format(filepath, obj, sort_mode, output_format, no_simple123, comp
 
     with TemporaryDirectory() as temporary:
         source_path = Path(temporary) / "model.3dg1"
-        write_3dg1(source_path, obj, sort_mode, compress_point_pairs, validate_signed_16bit=True)
+        vertex_coordinates = (
+            animation_frame_coordinates(obj, frame_index)
+            if is_vertex_animation(obj)
+            else None
+        )
+        write_3dg1(
+            source_path,
+            obj,
+            sort_mode,
+            compress_point_pairs,
+            validate_signed_16bit=True,
+            vertex_coordinates=vertex_coordinates,
+        )
         shape = load_shape(source_path)
         shape.header = ShapeHeader(
             name=shape_name,
@@ -329,10 +369,18 @@ def export_to_format(filepath, obj, sort_mode, output_format, no_simple123, comp
             raise ValueError(f"Unsupported ASM export format: {output_format}")
 
 
-def export_animated_to_format(filepath, objects, output_format, no_simple123, tree=True):
+def export_animated_to_format(
+    filepath,
+    objects,
+    output_format,
+    no_simple123,
+    tree=True,
+    mirror_animation=False,
+):
     """Export animation frame objects through a temporary 3DAN file and SHAPED."""
     output_path = Path(filepath)
-    frame_objects = sort_animation_objects(objects)
+    is_shape_key_animation = len(objects) == 1 and is_vertex_animation(objects[0])
+    frame_objects = list(objects) if is_shape_key_animation else sort_animation_objects(objects)
     if not frame_objects:
         raise ValueError("No mesh objects found for animation export.")
     base_object = frame_objects[0]
@@ -350,9 +398,14 @@ def export_animated_to_format(filepath, objects, output_format, no_simple123, tr
         if tuple(tuple(polygon.vertices) for polygon in mesh.polygons) != topology:
             raise ValueError(f"Frame '{obj.name}' has different face topology from frame '{frame_objects[0].name}'.")
 
+    frame_count = (
+        animation_frame_count(base_object)
+        if is_shape_key_animation
+        else len(frame_objects)
+    )
     with TemporaryDirectory() as temporary:
         source_path = Path(temporary) / "animation.3dan"
-        write_3dan(source_path, frame_objects, len(frame_objects), validate_signed_16bit=True)
+        write_3dan(source_path, frame_objects, frame_count, validate_signed_16bit=True)
         shape = load_shape(source_path)
         shape.header = ShapeHeader(
             name=shape_name,
@@ -368,9 +421,15 @@ def export_animated_to_format(filepath, objects, output_format, no_simple123, tr
         )
 
         if output_format == "bsp":
-            write_shape(shape, output_path, "bsp", tree=tree)
+            write_shape(
+                shape,
+                output_path,
+                "bsp",
+                tree=tree,
+                mirror_animation=mirror_animation,
+            )
         elif output_format == "gzs":
-            write_shape(shape, output_path, "gzs")
+            write_shape(shape, output_path, "gzs", mirror_animation=mirror_animation)
         else:
             raise ValueError(f"Unsupported animated ASM export format: {output_format}")
 
@@ -400,6 +459,7 @@ class ExportToBSP(bpy.types.Operator):
                 _simplified_shapehdr_for_scene(scene),
                 scene.fastfx_export_compress_point_pairs,
                 tree=True,
+                frame_index=scene.fastfx_static_export_frame,
             )
         except Exception as exc:
             self.report({'ERROR'}, f"Failed to export BSP: {exc}")
@@ -433,6 +493,7 @@ class ExportToBSPTreeless(bpy.types.Operator):
                 _simplified_shapehdr_for_scene(scene),
                 scene.fastfx_export_compress_point_pairs,
                 tree=False,
+                frame_index=scene.fastfx_static_export_frame,
             )
         except Exception as exc:
             self.report({'ERROR'}, f"Failed to export treeless BSP: {exc}")
@@ -468,6 +529,7 @@ class ExportToGZS(bpy.types.Operator):
                 "gzs",
                 _simplified_shapehdr_for_scene(scene),
                 scene.fastfx_export_compress_point_pairs,
+                frame_index=scene.fastfx_static_export_frame,
             )
         except Exception as exc:
             self.report({'ERROR'}, f"Failed to export GZS: {exc}")
@@ -497,7 +559,12 @@ class ExportAnimatedToASM(bpy.types.Operator):
         options={'HIDDEN'},
     )
     def execute(self, context):
-        frame_objects = [obj for obj in context.scene.objects if obj.type == "MESH"]
+        if context.scene.fastfx_use_legacy_animation_objects:
+            frame_objects = [
+                obj for obj in context.scene.objects if obj.type == "MESH"
+            ]
+        else:
+            frame_objects = [context.active_object] if is_vertex_animation(context.active_object) else []
         if not frame_objects:
             self.report({'ERROR'}, "No mesh objects found for animation export.")
             return {'CANCELLED'}
@@ -511,6 +578,7 @@ class ExportAnimatedToASM(bpy.types.Operator):
                 output_format,
                 _simplified_shapehdr_for_scene(context.scene),
                 tree=tree,
+                mirror_animation=context.scene.fastfx_animation_mirror,
             )
         except Exception as exc:
             self.report({'ERROR'}, f"Failed to export animated {self.output_format.upper()}: {exc}")
