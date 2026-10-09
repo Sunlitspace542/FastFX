@@ -5,7 +5,7 @@ Star Fox animations record vertex positions per frame. Preprocess the model befo
 
 ## Shape-Key Animation (Default)
 
-With ``Use Legacy Animation Objects`` disabled in the Animation panel, importing an animated 3DAN/3DGI, CAD/NCA, or ASM BSP/GZS file creates one mesh object with a shape key for each frame. The first frame is frame 0. In the Animation panel, use ``Add Frame`` to append a copy of the current frame, ``Remove Frame`` to delete the displayed frame, the arrow buttons to step between frames, and the outer buttons to jump to the first or last frame. The active shape key is the current frame, so edit its vertex positions in Edit Mode. Frame changes and playback require Object Mode.
+With ``Use Legacy Animation Objects`` disabled in the Animation panel, importing an animated 3DAN/3DGI, CAD/NCA, or ASM BSP/GZS file creates one mesh object with a shape key for each frame. The first frame is frame 0. In the Animation panel, use ``Add Frame`` to append a copy of the current frame, ``Insert After`` to copy it directly after the displayed frame, ``Remove Frame`` to delete the displayed frame, the arrow buttons to step between frames, and the outer buttons to jump to the first or last frame. The active shape key is the current frame, so edit its vertex positions in Edit Mode. Frame changes and playback require Object Mode.
 
 ``Play/Pause`` plays at up to 20 frames per second. ``Loop Playback`` repeats the animation; ``Mirror Animation`` plays it forward and backward without duplicating the endpoints. The same mirror option is used by animated ASM exports to mirror the jump table without duplicating vertex-frame data. Export menus are unchanged.
 

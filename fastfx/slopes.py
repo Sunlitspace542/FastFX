@@ -190,6 +190,38 @@ def add_animation_slope_frame(obj, source_frame):
         )
 
 
+def insert_animation_slope_frame(obj, source_frame):
+    mesh = obj.data
+    frame_count = len([
+        key for key in mesh.shape_keys.key_blocks
+        if key.name.startswith("FastFX_Frame_")
+    ])
+    old_frame_count = frame_count - 1
+    if not 0 <= source_frame < old_frame_count:
+        raise ValueError(f"Frame index {source_frame} is outside the animation on '{obj.name}'.")
+    for name in _SLOPE_FRAME_ATTRIBUTES:
+        values = _read_slope_attribute(mesh, name)
+        _write_slope_attribute(
+            mesh,
+            _animation_slope_attribute_name(name, source_frame),
+            values,
+        )
+        for old_index in range(old_frame_count - 1, source_frame, -1):
+            _write_slope_attribute(
+                mesh,
+                _animation_slope_attribute_name(name, old_index + 1),
+                _read_slope_attribute(
+                    mesh,
+                    _animation_slope_attribute_name(name, old_index),
+                ),
+            )
+        _write_slope_attribute(
+            mesh,
+            _animation_slope_attribute_name(name, source_frame + 1),
+            values,
+        )
+
+
 def remove_animation_slope_frame(obj, frame_index):
     mesh = obj.data
     frame_count = len([

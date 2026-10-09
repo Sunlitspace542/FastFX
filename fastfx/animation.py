@@ -182,6 +182,14 @@ def _active_animation(context):
     return obj
 
 
+def _renumber_animation_frames(obj):
+    keys = animation_frame_keys(obj)
+    for index, key in enumerate(keys):
+        key.name = f"FastFX__TEMP_FRAME__{index:04d}"
+    for index, key in enumerate(keys):
+        key.name = f"{ANIMATION_FRAME_PREFIX}{index:04d}"
+
+
 class OBJECT_OT_animation_add_frame(bpy.types.Operator):
     """Append a frame copied from the currently displayed geometry"""
     bl_idname = "object.fastfx_animation_add_frame"
@@ -225,6 +233,47 @@ class OBJECT_OT_animation_add_frame(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class OBJECT_OT_animation_insert_frame(bpy.types.Operator):
+    """Insert a copy of the displayed frame immediately after it"""
+    bl_idname = "object.fastfx_animation_insert_frame"
+    bl_label = "Insert Frame"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        try:
+            obj = _active_animation(context)
+            if obj.mode != "OBJECT":
+                raise ValueError("Switch to Object Mode before inserting an animation frame.")
+            if context.scene.fastfx_animation_playing:
+                raise ValueError("Pause animation playback before changing its frames.")
+
+            source_frame = obj.fastfx_animation_frame
+            coordinates = animation_frame_coordinates(obj, source_frame)
+            key = obj.shape_key_add(
+                name=f"{ANIMATION_FRAME_PREFIX}{animation_frame_count(obj):04d}",
+                from_mix=True,
+            )
+            key.relative_key = obj.data.shape_keys.key_blocks["Basis"]
+            for vertex, coordinate in zip(key.data, coordinates):
+                vertex.co = coordinate
+
+            _insert_slope_animation_frame(obj, source_frame)
+            new_key_index = len(obj.data.shape_keys.key_blocks) - 1
+            target_key_index = source_frame + 2
+            for key_index in range(new_key_index, target_key_index, -1):
+                obj.active_shape_key_index = key_index
+                result = bpy.ops.object.shape_key_move(type='UP')
+                if 'FINISHED' not in result:
+                    raise RuntimeError("Blender could not move the inserted shape key.")
+
+            _renumber_animation_frames(obj)
+            set_animation_frame(obj, source_frame + 1)
+        except (RuntimeError, ValueError, KeyError) as exc:
+            self.report({'ERROR'}, f"Could not insert animation frame: {exc}")
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
 class OBJECT_OT_animation_remove_frame(bpy.types.Operator):
     """Remove the currently displayed animation frame"""
     bl_idname = "object.fastfx_animation_remove_frame"
@@ -244,8 +293,7 @@ class OBJECT_OT_animation_remove_frame(bpy.types.Operator):
             frame_index = min(obj.fastfx_animation_frame, len(keys) - 1)
             _remove_slope_animation_frame(obj, frame_index)
             obj.shape_key_remove(keys[frame_index])
-            for index, key in enumerate(animation_frame_keys(obj)):
-                key.name = f"{ANIMATION_FRAME_PREFIX}{index:04d}"
+            _renumber_animation_frames(obj)
             remaining = animation_frame_count(obj)
             set_animation_frame(obj, min(frame_index, remaining - 1))
         except (RuntimeError, ValueError, KeyError) as exc:
@@ -384,6 +432,12 @@ def _add_slope_animation_frame(obj, source_frame):
     from .slopes import add_animation_slope_frame
 
     add_animation_slope_frame(obj, source_frame)
+
+
+def _insert_slope_animation_frame(obj, source_frame):
+    from .slopes import insert_animation_slope_frame
+
+    insert_animation_slope_frame(obj, source_frame)
 
 
 def _remove_slope_animation_frame(obj, frame_index):

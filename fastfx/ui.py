@@ -841,6 +841,11 @@ class VIEW3D_PT_fastfx_animation(bpy.types.Panel):
                 obj.mode == "OBJECT" and not scene.fastfx_animation_playing
             )
             frame_actions.operator("object.fastfx_animation_add_frame", icon='ADD')
+            frame_actions.operator(
+                "object.fastfx_animation_insert_frame",
+                text="Insert After",
+                icon='ADD',
+            )
             frame_actions.operator("object.fastfx_animation_remove_frame", icon='REMOVE')
             animation_box.prop(scene, "fastfx_animation_loop")
             mirror_row = animation_box.row()

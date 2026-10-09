@@ -19,6 +19,7 @@ bl_info = {
 from .fmt_3dan import Export3DAN
 from .animation import (
     OBJECT_OT_animation_add_frame,
+    OBJECT_OT_animation_insert_frame,
     OBJECT_OT_animation_jump_endpoint,
     OBJECT_OT_animation_playback,
     OBJECT_OT_animation_remove_frame,
@@ -86,6 +87,7 @@ classes = (
     Export3DG1,
     VertexOperation,
     OBJECT_OT_animation_add_frame,
+    OBJECT_OT_animation_insert_frame,
     OBJECT_OT_animation_remove_frame,
     OBJECT_OT_animation_step_frame,
     OBJECT_OT_animation_jump_endpoint,
