@@ -35,6 +35,7 @@ Categories are named by their source files.
 
 ## ui
 - [ ] ability to assign multiple shape headers to an object for ASM export? the main label names come from the first
+- [ ] convert 2-gons to tagged stray edges?
 
 ## OTHER
 - [ ] Figure out some way to determine how textures will be mapped on a face beforehand (some way to show which way is "up")?
