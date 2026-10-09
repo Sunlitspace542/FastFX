@@ -1,5 +1,10 @@
 import bpy
 
+# FastFX
+# File: animation.py
+# Vertex animation system functions.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
 
 ANIMATION_MARKER = "fastfx_vertex_animation"
 ANIMATION_FRAME_PREFIX = "FastFX_Frame_"

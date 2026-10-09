@@ -123,6 +123,33 @@ def initialize_animation_slope_frames(obj, frame_count):
         _write_slope_attribute(mesh, name, values)
 
 
+def store_animation_slope_frame(obj, frame_index, bm=None):
+    mesh = obj.data
+    frame_count = len([
+        key for key in mesh.shape_keys.key_blocks
+        if key.name.startswith("FastFX_Frame_")
+    ])
+    if not 0 <= frame_index < frame_count:
+        raise ValueError(f"Frame index {frame_index} is outside the animation on '{obj.name}'.")
+    if bm is not None:
+        for name in _SLOPE_FRAME_ATTRIBUTES:
+            source_layer = bm.faces.layers.int.get(name)
+            target_name = _animation_slope_attribute_name(name, frame_index)
+            target_layer = bm.faces.layers.int.get(target_name)
+            if target_layer is None:
+                target_layer = bm.faces.layers.int.new(target_name)
+            for face in bm.faces:
+                face[target_layer] = face[source_layer] if source_layer is not None else 0
+        return
+
+    for name in _SLOPE_FRAME_ATTRIBUTES:
+        _write_slope_attribute(
+            mesh,
+            _animation_slope_attribute_name(name, frame_index),
+            _read_slope_attribute(mesh, name),
+        )
+
+
 def switch_animation_slope_frame(obj, previous_frame, next_frame):
     mesh = obj.data
     for name in _SLOPE_FRAME_ATTRIBUTES:
@@ -212,6 +239,16 @@ def slope_type_name(mesh, code):
     raise ValueError(f"Unknown slope type id {code}")
 
 
+def _display_slope_attribute_names(obj):
+    if is_vertex_animation(obj):
+        frame_index = obj.fastfx_animation_frame
+        return tuple(
+            _animation_slope_attribute_name(name, frame_index)
+            for name in _SLOPE_FRAME_ATTRIBUTES
+        )
+    return _SLOPE_FRAME_ATTRIBUTES
+
+
 def selected_slope_settings(context):
     obj = context.object
     if (
@@ -244,15 +281,11 @@ def selected_slope_settings(context):
     if active_face is None:
         return selection, None
 
-    layers = {
-        name: bm.faces.layers.int.get(name)
-        for name in (
-            SLOPE_ENABLED_ATTRIBUTE,
-            SLOPE_TYPE_ATTRIBUTE,
-            SLOPE_POLY_ATTRIBUTE,
-            SLOPE_ANIMATION_ATTRIBUTE,
-        )
-    }
+    attribute_names = _display_slope_attribute_names(obj)
+    layers = dict(zip(
+        _SLOPE_FRAME_ATTRIBUTES,
+        (bm.faces.layers.int.get(name) for name in attribute_names),
+    ))
     if any(layer is None for layer in layers.values()):
         return selection, None
     if active_face[layers[SLOPE_ENABLED_ATTRIBUTE]] != 1:
@@ -276,8 +309,9 @@ def slope_face_labels(context, obj):
     labels = []
     if context.mode == 'EDIT_MESH' and obj.mode == 'EDIT':
         bm = bmesh.from_edit_mesh(obj.data)
-        enabled_layer = bm.faces.layers.int.get(SLOPE_ENABLED_ATTRIBUTE)
-        type_layer = bm.faces.layers.int.get(SLOPE_TYPE_ATTRIBUTE)
+        enabled_name, type_name, _, _ = _display_slope_attribute_names(obj)
+        enabled_layer = bm.faces.layers.int.get(enabled_name)
+        type_layer = bm.faces.layers.int.get(type_name)
         if enabled_layer is None or type_layer is None:
             return labels
         for face in bm.faces:
@@ -288,8 +322,9 @@ def slope_face_labels(context, obj):
         return labels
 
     mesh = obj.data
-    enabled_attribute = mesh.attributes.get(SLOPE_ENABLED_ATTRIBUTE)
-    type_attribute = mesh.attributes.get(SLOPE_TYPE_ATTRIBUTE)
+    enabled_name, type_name, _, _ = _display_slope_attribute_names(obj)
+    enabled_attribute = mesh.attributes.get(enabled_name)
+    type_attribute = mesh.attributes.get(type_name)
     if (
         enabled_attribute is None
         or type_attribute is None
@@ -375,6 +410,12 @@ class OBJECT_OT_assign_slope_data(bpy.types.Operator):
             face[layers[SLOPE_POLY_ATTRIBUTE]] = int(scene.fastfx_slope_poly)
             face[layers[SLOPE_ANIMATION_ATTRIBUTE]] = int(scene.fastfx_slope_animation)
 
+        if is_vertex_animation(obj):
+            store_animation_slope_frame(
+                obj,
+                obj.fastfx_animation_frame,
+                bm=bm,
+            )
         bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
         skipped = len(selected_faces) - len(valid_faces)
         message = f"Assigned {slope_name} slope data to {len(valid_faces)} face(s)"
@@ -410,6 +451,12 @@ class OBJECT_OT_clear_slope_data(bpy.types.Operator):
             return {'CANCELLED'}
         for face in selected_faces:
             face[layer] = 0
+        if is_vertex_animation(context.object):
+            store_animation_slope_frame(
+                context.object,
+                context.object.fastfx_animation_frame,
+                bm=bm,
+            )
         bmesh.update_edit_mesh(context.object.data, loop_triangles=False, destructive=False)
         self.report({'INFO'}, f"Cleared slope data from {len(selected_faces)} face(s)")
         return {'FINISHED'}
@@ -420,9 +467,7 @@ def _mesh_slope_records(obj, frame_index=None):
     from .animation import is_vertex_animation
 
     if is_vertex_animation(obj) and frame_index is not None:
-        current_frame = obj.fastfx_animation_frame
         attribute_names = tuple(
-            name if frame_index == current_frame else
             _animation_slope_attribute_name(name, frame_index)
             for name in _SLOPE_FRAME_ATTRIBUTES
         )
@@ -570,8 +615,17 @@ def write_slope_data(filepath, objects, animated=False):
                 f"Frame '{frame_obj.name}' has different face topology from '{frame_objects[0].name}'"
             )
 
+    if shape_key_animation:
+        store_animation_slope_frame(
+            frame_objects[0],
+            frame_objects[0].fastfx_animation_frame,
+        )
+
     records_by_frame = [
-        _mesh_slope_records(obj, frame_index if shape_key_animation else None)
+        _mesh_slope_records(
+            obj,
+            frame_index if shape_key_animation else None,
+        )
         for frame_index, obj in enumerate(frame_objects)
     ]
     records = records_by_frame[0]
