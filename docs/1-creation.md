@@ -16,9 +16,6 @@ For new 2-point faces, select loose edges in Edit Mode, choose an ``FX#`` materi
 
 These colored loose edges export as 2-point faces and are deduplicated with edges converted from existing 2-point faces.
 
-### Legacy 2-gon features
-You can also create 2-gons directly using the ``Add 2-Point Face`` option in the FastFX sidebar, though this is a legacy feature, and working with real 2-gons in Blender has its quirks and issues. 2-gons are only used when importing a shape or on older projects from before edge tagging was added.
-
 ### Edge material overlay
 The active mesh's assigned loose edges and existing 2-point faces with ``FX#`` materials display a palette-colored line and material label over the edge in the 3D Viewport; this is a viewport-only visual aid and does not add geometry or affect exports.
 
@@ -28,6 +25,9 @@ The line and label overlays can be toggled independently in the FastFX sidebar u
 To convert faces on a model into edges, use ``FE#`` instead of ``FX#`` as the material name. Please note that ``FE#`` materials are reserved for this feature only and should not be used otherwise. Faces using that material naming scheme will be converted to edges when exporting.
 
 Generated edges are also deduplicated based on if two edges are at the same position and have the same color.  
+
+### Legacy 2-gon features
+You can also create 2-gons directly using the ``Add 2-Point Face`` option in the FastFX sidebar, though this is a legacy feature, and working with real 2-gons in Blender has its quirks and issues. 2-gons are only used when importing a shape or on older projects from before edge tagging was added.
 
 # 1a. Creating Slope Data (Star Fox 2)
 Before creating slope data, export your completed model as 3DG1 and reimport beforehand so the model is correctly face sorted and preprocessed, similar to the procedure for animation.  
