@@ -1,25 +1,31 @@
 [Return to User's Manual index](MANUAL.md)
 # 2. Animations
-```diff  
--IMPORTANT!-
-SHAPED.EXE (the original DOS tool used to convert 3DG1/3DAN to ASM) only supports up to 16 frames of animation (15 if counting from 0).
-```
-The way animations in Star Fox work is comparable to stop motion or claymation. The format logs point position changes for each frame.  
 
-Note that this procedure is very janky and manual and may be completely reworked in the future. It's good enough for simple things (e.g. moving doors/gates), but more complex animations can get tedious quickly.  
+Star Fox animations record vertex positions per frame. Preprocess the model before animating: export it as 3DG1 and reimport it so vertex order and face sorting are consistent. Once animation frames have been created, change vertex positions only; changing mesh topology invalidates the animation.
 
-1. Create a model and export it as 3DG1 so the model is preprocessed for animation and the faces are pre-sorted as desired, as the animation exporters no **NOT** sort faces, and expect you to have done all this beforehand.
-2. Create a new Blender document and import the prior 3DG1. Rename it to ``Frame0`` for the first frame.  
-3. Press Shift+D, then 0 to reset the position, then ENTER to duplicate it. Rename this one to ``Frame1``. Go into edit mode and reposition the vertices for that frame.  
-4. Duplicate that frame as before, rename it so its frame number is one greater than the previous, make your changes to the vertices, and repeat until you have all your frames.  
+## Shape-Key Animation (Default)
 
-## Exporting Animations
-Select all the frame objects in Blender. They should all be in order from Frame 0 to whatever your last frame is. Usually Blender will sort the object list for you.  
-Go to ``File -> Export -> 3DAN/3DGI/Animated Fundoshi-kun (.anm)`` to export the animation to a .anm file in 3DAN/3DGI format.  
-To export as assembly, use the `File -> Export -> Star Fox ASM (Animated)` submenu.  
-For more detailed information on exporting animations, see chapter 3.  
+With ``Use Legacy Animation Objects`` disabled in the Animation panel, importing an animated 3DAN/3DGI, CAD/NCA, or ASM BSP/GZS file creates one mesh object with a shape key for each frame. The first frame is frame 0. In the Animation panel, use ``Add Frame`` to append a copy of the current frame, ``Remove Frame`` to delete the displayed frame, the arrow buttons to step between frames, and the outer buttons to jump to the first or last frame. The active shape key is the current frame, so edit its vertex positions in Edit Mode. Frame changes and playback require Object Mode.
 
-There is a rare chance that you may need to correct the order of the animation jump tables in the assembly after conversion to assembly if the animation frame order is incorrect. The addon has measures to try to prevent this, but things could still come out wrong.  
+``Play/Pause`` plays at up to 20 frames per second. ``Loop Playback`` repeats the animation; ``Mirror Animation`` plays it forward and backward without duplicating the endpoints. The same mirror option is used by animated ASM exports to mirror the jump table without duplicating vertex-frame data. Export menus are unchanged.
 
-# 2a. Exporting Animated Slope Data (Star Fox 2)
-Assign slope data to each animated face on every frame mesh. The slope type can differ per frame, so you can change the slope assignment while editing each frame. ``Animate Slope Data`` must be enabled for the same faces on every frame; optional ``Export Slope Polygon`` must also match for each animated face. Select all frame meshes, make the first frame active, then choose ``File -> Export -> Star Fox 2 Slope Data -> Animated Slope Data``. Frames must have matching vertex counts and face topology; they are ordered naturally by object name (for example, ``Frame0``, ``Frame1``, ``Frame2``). The exporter writes one ``SLOPEANIM`` sequence per animated face using that face's settings and geometry from each frame. Both ``.slo`` and ``.asm`` output are supported.
+For a static 3DG1, BSP, treeless BSP, or GZS export of an animated mesh, choose the zero-based ``Static Export Frame`` in the Animation panel. Animated 3DAN and ASM exports use all shape-key frames.
+
+Animated slope data remains a separate export. In Star Fox 2 mode, assign slope data while displaying each animation frame; each frame retains its own slope assignments, including its slope type. Animated slope data must be assigned to the same faces on every frame, but those faces can use different slope types between frames. Export the animation and slope data separately using their existing `File > Export` menu entries.
+
+## Legacy Object-Per-Frame Animation
+
+Enable ``Use Legacy Animation Objects`` in the Animation panel to retain the previous workflow. Animated imports create one mesh object per frame, and animation exporters use the selected/available frame objects.
+For this workflow:
+
+1. Import the preprocessed model once per frame, or import an animated file
+   while legacy mode is enabled.
+2. Name the objects so their frame numbers sort naturally, such as
+   `Ship_Frame0`, `Ship_Frame1`, and `Ship_Frame2`.
+3. Edit each frame's vertices without changing topology.
+4. Select the frame objects and use the existing 3DAN, animated ASM, or
+   animated slope-data export menu.
+
+## Animated Slope Data (Star Fox 2)
+
+Slope assignments can differ between animation frames. In shape-key mode, change to each frame before assigning its slope data; in legacy mode, assign slope data on each frame object. Animated slope export remains separate from shape export. It validates matching face topology and consistent animated slope-face assignments.

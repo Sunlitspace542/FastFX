@@ -18,11 +18,16 @@ This setting is affected by the selected game preset. Star Fox 2 forces it off b
 
 ``Compress point pairs``: If checked, exact X-mirrored pairs are sorted together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
 
+## Vertex Animation
+The Animation panel contains the ``Use Legacy Animation Objects`` setting, which selects the old object per frame system. By default, animated imports use one mesh with per-frame shape keys. For a FastFX vertex-animation object, ``Static Export Frame`` selects the zero-based frame used by static 3DG1 and ASM exports.
+
+The panel also shows the current frame and frame count, controls to jump to the first or last frame, step between frames, play/pause, add a frame copied from the displayed frame, and remove the displayed frame. Change frame or edit the frame geometry in Object Mode/Edit Mode respectively; mesh topology must stay fixed. Playback follows the scene frame rate up to a maximum of 20 FPS. It can loop and optionally mirror without duplicating the first or last frame. The mirror option also controls mirrored jump-table output for animated ASM exports. Animated slope data is stored per frame and still exported separately.
+
 # Material Configuration
 ``Toggle Backface Culling`` toggles backface culling on all materials. This allows for a more accurate representation of the shape in Blender, as Star Fox doesn't draw polygons as double-sided.  
 
 ## Color Palette (Fancy)
-**PLEASE NOTE**: these features are only known to work on Blender 3.x.  
+``PLEASE NOTE``: these features are only known to work on Blender 3.x.  
   
 ``Create Super FX node group`` creates the node group needed for the Super FX material. You only need to click this once per .blend file.  
   
@@ -71,7 +76,7 @@ This section allows you to enable/disable the edge color and label overlays if d
   
 ``Update Colbox Positions`` updates the position properties of the selected colboxes based on the position of the empties.  
   
-``Generate Colbox for Mesh`` generates a colbox that fits the selected mesh. **NOTE:** this can sometimes cause Blender to crash. Save often and you should be fine.  
+``Generate Colbox for Mesh`` generates a colbox that fits the selected mesh. ``NOTE:`` this can sometimes cause Blender to crash. Save often and you should be fine.  
 
 # Object Tools
 ## ASM Tools

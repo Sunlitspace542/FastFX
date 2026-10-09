@@ -3,9 +3,9 @@
 
 ## A. To 3DG1/3DAN
 
-To export to 3DG1, select all frame objects, and go to `File -> Export -> 3DG1/3DGI/Fundoshi-Kun (.txt/.3dg1/.obj)` to export.
+To export a static 3DG1, select the mesh and go to `File -> Export -> 3DG1/3DGI/Fundoshi-Kun (.txt/.3dg1/.obj)`. When the mesh uses the new shape-key animation system, the ``Static Export Frame`` setting selects which frame is exported.
 
-Export options are in the FastFX sidebar under **Export Options**.
+Export options are in the FastFX sidebar under ``Export Options``.
 
 Face sorting (drop-down):  
 - Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting as it tends to yield decent results.
@@ -14,14 +14,14 @@ Face sorting (drop-down):
 
 Compress point pairs: Whether the exporter should sort exact X-mirrored pairs together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
 
-To export to 3DAN, select all frame objects, and go to `File -> Export -> 3DAN/3DGI/Animated Fundoshi-Kun (.anm)` to export. There are no export options in the file picker dialog.
+To export to 3DAN, use `File -> Export -> 3DAN/3DGI/Animated Fundoshi-Kun (.anm)`. In shape-key mode, select the animated mesh; with ``Use Legacy Animation Objects`` enabled, the legacy exporter uses the per-frame mesh objects. There are no export options in the file picker dialog.
 
 ## B. To ASM
 
 ## Method 1: Via FastFX
 FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Coordinates outside the signed 16-bit range (-32768 to 32767) are rejected.
 
-Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds some editable shape header properties to the selected object. Custom ShapeHdr properties are currently not supported in animation export, but will be supported eventually.  
+Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds editable shape header properties to the selected object. For animated object-per-frame export, the first frame in natural object-name order supplies the header properties.
 You can edit these properties in the ``ShapeHdr Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties.
 
 Go to ``File -> Export -> Star Fox ASM`` to export.  
@@ -30,7 +30,7 @@ Explanation of the 3 supported assembly formats:
 - Star Fox ASM BSP (treeless) - The same as BSP, but faces are written as a flat list with no BSP tree information.  
 - Star Fox ASM GZS - Similar to treeless BSP, having no BSP tree information, but with a slightly different format and worse Z-sorting.  
 
-The FastFX sidebar's **Export Options** are applied during the 3DG1 export stage.
+The FastFX sidebar's ``Export Options`` are applied during the 3DG1 export stage.
 
 ``Face sorting`` (drop-down):  
 - Distance From Origin: sorts faces/edges by their distance from the origin. This is the default setting as it tends to yield decent results.  
@@ -41,13 +41,13 @@ The FastFX sidebar's **Export Options** are applied during the 3DG1 export stage
   
 ``Compress point pairs``: If checked, exact X-mirrored pairs are sorted together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
 
-For animated ASM export, select all frame mesh objects and use the ``Star Fox ASM (Animated)`` submenu. It gathers all mesh objects in the scene and orders them naturally by **object name**, so name the frames ``Frame0``, ``Frame1``, and so on (``Frame2`` sorts before ``Frame10``).
+For animated ASM export, use the ``Star Fox ASM (Animated)`` submenu. In shape-key mode, select the animated mesh; with ``Use Legacy Animation Objects`` enabled, the exporter gathers mesh objects in the scene and orders them naturally by ``object name``, so name the frames ``Frame0``, ``Frame1``, and so on (``Frame2`` sorts before ``Frame10``).
 
 Each frame must have the same vertex count and face topology; ShapeHdr properties and polygon materials are taken from the first frame in that order.
 
 The SHAPED compiler supports up to 128 frames and 500 points, and coordinates outside the signed 16-bit range (-32768 to 32767) are rejected.
 
-The **Simplified ShapeHdr** setting in the FastFX sidebar also applies to animated ASM exports. Sort mode and point-pair compression are not used by animated ASM export because it uses the 3DAN path. It is expected that you already exported your shape to 3DG1 and reimported before animating so the shape is correctly preprocessed for animation.
+The ``Simplified ShapeHdr`` setting in the FastFX sidebar also applies to animated ASM exports. Sort mode and point-pair compression are not used by animated ASM export because it uses the 3DAN path. The ``Mirror Animation`` option mirrors the ASM jump table without duplicating frame point data. Preprocess the shape to 3DG1 and reimport before animating so vertex ordering and faces remain consistent.
 
 ## Method 2: WinShaped CLI (the slightly better manual way)
 Get WinShaped [here](https://github.com/Sunlitspace542/WinShaped/releases).
