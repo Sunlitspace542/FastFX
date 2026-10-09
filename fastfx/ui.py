@@ -741,17 +741,19 @@ class OBJECT_OT_toggle_backface_culling(bpy.types.Operator):
 # FastFX Menu Panel Layout
 # =========================
 class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
-    """FastFX tools"""
-    bl_label = "FastFX"
+    """Global configuration for FastFX"""
+    bl_label = "FastFX Global Configuration"
     bl_idname = "VIEW3D_PT_fastfx_tools"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "FastFX"
+    bl_order = 0
+#    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        is_starfox2 = scene.fastfx_game_preset == "STARFOX2"
+
         layout.prop(scene, "fastfx_game_preset")
         export_box = layout.box()
         export_box.label(text="Export Options")
@@ -760,14 +762,43 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         simplified_row = export_box.row()
         simplified_row.enabled = scene.fastfx_game_preset not in {"STARFOX2", "STARFOXEX"}
         simplified_row.prop(scene, "fastfx_export_simplified_shapehdr")
-        layout.label(text="Material Configuration")
+
+
+class VIEW3D_PT_fastfx_material_configuration(bpy.types.Panel):
+    """Material configuration for FastFX"""
+    bl_label = "Material Configuration"
+    bl_idname = "VIEW3D_PT_fastfx_material_configuration"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "FastFX"
+    bl_order = 1
+#    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
         layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
         layout.label(text="Color Palette (Fancy)")
         layout.operator("object.create_super_fx")
         layout.operator("object.apply_material_colors")
         layout.label(text="Color Palette (Simple)")
         layout.operator("object.apply_material_colors_simple")
-        layout.label(text="Mesh Utilities")
+
+
+class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):
+    """Mesh utilities for FastFX"""
+    bl_label = "Mesh Utilities"
+    bl_idname = "VIEW3D_PT_fastfx_mesh_utilities"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "FastFX"
+    bl_order = 2
+#    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        is_starfox2 = scene.fastfx_game_preset == "STARFOX2"
+
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
         layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face")
@@ -809,14 +840,46 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
             slope_box.operator("object.assign_slope_data")
             slope_box.operator("object.clear_slope_data")
             slope_box.prop(scene, "fastfx_show_slope_labels")
-        layout.label(text="Collision Box Tools")
+
+
+class VIEW3D_PT_fastfx_collision_box_tools(bpy.types.Panel):
+    """Collision box tools for FastFX"""
+    bl_label = "Collision Box Tools"
+    bl_idname = "VIEW3D_PT_fastfx_collision_box_tools"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "FastFX"
+    bl_order = 3
+#    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+
         layout.operator("object.import_colboxes_clipboard")
         layout.operator("object.export_colboxes")
         layout.prop(scene, "fastfx_export_animated_colbox")
         layout.operator("object.update_colboxes")
         layout.operator("object.update_colbox_offsets")
         layout.operator("object.generate_colbox")
-        layout.label(text="BSP/GZS Tools")
+
+
+class VIEW3D_PT_fastfx_object_tools(bpy.types.Panel):
+    """Object tools for FastFX"""
+    bl_label = "Object Tools"
+    bl_idname = "VIEW3D_PT_fastfx_object_tools"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "FastFX"
+    bl_order = 4
+#    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        is_starfox2 = scene.fastfx_game_preset == "STARFOX2"
+
+        layout.label(text="ASM Tools")
         layout.operator("object.add_shape_header_properties")
 
         obj = context.active_object
