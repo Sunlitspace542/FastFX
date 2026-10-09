@@ -124,6 +124,10 @@ def _edge_material_segments(context, obj):
                     edge_labels.append((face.verts[0].co, face.verts[1].co, label))
     else:
         mesh = obj.data
+        vertices = mesh.vertices
+        if is_vertex_animation(obj):
+            evaluated_obj = obj.evaluated_get(context.evaluated_depsgraph_get())
+            vertices = evaluated_obj.data.vertices
         edge_color_attribute = mesh.attributes.get(EDGE_COLOR_ATTRIBUTE)
         if (
             edge_color_attribute is not None
@@ -140,8 +144,8 @@ def _edge_material_segments(context, obj):
                 if color_value.value >= 0 and edge_key not in face_edge_keys:
                     v1, v2 = edge.vertices
                     edge_labels.append((
-                        mesh.vertices[v1].co,
-                        mesh.vertices[v2].co,
+                        vertices[v1].co.copy(),
+                        vertices[v2].co.copy(),
                         f"FX{color_value.value}",
                     ))
 
@@ -151,7 +155,11 @@ def _edge_material_segments(context, obj):
             label = _edge_material_label(obj.material_slots[poly.material_index].material)
             if label:
                 v1, v2 = poly.vertices
-                edge_labels.append((mesh.vertices[v1].co, mesh.vertices[v2].co, label))
+                edge_labels.append((
+                    vertices[v1].co.copy(),
+                    vertices[v2].co.copy(),
+                    label,
+                ))
 
     return edge_labels
 
