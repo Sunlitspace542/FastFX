@@ -271,6 +271,35 @@ class OBJECT_OT_animation_step_frame(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class OBJECT_OT_animation_jump_endpoint(bpy.types.Operator):
+    """Jump to the first or last frame of the active animation"""
+    bl_idname = "object.fastfx_animation_jump_endpoint"
+    bl_label = "Jump to Animation Endpoint"
+    bl_options = {'INTERNAL'}
+
+    endpoint: bpy.props.EnumProperty(
+        items=[
+            ("START", "Start", "Jump to the first frame"),
+            ("END", "End", "Jump to the last frame"),
+        ],
+        default="START",
+    )
+
+    def execute(self, context):
+        try:
+            obj = _active_animation(context)
+            if obj.mode != "OBJECT":
+                raise ValueError("Switch to Object Mode before changing animation frames.")
+            if context.scene.fastfx_animation_playing:
+                raise ValueError("Pause animation playback before changing its frame.")
+            frame_index = 0 if self.endpoint == "START" else animation_frame_count(obj) - 1
+            set_animation_frame(obj, frame_index)
+        except ValueError as exc:
+            self.report({'ERROR'}, str(exc))
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
 class OBJECT_OT_animation_playback(bpy.types.Operator):
     """Play or pause the active FastFX vertex animation"""
     bl_idname = "object.fastfx_animation_playback"
@@ -294,8 +323,10 @@ class OBJECT_OT_animation_playback(bpy.types.Operator):
             context.scene.fastfx_animation_playing = False
             return {'FINISHED'}
         self._frame_direction = 1
+        render = context.scene.render
+        playback_fps = max(render.fps, 1) / render.fps_base
         self._timer = context.window_manager.event_timer_add(
-            1.0 / max(context.scene.render.fps, 1),
+            max(1.0 / playback_fps, 1.0 / 20.0),
             window=context.window,
         )
         context.window_manager.modal_handler_add(self)

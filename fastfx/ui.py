@@ -764,7 +764,6 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         scene = context.scene
 
         layout.prop(scene, "fastfx_game_preset")
-        layout.prop(scene, "fastfx_use_legacy_animation_objects")
         export_box = layout.box()
         export_box.label(text="Export Options")
         export_box.prop(scene, "fastfx_export_sort_mode")
@@ -772,11 +771,27 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         simplified_row = export_box.row()
         simplified_row.enabled = scene.fastfx_game_preset not in {"STARFOX2", "STARFOXEX"}
         simplified_row.prop(scene, "fastfx_export_simplified_shapehdr")
-        frame_row = export_box.row()
-        frame_row.enabled = is_vertex_animation(context.active_object)
+
+
+class VIEW3D_PT_fastfx_animation(bpy.types.Panel):
+    """Vertex animation controls and export settings"""
+    bl_label = "Animation"
+    bl_idname = "VIEW3D_PT_fastfx_animation"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "FastFX"
+    bl_order = 1
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        obj = context.active_object
+
+        layout.prop(scene, "fastfx_use_legacy_animation_objects")
+        frame_row = layout.row()
+        frame_row.enabled = is_vertex_animation(obj)
         frame_row.prop(scene, "fastfx_static_export_frame")
 
-        obj = context.active_object
         if is_vertex_animation(obj):
             animation_box = layout.box()
             animation_box.label(text="Vertex Animation")
@@ -784,22 +799,43 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
                 text=f"Frame {obj.fastfx_animation_frame + 1} of {animation_frame_count(obj)}"
             )
             controls = animation_box.row(align=True)
-            controls.enabled = obj.mode == "OBJECT"
-            previous = controls.operator(
+            navigation_start = controls.row(align=True)
+            navigation_start.enabled = (
+                obj.mode == "OBJECT" and not scene.fastfx_animation_playing
+            )
+            first = navigation_start.operator(
+                "object.fastfx_animation_jump_endpoint",
+                text="",
+                icon='REW',
+            )
+            first.endpoint = "START"
+            previous = navigation_start.operator(
                 "object.fastfx_animation_step_frame",
                 text="",
                 icon='BACK',
             )
             previous.direction = -1
-            controls.operator("object.fastfx_animation_playback", text="", icon=(
+            playback = controls.row(align=True)
+            playback.enabled = obj.mode == "OBJECT"
+            playback.operator("object.fastfx_animation_playback", text="", icon=(
                 'PAUSE' if scene.fastfx_animation_playing else 'PLAY'
             ))
-            following = controls.operator(
+            navigation_end = controls.row(align=True)
+            navigation_end.enabled = (
+                obj.mode == "OBJECT" and not scene.fastfx_animation_playing
+            )
+            following = navigation_end.operator(
                 "object.fastfx_animation_step_frame",
                 text="",
                 icon='FORWARD',
             )
             following.direction = 1
+            last = navigation_end.operator(
+                "object.fastfx_animation_jump_endpoint",
+                text="",
+                icon='FF',
+            )
+            last.endpoint = "END"
             frame_actions = animation_box.row(align=True)
             frame_actions.enabled = (
                 obj.mode == "OBJECT" and not scene.fastfx_animation_playing
@@ -821,7 +857,7 @@ class VIEW3D_PT_fastfx_material_configuration(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "FastFX"
-    bl_order = 1
+    bl_order = 2
 #    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -841,7 +877,7 @@ class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "FastFX"
-    bl_order = 2
+    bl_order = 3
 #    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -899,7 +935,7 @@ class VIEW3D_PT_fastfx_collision_box_tools(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "FastFX"
-    bl_order = 3
+    bl_order = 4
 #    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -921,7 +957,7 @@ class VIEW3D_PT_fastfx_object_tools(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "FastFX"
-    bl_order = 4
+    bl_order = 5
 #    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):

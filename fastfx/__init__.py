@@ -19,6 +19,7 @@ bl_info = {
 from .fmt_3dan import Export3DAN
 from .animation import (
     OBJECT_OT_animation_add_frame,
+    OBJECT_OT_animation_jump_endpoint,
     OBJECT_OT_animation_playback,
     OBJECT_OT_animation_remove_frame,
     OBJECT_OT_animation_step_frame,
@@ -62,6 +63,7 @@ from .ui import (
     OBJECT_OT_select_twisted_faces,
     OBJECT_OT_toggle_backface_culling,
     VIEW3D_PT_fastfx_collision_box_tools,
+    VIEW3D_PT_fastfx_animation,
     VIEW3D_PT_fastfx_material_configuration,
     VIEW3D_PT_fastfx_mesh_utilities,
     VIEW3D_PT_fastfx_object_tools,
@@ -86,6 +88,7 @@ classes = (
     OBJECT_OT_animation_add_frame,
     OBJECT_OT_animation_remove_frame,
     OBJECT_OT_animation_step_frame,
+    OBJECT_OT_animation_jump_endpoint,
     OBJECT_OT_animation_playback,
     OBJECT_OT_toggle_backface_culling,
     OBJECT_OT_add_2_point_face,
@@ -96,6 +99,7 @@ classes = (
     OBJECT_OT_apply_material_colors_simple,
     OBJECT_OT_select_twisted_faces,
     VIEW3D_PT_fastfx_tools,
+    VIEW3D_PT_fastfx_animation,
     VIEW3D_PT_fastfx_material_configuration,
     VIEW3D_PT_fastfx_mesh_utilities,
     VIEW3D_PT_fastfx_collision_box_tools,
