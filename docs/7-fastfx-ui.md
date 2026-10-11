@@ -54,6 +54,7 @@ If your model becomes greatly distorted after using these tools, try scaling it 
 
 ``Select Twisted Faces`` computes the average face twist for the mesh and selects any quads and N-gons whose vertices twist away from the plane. Twisted faces may render unreliably in game. This operator only works in edit mode.  
   
+``Merge Points (Keep Faces)`` merges selected vertices within the chosen distance by rebuilding the mesh connectivity, retaining separate polygon records even when they become opposing-winding duplicates. It prevents a merge only when it would collapse two corners of the same face. Run it in Edit Mode with the vertices to merge selected. Mesh attributes, UV data, materials, and face shading are preserved. Merge points before creating shape keys, since changing topology invalidates their vertex data.
 
 ``Assign FX Material to Edges`` assigns a selected FX# material in the material pane to a selected plain edge in edit mode. You may sometimes get an error when attempting to apply materials to loose edges in this way. Just try again and it should eventually go through.  
 

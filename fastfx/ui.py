@@ -566,6 +566,253 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
         self.report({'INFO'}, f"Avg twist {average_twist:.6f}% | Selected {selected_count} twisted faces")
         return {'FINISHED'}
 
+
+# =========================
+# FastFX Menu Panel - Nondestructive merge by distance
+# =========================
+class OBJECT_OT_merge_points_by_distance(bpy.types.Operator):
+    """Merge nearby selected vertices while retaining every polygon"""
+    bl_idname = "object.merge_points_by_distance"
+    bl_label = "Merge Points (Keep Faces)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    distance: bpy.props.FloatProperty(
+        name="Distance",
+        description="Maximum distance between points to merge",
+        default=0.0001,
+        min=0.0,
+        subtype='DISTANCE',
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.object is not None
+            and context.object.type == 'MESH'
+            and context.mode == 'EDIT_MESH'
+        )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    @staticmethod
+    def _vertex_groups(vertices, faces, distance):
+        selected = [index for index, vertex in enumerate(vertices) if vertex.select]
+        parent = list(range(len(vertices)))
+        conflicts = {index: set() for index in selected}
+
+        for face in faces:
+            face_selected = [index for index in face if index in conflicts]
+            for offset, first in enumerate(face_selected):
+                for second in face_selected[offset + 1:]:
+                    conflicts[first].add(second)
+                    conflicts[second].add(first)
+
+        pairs = []
+        if distance == 0.0:
+            coincident = {}
+            for index in selected:
+                key = tuple(vertices[index].co)
+                coincident.setdefault(key, []).append(index)
+            for indices in coincident.values():
+                pairs.extend(
+                    (first, second, 0.0)
+                    for offset, first in enumerate(indices)
+                    for second in indices[offset + 1:]
+                )
+        else:
+            buckets = {}
+            for index in selected:
+                coordinate = vertices[index].co
+                cell = tuple(math.floor(value / distance) for value in coordinate)
+                for x in range(cell[0] - 1, cell[0] + 2):
+                    for y in range(cell[1] - 1, cell[1] + 2):
+                        for z in range(cell[2] - 1, cell[2] + 2):
+                            for other in buckets.get((x, y, z), ()):
+                                delta = vertices[index].co - vertices[other].co
+                                squared_distance = delta.length_squared
+                                if squared_distance <= distance * distance:
+                                    pairs.append((other, index, squared_distance))
+                buckets.setdefault(cell, []).append(index)
+
+        pairs.sort(key=lambda pair: (pair[2], pair[0], pair[1]))
+        for first, second, _ in pairs:
+            first_root = parent[first]
+            while parent[first_root] != first_root:
+                first_root = parent[first_root]
+            second_root = parent[second]
+            while parent[second_root] != second_root:
+                second_root = parent[second_root]
+            if first_root == second_root or second_root in conflicts[first_root]:
+                continue
+
+            root, absorbed = sorted((first_root, second_root))
+            neighbors = (conflicts[root] | conflicts[absorbed]) - {root, absorbed}
+            parent[absorbed] = root
+            conflicts[root] = neighbors
+            conflicts.pop(absorbed)
+            for neighbor in neighbors:
+                conflicts[neighbor].discard(root)
+                conflicts[neighbor].discard(absorbed)
+                conflicts[neighbor].add(root)
+
+        for index in range(len(parent)):
+            root = index
+            while parent[root] != root:
+                root = parent[root]
+            parent[index] = root
+        return parent, selected
+
+    @staticmethod
+    def _attribute_property_name(data_type):
+        property_name = {
+            'FLOAT': "value",
+            'INT': "value",
+            'BOOLEAN': "value",
+            'STRING': "value",
+            'INT8': "value",
+            'FLOAT_VECTOR': "vector",
+            'FLOAT2': "vector",
+            'FLOAT_COLOR': "color",
+            'BYTE_COLOR': "color",
+            'QUATERNION': "value",
+            'FLOAT4X4': "value",
+        }.get(data_type)
+        if property_name is None:
+            raise ValueError(f"Unsupported mesh attribute data type: {data_type}")
+        return property_name
+
+    @classmethod
+    def _attribute_value(cls, item, data_type):
+        return getattr(item, cls._attribute_property_name(data_type))
+
+    @classmethod
+    def _copy_attributes(cls, source, target, point_sources, edge_sources):
+        built_in_attributes = {"position", "material_index", "sharp_face"}
+        for attribute in source.attributes:
+            if (
+                attribute.name.startswith(".")
+                or attribute.name in built_in_attributes
+                or getattr(attribute, "is_internal", False)
+            ):
+                continue
+            if attribute.domain not in {'POINT', 'EDGE', 'FACE', 'CORNER'}:
+                continue
+            values = [
+                cls._attribute_value(item, attribute.data_type)
+                for item in attribute.data
+            ]
+            if attribute.domain == 'POINT':
+                source_indices = point_sources
+            elif attribute.domain == 'EDGE':
+                source_indices = edge_sources
+            else:
+                source_indices = range(len(values))
+            target_domain_size = {
+                'POINT': len(target.vertices),
+                'EDGE': len(target.edges),
+                'FACE': len(target.polygons),
+                'CORNER': len(target.loops),
+            }[attribute.domain]
+            if len(source_indices) != target_domain_size:
+                raise ValueError(
+                    f"Could not preserve mesh attribute '{attribute.name}'."
+                )
+            copied = target.attributes.new(
+                name=attribute.name,
+                type=attribute.data_type,
+                domain=attribute.domain,
+            )
+            property_name = cls._attribute_property_name(attribute.data_type)
+            for target_index, source_index in enumerate(source_indices):
+                if source_index is not None:
+                    setattr(copied.data[target_index], property_name, values[source_index])
+
+    def execute(self, context):
+        obj = context.object
+        if obj.data.shape_keys is not None:
+            self.report(
+                {'ERROR'},
+                "Merge points before creating shape keys; changing topology invalidates their vertex data.",
+            )
+            return {'CANCELLED'}
+
+        bpy.ops.object.mode_set(mode='OBJECT')
+        source = obj.data
+        vertices = list(source.vertices)
+        faces = [tuple(polygon.vertices) for polygon in source.polygons]
+        selected = [index for index, vertex in enumerate(vertices) if vertex.select]
+        if len(selected) < 2:
+            bpy.ops.object.mode_set(mode='EDIT')
+            self.report({'WARNING'}, "Select at least two vertices to merge.")
+            return {'CANCELLED'}
+
+        groups, _ = self._vertex_groups(vertices, faces, self.distance)
+        representatives = {}
+        for index, root in enumerate(groups):
+            representatives[root] = min(index, representatives.get(root, index))
+        if len(representatives) == len(vertices):
+            bpy.ops.object.mode_set(mode='EDIT')
+            self.report({'INFO'}, "No selected points were within the merge distance.")
+            return {'CANCELLED'}
+
+        roots = sorted(representatives)
+        root_to_new = {root: index for index, root in enumerate(roots)}
+        vertex_map = [root_to_new[root] for root in groups]
+        new_vertices = [vertices[representatives[root]].co[:] for root in roots]
+        new_faces = [tuple(vertex_map[index] for index in face) for face in faces]
+        new_edges = []
+        edge_sources = {}
+        for edge in source.edges:
+            mapped = tuple(vertex_map[index] for index in edge.vertices)
+            if mapped[0] == mapped[1]:
+                continue
+            key = tuple(sorted(mapped))
+            if key not in edge_sources:
+                edge_sources[key] = edge.index
+                new_edges.append(mapped)
+
+        new_mesh = None
+        try:
+            new_mesh = bpy.data.meshes.new(source.name)
+            new_mesh.from_pydata(new_vertices, new_edges, new_faces)
+            new_mesh.update()
+            for material in source.materials:
+                new_mesh.materials.append(material)
+            for index, polygon in enumerate(source.polygons):
+                new_mesh.polygons[index].material_index = polygon.material_index
+                new_mesh.polygons[index].use_smooth = polygon.use_smooth
+                new_mesh.polygons[index].select = polygon.select
+            for edge in new_mesh.edges:
+                edge.select = source.edges[edge_sources[tuple(sorted(edge.vertices))]].select
+            selected_roots = {groups[index] for index in selected}
+            for new_index, root in enumerate(roots):
+                new_mesh.vertices[new_index].select = root in selected_roots
+
+            point_sources = [representatives[root] for root in roots]
+            edge_source_indices = [
+                edge_sources.get(tuple(sorted(edge.vertices)))
+                for edge in new_mesh.edges
+            ]
+            self._copy_attributes(source, new_mesh, point_sources, edge_source_indices)
+        except (RuntimeError, TypeError, ValueError) as exc:
+            if new_mesh is not None and new_mesh.users == 0:
+                bpy.data.meshes.remove(new_mesh)
+            bpy.ops.object.mode_set(mode='EDIT')
+            self.report({'ERROR'}, f"Could not rebuild mesh while preserving its data: {exc}")
+            return {'CANCELLED'}
+
+        obj.data = new_mesh
+        if source.users == 0:
+            bpy.data.meshes.remove(source)
+        bpy.ops.object.mode_set(mode='EDIT')
+        merged_count = len(vertices) - len(new_vertices)
+        self.report(
+            {'INFO'},
+            f"Merged {merged_count} point(s); retained all {len(new_faces)} faces.",
+        )
+        return {'FINISHED'}
+
 # =========================
 # FastFX Menu Panel - Assign colors to loose edges
 # =========================
@@ -894,6 +1141,7 @@ class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
         layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
+        layout.operator(OBJECT_OT_merge_points_by_distance.bl_idname)
         layout.operator(OBJECT_OT_assign_edge_material.bl_idname)
         overlay_box = layout.box()
         overlay_box.label(text="Edge Material Overlay")
