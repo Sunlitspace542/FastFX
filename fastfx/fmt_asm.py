@@ -112,28 +112,56 @@ def _parse_asm_points(lines):
                     f"{len(jump_targets)} jump-table entries."
                 )
 
-            block_frames = []
             block_next_point_index = next_point_index
             parsed_targets = {}
-            for target in jump_targets:
-                if target in parsed_targets:
-                    block_frames.append(dict(parsed_targets[target]))
-                    continue
-                label_pattern = re.compile(rf"^\s*{re.escape(target)}(?:\s|$)", re.IGNORECASE)
-                while cursor < len(lines) and not label_pattern.match(lines[cursor].split(";", 1)[0]):
+            target_patterns = {
+                target: re.compile(
+                    rf"^\s*{re.escape(target)}(?:\s|$)",
+                    re.IGNORECASE,
+                )
+                for target in jump_targets
+            }
+            while cursor < len(lines):
+                line_content = lines[cursor].split(";", 1)[0].strip()
+                if re.match(r"\.EB[\w]*\b", line_content, re.IGNORECASE):
                     cursor += 1
-                if cursor >= len(lines):
-                    raise ValueError(f"Animated frame label {target} was not found.")
+                    break
 
+                target = next(
+                    (
+                        target
+                        for target, pattern in target_patterns.items()
+                        if pattern.match(lines[cursor].split(";", 1)[0])
+                    ),
+                    None,
+                )
+                if target is None:
+                    cursor += 1
+                    continue
+
+                if target in parsed_targets:
+                    raise ValueError(f"Animated frame label {target} is defined more than once.")
                 frame_points = {}
                 frame_next_point_index = next_point_index
+                directive_match = _POINT_DIRECTIVE.search(line_content)
+                if directive_match:
+                    points, cursor, frame_next_point_index = _parse_point_macro(
+                        lines, cursor, frame_next_point_index
+                    )
+                    frame_points.update(points)
+                else:
+                    cursor += 1
                 while cursor < len(lines):
                     content = lines[cursor].split(";", 1)[0].strip()
                     if re.match(r"jump\s+\.EB[\w]*\b", content, re.IGNORECASE):
                         cursor += 1
                         break
                     if re.match(r"\.EB[\w]*\b", content, re.IGNORECASE):
-                        cursor += 1
+                        break
+                    if any(
+                        pattern.match(lines[cursor].split(";", 1)[0])
+                        for pattern in target_patterns.values()
+                    ):
                         break
                     directive_match = _POINT_DIRECTIVE.search(content)
                     if directive_match:
@@ -143,22 +171,20 @@ def _parse_asm_points(lines):
                         frame_points.update(points)
                     else:
                         cursor += 1
-                block_frames.append(frame_points)
                 parsed_targets[target] = dict(frame_points)
-                if block_frames:
-                    block_next_point_index = max(block_next_point_index, frame_next_point_index)
+                block_next_point_index = max(block_next_point_index, frame_next_point_index)
+
+            missing_targets = [
+                target for target in jump_targets if target not in parsed_targets
+            ]
+            if missing_targets:
+                raise ValueError(
+                    f"Animated frame label {missing_targets[0]} was not found."
+                )
+
+            block_frames = [dict(parsed_targets[target]) for target in jump_targets]
             next_point_index = block_next_point_index
 
-            # The final frame may jump to the shared end label rather than
-            # ending directly at it.
-            while cursor < len(lines):
-                content = lines[cursor].split(";", 1)[0].strip()
-                if re.match(r"\.EB[\w]*\b", content, re.IGNORECASE):
-                    cursor += 1
-                    break
-                if content and not content.lower().startswith(("jump ",)):
-                    break
-                cursor += 1
             animated_blocks.append(block_frames)
             continue
 
