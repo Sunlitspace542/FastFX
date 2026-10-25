@@ -178,9 +178,10 @@ def import_cad(filepath, context):
         material = bpy.data.materials.get(material_name) or bpy.data.materials.new(name=material_name)
         material.use_nodes = True
         bsdf = material.node_tree.nodes.get("Principled BSDF")
+        color = hex_to_rgb(id_0_c_rgb.get(color_index, "#FFFFFF"))
         if bsdf:
-            hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")
-            bsdf.inputs["Base Color"].default_value = hex_to_rgb(hex_color)
+            bsdf.inputs["Base Color"].default_value = color
+        material.diffuse_color = color
         material_indices[color_index] = len(material_indices)
 
     if animated and not context.scene.fastfx_use_legacy_animation_objects:

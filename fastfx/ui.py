@@ -382,6 +382,11 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
                                 except ValueError:
                                     self.report({'WARNING'}, f"Invalid value for '{input_name}' in material '{material.name}'")
 
+                    # Set viewport color
+                    hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white if not defined
+                    linear_rgb_color = hex_to_rgb(hex_color)
+                    material.diffuse_color = linear_rgb_color
+
                 except ValueError:
                     self.report({'WARNING'}, f"Material '{material.name}' has invalid FX# or FE# format")
                     continue
@@ -434,6 +439,7 @@ class OBJECT_OT_apply_material_colors_simple(bpy.types.Operator):
 
                     # Set the Base Color
                     bsdf_node.inputs["Base Color"].default_value = linear_rgb_color
+                    bpy.data.materials[material.name].diffuse_color = linear_rgb_color
 
                     # Add a Material Output node
                     output_node = nodes.new(type="ShaderNodeOutputMaterial")

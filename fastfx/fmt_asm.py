@@ -289,7 +289,9 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                             # Convert hex to RGB and set the material's base color
                             hex_color = id_0_c_rgb.get(material_index, "#FFFFFF")  # Default to white
                             linear_rgb_color = hex_to_rgb(hex_color)
-                            bsdf.inputs["Base Color"].default_value = linear_rgb_color
+                            if bsdf:
+                                bsdf.inputs["Base Color"].default_value = linear_rgb_color
+                            material.diffuse_color = linear_rgb_color
                         material_map[material_name] = len(material_map)
 
                     # Store face data along with its original order

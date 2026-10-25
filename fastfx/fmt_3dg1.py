@@ -195,7 +195,9 @@ def read_3dg1(filepath, context):
                         # Use the id_0_c_rgb dictionary for standard color indices
                         hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white if not defined
                     linear_rgb_color = hex_to_rgb(hex_color)
-                    bsdf.inputs["Base Color"].default_value = linear_rgb_color  # Linear RGB with alpha
+                    if bsdf:
+                        bsdf.inputs["Base Color"].default_value = linear_rgb_color  # Linear RGB with alpha
+                    material.diffuse_color = linear_rgb_color
                 material_list.append(material)
                 obj.data.materials.append(material)
 
