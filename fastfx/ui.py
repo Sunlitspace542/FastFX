@@ -1145,7 +1145,7 @@ class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):
 
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
-        layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face")
+        layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face (OLD)")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
         layout.operator(OBJECT_OT_merge_points_by_distance.bl_idname)
         layout.operator(OBJECT_OT_assign_edge_material.bl_idname)
