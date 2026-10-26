@@ -4,10 +4,10 @@ Note that this guide assumes you are using Windows. If you're using Linux or som
 
 ## Sections
 1. [FastFX UI](1-fastfx-ui.md)
-2. [Model Creation and Export](2-creation.md)
-3. [Animation](3-animation.md)
+2. [Creating Models](2-creation.md)
+3. [Animations](3-animation.md)
 4. [Exporting Shapes](4-export.md)
 5. [Importing Shapes Into Blender](5-blender-import.md)
 6. [Collision Boxes (colboxes)](6-colboxes.md)
-7. [Importing into Star Fox](7-game-import.md)
+7. [Importing into Star Fox (2)](7-game-import.md)
 8. [Notes and Errata](8-notes-errata.md)

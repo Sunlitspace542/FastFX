@@ -1,5 +1,5 @@
 [Return to User's Manual index](MANUAL.md)
-# 4. Exporting models
+# 4. Exporting Shapes
 
 ## A. To 3DG1/3DAN
 
