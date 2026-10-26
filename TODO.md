@@ -14,7 +14,7 @@ Categories are named by their source files.
 - N/A
 
 ## fmt_3dg1
-- N/A
+- [x] faces/edges should be sorted together? sort both separately like before, then together afterward?
 
 ## fmt_asm
 - [x] allow for importing animations whose jump tables are out of order

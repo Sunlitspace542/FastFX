@@ -267,10 +267,19 @@ def write_3dg1(
 
         # Process polygons and edges
         polygons = []
-        edges = []  # Store edges for colored lines
+        edges = []
 
         mesh = obj.data
         mesh.calc_loop_triangles()
+
+        fx_material_orders = {}
+        for material_index, material_slot in enumerate(obj.material_slots):
+            material = material_slot.material
+            if material is None:
+                continue
+            material_name = re.sub(r"\.\d{3}$", "", material.name)
+            if material_name.startswith("FX") and material_name[2:].isdigit():
+                fx_material_orders.setdefault(int(material_name[2:]), material_index)
 
         edge_color_attribute = mesh.attributes.get(EDGE_COLOR_ATTRIBUTE)
         if (
@@ -291,6 +300,14 @@ def write_3dg1(
                         index_map[v1],
                         index_map[v2],
                         color_value.value,
+                        tuple(
+                            (new_vertices[index_map[v1]][axis] + new_vertices[index_map[v2]][axis]) / 2
+                            for axis in range(3)
+                        ),
+                        fx_material_orders.get(
+                            color_value.value,
+                            len(obj.material_slots) + color_value.value,
+                        ),
                     ))
 
         for poly in mesh.polygons:
@@ -309,7 +326,18 @@ def write_3dg1(
                     for i in range(len(poly.vertices)):
                         v1 = poly.vertices[i]
                         v2 = poly.vertices[(i + 1) % len(poly.vertices)]
-                        edges.append((index_map[v1], index_map[v2], edge_color_index))
+                        edge_v1 = index_map[v1]
+                        edge_v2 = index_map[v2]
+                        edges.append((
+                            edge_v1,
+                            edge_v2,
+                            edge_color_index,
+                            tuple(
+                                (new_vertices[edge_v1][axis] + new_vertices[edge_v2][axis]) / 2
+                                for axis in range(3)
+                            ),
+                            material_index,
+                        ))
 
                 elif material_name.startswith("FX"):  # Handle polygons
                     try:
@@ -324,33 +352,35 @@ def write_3dg1(
                     )
                     polygons.append((poly_vertices, color_index, centroid, material_index))
 
-        # Apply sorting based on the selected mode
+        elements = [
+            (poly_vertices, color_index, centroid, material_index, False)
+            for poly_vertices, color_index, centroid, material_index in polygons
+        ]
+        elements.extend(
+            ([v1, v2], color_index, midpoint, material_index, True)
+            for v1, v2, color_index, midpoint, material_index in edges
+        )
+
+        # Apply sorting to all serialized primitives in one sequence.
         if sort_mode == "distance":
-            polygons.sort(key=lambda p: distance_from_origin(p[2]))  # Sort polygons by centroid distance from origin
-            edges.sort(key=lambda e: distance_from_origin(
-                [(new_vertices[e[0]][i] + new_vertices[e[1]][i]) / 2 for i in range(3)]
-            ))  # Sort edges by midpoint distance from origin
+            elements.sort(key=lambda element: distance_from_origin(element[2]))
+            elements.reverse()
         elif sort_mode == "material":
-            polygons.sort(key=lambda p: p[3])  # Sort by material index
+            elements.sort(key=lambda element: element[3])
 
-        if sort_mode == "distance":
-            # Reverse the order so farthest elements are written last
-            polygons.reverse()
-            edges.reverse()
-
-        # Deduplicate edges that occupy the same positions and have the same color
-        deduped_edges = []
+        # Deduplicate line primitives without affecting face records.
+        sorted_elements = []
         seen = set()
-        for v1, v2, color_index in edges:
-            p1 = tuple(round(c, 6) for c in new_vertices[v1])
-            p2 = tuple(round(c, 6) for c in new_vertices[v2])
-            key = (p1, p2) if p1 <= p2 else (p2, p1)
-            key = (key, color_index)
-            if key in seen:
-                continue
-            seen.add(key)
-            deduped_edges.append((v1, v2, color_index))
-        edges = deduped_edges
+        for vertices, color_index, _, _, is_edge in elements:
+            if is_edge:
+                p1 = tuple(round(c, 6) for c in new_vertices[vertices[0]])
+                p2 = tuple(round(c, 6) for c in new_vertices[vertices[1]])
+                key = (p1, p2) if p1 <= p2 else (p2, p1)
+                key = (key, color_index)
+                if key in seen:
+                    continue
+                seen.add(key)
+            sorted_elements.append((vertices, color_index))
 
         # Write 3DG1 header
         file.write("3DG1\n")
@@ -360,15 +390,11 @@ def write_3dg1(
         for vertex in new_vertices:
             file.write(f"{vertex[0]} {vertex[2]} {-(vertex[1])}\n")  # Convert back to 3DG1 coordinate system
 
-        # Write polygons
-        for poly_vertices, color_index, _, _ in polygons:
-            file.write(f"{len(poly_vertices)} ")
-            file.write(" ".join(map(str, poly_vertices)) + " ")
+        # Write polygons and edges in the selected shared order.
+        for vertices, color_index in sorted_elements:
+            file.write(f"{len(vertices)} ")
+            file.write(" ".join(map(str, vertices)) + " ")
             file.write(f"{color_index}\n")
-
-        # Write edges
-        for v1, v2, color_index in edges:
-            file.write(f"2 {v1} {v2} {color_index}\n")
 
         # End-of-file marker
         file.write(chr(0x1A))
