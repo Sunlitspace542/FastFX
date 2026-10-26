@@ -17,7 +17,7 @@ Categories are named by their source files.
 - N/A
 
 ## fmt_asm
-- [ ] allow for importing animations whose jump tables are out of order
+- [x] allow for importing animations whose jump tables are out of order
 
 ## fmt_cad
 - N/A

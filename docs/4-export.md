@@ -1,5 +1,5 @@
 [Return to User's Manual index](MANUAL.md)
-# 3. Exporting models
+# 4. Exporting models
 
 ## A. To 3DG1/3DAN
 
@@ -14,12 +14,12 @@ Face sorting (drop-down):
 
 Compress point pairs: Whether the exporter should sort exact X-mirrored pairs together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
 
-To export to 3DAN, use `File -> Export -> 3DAN/3DGI/Animated Fundoshi-Kun (.anm)`. In shape-key mode, select the animated mesh; with ``Use Legacy Animation Objects`` enabled, the legacy exporter uses the per-frame mesh objects. There are no export options in the file picker dialog.
+To export to 3DAN, use `File -> Export -> 3DAN/3DGI/Animated Fundoshi-Kun (.anm)`. In shape-key mode, select the animated mesh; with ``Use Legacy Animation Objects`` enabled, select all frame meshes.  
 
 ## B. To ASM
 
 ## Method 1: Via FastFX
-FastFX exports selected static meshes by writing a temporary 3DG1 file and compiling it with the bundled SHAPED model compiler. Coordinates outside the signed 16-bit range (-32768 to 32767) are rejected.
+FastFX exports meshes as ASM by writing a temporary 3DG1/3DAN file and compiling it with the bundled SHAPED model compiler. Coordinates outside the signed 16-bit range (-32768 to 32767) are rejected.
 
 Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds editable shape header properties to the selected object. For animated object-per-frame export, the first frame in natural object-name order supplies the header properties.
 You can edit these properties in the ``ShapeHdr Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties.

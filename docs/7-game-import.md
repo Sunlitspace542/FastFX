@@ -1,6 +1,6 @@
 [Return to User's Manual index](MANUAL.md)
 
-# 6. Importing into Star Fox (2)
+# 7. Importing into Star Fox (2)
 
 Proper guide coming at some point. For now, the quick summary of this process is:  
 
@@ -20,7 +20,7 @@ Proper guide coming at some point. For now, the quick summary of this process is
   
   
 
-# 6a. Importing Slope Data (Star Fox 2)
+# 7a. Importing Slope Data (Star Fox 2)
 - Export slope data from Blender.
 - Insert the output `.SLO` file into `SLOPEDEF.ASM`, and extern the main slope label (the line following the `Created with FastFX` header) in `SLOPEDEF.EXT`.
 - Reference the slope data in a shape's header to use the slope data. Slope data is referenced in the same ShapeHdr position as the near LOD shape was in Star Fox. If you created ShapeHdr properties on an object in Blender and the game preset is set to Star Fox 2, this field will be properly labeled.

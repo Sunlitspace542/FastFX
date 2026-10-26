@@ -1,5 +1,5 @@
 [Return to User's Manual index](MANUAL.md)
-# 5. Collision Boxes
+# 6. Collision Boxes
 
 ## Importing Collision Boxes
 Collision boxes have to be in a very specific sanitized format. Remove any extra tabs and manually evaluate any expressions if importing from source.  
@@ -16,7 +16,7 @@ playerRW_col	colbox	0,33,13,0,rotz,5,5,10,HF3,0,0
 ```
 
 Animated colboxes use one label, a `colframes` frame count, then one standard
-`colbox` definition per frame. Definitions are ordered from frame 1:
+`colbox` definition per frame. Definitions are counted starting from 1:
 
 ```
 flap_col
@@ -29,9 +29,9 @@ flap_col
 
 Importing this block creates one editable Empty per frame, named
 `flap_col_frame1`, `flap_col_frame2`, and so on. To export an animated colbox,
-select all its frame empties and enable **Export as Animated Colbox** in the
+select all its frame empties and enable ``Export as Animated Colbox`` in the
 FastFX sidebar. All selected colboxes must have the same `<prefix>_frameN`
-name pattern, with frame numbers starting at 1 and forming a contiguous
+name scheme, with frame numbers starting at 1 and forming a contiguous
 sequence.
 
 ## Editing Collision Boxes
@@ -63,7 +63,7 @@ You can also manually edit the properties of a colbox empty and apply them by cl
 
 ## Exporting
 Select the colboxes you wish to export, and click ``Export Colboxes to Clipboard`` in the FastFX panel.  
-You can then paste them into ``COLBOXES.ASM`` and make them global labels in ``COLBOXES.EXT``  (located in ``SF\ASM\`` and ``SF\EXT`` in UltraStarFox, ``SFES\`` in Star Fox EX, and ``SG\`` in vanilla Star Fox).  
+You can then paste them into ``COLBOXES.ASM`` and make them global labels in ``COLBOXES.EXT``.  
 When exporting multiple linked colboxes, make sure they're in order from first to last when adding them into the source or the assembler may throw an error.  
 for example:  
 ```
@@ -71,3 +71,13 @@ pillar_col1	colbox	pillar_col2,0,-138,-13,norot,10,80,10,HF1,0,0
 pillar_col2	colbox	0,0,-138,-13,norot,10,80,10,HF1,0,0
 ```
 For a shape to use a colbox you have created, you must reference the first colbox all others (if any) link to in the colbox field of its shape header. e.g. For the above example, ``pillar_col1`` would be referenced in the shape header.  
+
+## Colbox Source Paths
+  
+  | Game          | Shapes Path               | Shapes Extern Path     |
+  | ------------- | ------------------------- | ---------------------- |
+  | Star Fox      | `SG\COLBOXES.ASM`         | `SG\COLBOXES.EXT`      |
+  | UltraStarFox  | `SF\ASM\COLBOXES.ASM`     | `SF\EXT\COLBOXES.EXT`  |
+  | Star Fox EX   | `SFES\COLBOXES.ASM`       | `SFES\COLBOXES.EXT`    |
+  | Star Fox 2    | `SF2\COLBOXES.ASM`        | `SF2\COLBOXES.EXT`     |
+  | UltraStarFox2 | `SF2\ASM\COLBOXES.ASM`    | `SF2\EXT\COLBOXES.EXT` |

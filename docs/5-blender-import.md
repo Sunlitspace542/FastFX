@@ -1,5 +1,5 @@
 [Return to User's Manual index](MANUAL.md)
-# 4. Importing Shapes Into Blender
+# 5. Importing Shapes Into Blender
 Currently, this addon supports importing the following formats:
 - 3DG1/3DGI/3DAN
     - Fundoshi-kun - point coordinates are integers  

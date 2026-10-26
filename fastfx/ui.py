@@ -883,7 +883,7 @@ class OBJECT_OT_assign_edge_material(bpy.types.Operator):
 class OBJECT_OT_add_2_point_face(bpy.types.Operator):
     """Create a 2-point face primitive"""
     bl_idname = "object.add_2_point_face"
-    bl_label = "Add 2-Point Face"
+    bl_label = "Add 2-Point Face (OLD)"
     bl_options = {'REGISTER', 'UNDO'}
 
     template_name = "two-point-face"
