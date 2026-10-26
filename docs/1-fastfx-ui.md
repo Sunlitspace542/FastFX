@@ -23,7 +23,7 @@ This setting is affected by the selected game preset. Star Fox 2 forces it off b
 ``Compress point pairs``: If checked, exact X-mirrored pairs are sorted together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block. This setting does not apply to animation exports.  
 
 ## Animation
-**PLEASE NOTE:** Before animating, export your shape as 3DG1 or static ASM and reimport before animating so the shape is correctly preprocessed for animation.
+**PLEASE NOTE:** Before animating, export your shape as 3DG1 or static ASM and reimport before animating so the shape is correctly preprocessed for animation.  
 ``Use Legacy Animation Objects`` - Switches over to the old object-per-frame system used in older versions of FastFX (See chapter 3, section B). All other options in this group apply to the new vertex animation system.
 ``Static Export Frame`` - Sets which animation frame to use as the basis for static shape exports.
 ``Start Animation`` - Starts vertex animation.
@@ -77,7 +77,7 @@ If your model becomes greatly distorted after using these tools, try scaling it 
 ``Show Colored Edge Lines`` draws a colored line overlay on each edge with its assigned material color.
 
 ## Slope Data (Star Fox 2)
-**PLEASE NOTE:** As with animation, export your shape as 3DG1 or static ASM and reimport before creating slope data so the shape is correctly preprocessed.
+**PLEASE NOTE:** As with animation, export your shape as 3DG1 or static ASM and reimport before creating slope data so the shape is correctly preprocessed.  
 In Edit Mode, select one or more faces with at least three vertices, choose a built-in or custom slope type, configure optional slope polygon (`SLOPEPOLY`) and animation (`SLOPEANIM`) output, and click ``Assign Slope Data``. Click ``Clear Slope Data`` to remove slope assignments from selected faces. Slope types appear as labels drawn over the faces when ``Show Slope Labels`` is enabled.
 
 When faces are selected in Edit Mode, the panel displays the active face's assigned slope type, polygon, and animation settings. With multiple selected faces, the settings for the active (i.e. last selected) face are shown. The controls under ``-Settings to Assign-`` remain the values used when assigning or updating slope data.
