@@ -1,3 +1,9 @@
+# FastFX
+# File: menus.py
+# Functions setting up menu options for import/export.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
+
 import bpy
 
 from .fmt_3dan import Export3DAN
@@ -5,12 +11,6 @@ from .fmt_cad import ImportCADOperator
 from .fmt_3dg1 import Export3DG1, Import3DGI
 from .fmt_asm import ExportAnimatedToASM, ExportToBSP, ExportToBSPTreeless, ExportToGZS, ImportBSPOperator
 from .slopes import ExportSlopeData
-
-# FastFX
-# File: menus.py
-# Functions setting up menu options for import/export.
-# Copyright (c) 2026 Sunlit
-# Released under the MIT License.
 
 # =========================
 # ASM Export Submenus

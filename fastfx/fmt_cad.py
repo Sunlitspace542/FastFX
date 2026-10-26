@@ -1,3 +1,9 @@
+# FastFX
+# File: fmt_cad.py
+# Functions dealing with Iwamoto-CAD CAD/NCA file import.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
+
 import os
 import struct
 
@@ -6,12 +12,6 @@ import bpy
 from .common import hex_to_rgb
 from .animation import create_animation_object
 from .palette import id_0_c_rgb
-
-# FastFX
-# File: fmt_cad.py
-# Functions dealing with Iwamoto-CAD CAD/NCA file import.
-# Copyright (c) 2026 Sunlit
-# Released under the MIT License.
 
 _CAD_RECORD_SIZES = {
     0: 40,   # Object: 68k-aligned doubles

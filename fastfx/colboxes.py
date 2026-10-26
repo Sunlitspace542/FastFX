@@ -1,12 +1,12 @@
-import bpy
-import math
-import re
-
 # FastFX
 # File: colboxes.py
 # Functions concerning Star Fox collision box creation/import/export.
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
+
+import bpy
+import math
+import re
 
 # =========================
 # Colbox importer operator

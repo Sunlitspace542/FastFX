@@ -1,3 +1,9 @@
+# FastFX
+# File: fmt_3dg1.py
+# Functions dealing with Fundoshi-Kun format import/export.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
+
 import bpy
 import math
 import os
@@ -7,12 +13,6 @@ from .common import hex_to_rgb, distance_from_origin, pair_points_for_compressio
 from .animation import animation_frame_coordinates, is_vertex_animation
 from .fmt_3dan import Import3DANOperator
 from .palette import id_0_c_rgb
-
-# FastFX
-# File: fmt_3dg1.py
-# Functions dealing with Fundoshi-Kun format import/export.
-# Copyright (c) 2026 Sunlit
-# Released under the MIT License.
 
 EDGE_COLOR_ATTRIBUTE = "fastfx_edge_color_index"
 

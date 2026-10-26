@@ -1,12 +1,12 @@
-import bpy
-import bmesh
-import math
-
 # FastFX
 # File: common.py
 # Functions shared across multiple components.
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
+
+import bpy
+import bmesh
+import math
 
 # =========================
 # Hex color to RGB color Converter

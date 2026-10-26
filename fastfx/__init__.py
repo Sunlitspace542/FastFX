@@ -1,14 +1,14 @@
-import bpy
-
 # FastFX
 # File: __init__.py
 # The file that ties everything together.
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
 
+import bpy
+
 bl_info = {
     "name": "FastFX",
-    "version": (1, 0, 2),
+    "version": (1, 0, 3),
     "blender": (3, 0, 0),
     "location": "File > Import-Export , 3DView",
     "description": "Import/Export shapes, collision boxes, and slope data for Star Fox 1/2/EX.",

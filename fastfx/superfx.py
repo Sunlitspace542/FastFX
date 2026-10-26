@@ -1,11 +1,11 @@
-import bpy
-
 # FastFX
 # File: superfx.py
 # Super FX material node group.
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
 # Super FX Material originally made by Euclidium98.
+
+import bpy
 
 # =========================
 # Super FX Material

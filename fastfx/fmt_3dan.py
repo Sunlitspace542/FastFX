@@ -1,3 +1,9 @@
+# FastFX
+# File: fmt_3dan.py
+# Functions dealing with animated Fundoshi-Kun format import/export.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
+
 import bpy
 import os
 import re
@@ -10,12 +16,6 @@ from .animation import (
     is_vertex_animation,
 )
 from .palette import id_0_c_rgb
-
-# FastFX
-# File: fmt_3dan.py
-# Functions dealing with animated Fundoshi-Kun format import/export.
-# Copyright (c) 2026 Sunlit
-# Released under the MIT License.
 
 # =========================
 # 3DAN Importer

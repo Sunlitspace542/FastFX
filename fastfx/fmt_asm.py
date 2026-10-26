@@ -1,3 +1,9 @@
+# FastFX
+# File: fmt_asm.py
+# Functions dealing with ASM BSP/GZS import/export.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
+
 import os
 import re
 from pathlib import Path
@@ -17,12 +23,6 @@ from .fmt_3dan import sort_animation_objects, write_3dan
 from .fmt_3dg1 import write_3dg1
 from .palette import id_0_c_rgb
 from .shaped import ShapeHeader, load as load_shape, write as write_shape
-
-# FastFX
-# File: fmt_asm.py
-# Functions dealing with ASM BSP/GZS import/export.
-# Copyright (c) 2026 Sunlit
-# Released under the MIT License.
 
 _POINT_DIRECTIVE = re.compile(r"\b(PointsX?[bw])\s+(\d+)", re.IGNORECASE)
 _POINT_VALUE = re.compile(r"\bp[bw]\s+(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)", re.IGNORECASE)
