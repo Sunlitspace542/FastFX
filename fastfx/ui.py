@@ -1,3 +1,9 @@
+# FastFX
+# File: ui.py
+# FastFX menu panel functions.
+# Copyright (c) 2026 Sunlit
+# Released under the MIT License.
+
 import bpy
 import bmesh
 import blf
@@ -15,12 +21,6 @@ from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
 from .slopes import selected_slope_settings, slope_face_labels
 from .superfx import super_fx_node_group
-
-# FastFX
-# File: ui.py
-# FastFX menu panel functions.
-# Copyright (c) 2026 Sunlit
-# Released under the MIT License.
 
 # =========================
 # FastFX Menu Panel/UI - Edge Material Overlay
@@ -1049,7 +1049,7 @@ class VIEW3D_PT_fastfx_animation(bpy.types.Panel):
             animation_box = layout.box()
             animation_box.label(text="Vertex Animation")
             animation_box.label(
-                text=f"Frame {obj.fastfx_animation_frame + 1} of {animation_frame_count(obj)}"
+                text=f"Frame {obj.fastfx_animation_frame} of {animation_frame_count(obj) - 1}"
             )
             controls = animation_box.row(align=True)
             navigation_start = controls.row(align=True)

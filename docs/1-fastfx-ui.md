@@ -34,7 +34,7 @@ The main playback controls are: jump to start, previous frame, play/pause, next 
 `Insert After` Inserts a new frame after the currently displayed frame.
 `Remove Frame` Removes the displayed frame.
 `Loop Playback` Loops animation playback.
-`Mirror Animation` Affects both animation playback and ASM export. Animations are played such that the animation is mirrored without repeating any start or end points, e.g. 5 frames of animation would be mirrored as 1,2,3,4,5,4,3,2.
+`Mirror Animation` Affects both animation playback and ASM export. Animations are played such that the animation is mirrored without repeating any start or end points, e.g. 5 frames of animation would be mirrored as 0,1,2,3,4,3,2,1.
 For more information on the animation system, see chapter 3.
 
 # Material Configuration
