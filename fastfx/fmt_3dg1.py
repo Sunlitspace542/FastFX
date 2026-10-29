@@ -82,7 +82,7 @@ def detect_3dgi_format(filepath):
 class Export3DG1(bpy.types.Operator):
     """Export to 3DG1 format"""
     bl_idname = "export_mesh.3dg1"
-    bl_label = "Export 3DG1/Fundoshi-Kun"
+    bl_label = "Export 3DG1"
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")

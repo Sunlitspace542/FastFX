@@ -9,7 +9,7 @@ Currently, this addon supports importing the following formats:
 - Star Fox ASM GZS format (BSP format variant) - static and animated
 - 3ddraw/Iwamoto 3D-CAD `.cad` and `.nca` files
 
-Go to ``File -> Import -> 3DG1/3DGI/3DAN/Fundoshi-kun`` to import a static or animated model. A `3DGI` file is detected as static when one single-number header line follows its magic, or animated when two do.
+Go to ``File -> Import -> Fundoshi-kun/Videoscape 3DG1 (.txt/.obj)`` to import a static or animated model. A `3DGI` file is detected as static when one single-number header line follows its magic, or animated when two do.
 Go to ``File -> Import -> Star Fox ASM BSP/GZS (.asm/.bsp)`` to import a Star Fox ASM BSP/GZS format shape.  
 Go to ``File -> Import -> Iwamoto CAD/NCA`` to import a CAD model or NCA animation.
 The mesh (or meshes if it's an animated shape) should appear. The simple material palette will be applied automatically.  

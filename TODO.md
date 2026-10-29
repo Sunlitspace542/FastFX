@@ -32,13 +32,15 @@ Categories are named by their source files.
 - N/A
 
 ## superfx
-- N/A
+- [ ] sidebar controls for aspect X/Y and dither
 
 ## ui
 - [ ] ability to assign multiple shape headers to an object for ASM export? the main label names come from the first
-- [ ] convert 2-gons to tagged stray edges? either on import and/or make it a tool
+- [ ] convert 2-gons to tagged stray edges? make it toggle for imports (unless animated?) and/or make it a tool in the sidebar, really important that this doesn't screw up the order
 - [x] nondestructively merge selected points by distance (allows to merge double sided faces without one side being removed)
 - [ ] (ASM) specify that model's points be divided by 2 (use pbd2 macro instead of pb), also make sure asm importer knows how to handle pbd2
+- [x] sidebar options which only work in edit mode should all be grayed in other modes
+- [ ] default filenames for export dialogs (e.g. [object name].[extension])
 
 ## OTHER
 - [ ] Figure out some way to determine how textures will be mapped on a face beforehand (some way to show which way is "up")?

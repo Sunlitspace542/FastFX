@@ -213,7 +213,7 @@ def import_cad(filepath, context):
 class ImportCADOperator(bpy.types.Operator):
     """Import an Iwamoto CAD or NCA file."""
     bl_idname = "import_mesh.cad"
-    bl_label = "Import Iwamoto CAD/NCA"
+    bl_label = "Import CAD/NCA"
     bl_options = {'UNDO'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")

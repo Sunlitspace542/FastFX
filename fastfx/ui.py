@@ -499,6 +499,14 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
     bl_label = "Select Twisted Faces"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.object is not None
+            and context.object.type == 'MESH'
+            and context.mode == 'EDIT_MESH'
+        )
+
     @staticmethod
     def _face_twist(face):
         if len(face.verts) <= 3:
@@ -539,14 +547,6 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.object
-        if obj is None or obj.type != 'MESH':
-            self.report({'ERROR'}, "Please select a valid mesh object.")
-            return {'CANCELLED'}
-
-        is_edit_mode = (context.mode == 'EDIT_MESH') or getattr(obj, 'mode', None) == 'EDIT'
-        if not is_edit_mode:
-            self.report({'WARNING'}, "This operator must be run in Edit Mode.")
-            return {'CANCELLED'}
 
         bm = bmesh.from_edit_mesh(obj.data)
         selected_count = 0
@@ -1121,11 +1121,11 @@ class VIEW3D_PT_fastfx_material_configuration(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
+        layout.label(text="Color Palette (Simple)")
+        layout.operator("object.apply_material_colors_simple")
         layout.label(text="Color Palette (Fancy)")
         layout.operator("object.create_super_fx")
         layout.operator("object.apply_material_colors")
-        layout.label(text="Color Palette (Simple)")
-        layout.operator("object.apply_material_colors_simple")
 
 
 class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):

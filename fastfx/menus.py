@@ -63,13 +63,13 @@ class TOPBAR_MT_fastfx_slopes(bpy.types.Menu):
 # Menu Functions
 # =========================
 def menu_func_import(self, context):
-    self.layout.operator(Import3DGI.bl_idname, text="3DG1/3DGI/3DAN/Fundoshi-kun (.txt/.3dg1/.anm/.3dan/.obj/.3dgi)")
+    self.layout.operator(Import3DGI.bl_idname, text="Fundoshi-kun/Videoscape 3DG1 (.txt/.obj/.anm)")
     self.layout.operator(ImportCADOperator.bl_idname, text="Iwamoto CAD/NCA (.cad/.nca)")
     self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm/.bsp/.gzs)")
 
 def menu_func_export(self, context):
-    self.layout.operator(Export3DG1.bl_idname, text="3DG1/3DGI/Fundoshi-kun (.txt/.3dg1/.obj)")
-    self.layout.operator(Export3DAN.bl_idname, text="3DAN/3DGI/Animated Fundoshi-kun (.anm)")
+    self.layout.operator(Export3DG1.bl_idname, text="Fundoshi-kun/Videoscape 3DG1 (.txt/.obj)")
+    self.layout.operator(Export3DAN.bl_idname, text="Animated Fundoshi-kun/3DAN (.anm)")
     self.layout.menu(TOPBAR_MT_fastfx_asm.bl_idname, text=TOPBAR_MT_fastfx_asm.bl_label)
     self.layout.menu(TOPBAR_MT_fastfx_asm_animated.bl_idname, text=TOPBAR_MT_fastfx_asm_animated.bl_label)
     if context.scene.fastfx_game_preset == "STARFOX2":

@@ -3,7 +3,7 @@
 
 ## A. To 3DG1/3DAN
 
-To export a static 3DG1, select the mesh and go to `File -> Export -> 3DG1/3DGI/Fundoshi-Kun (.txt/.3dg1/.obj)`. When the mesh uses the new shape-key animation system, the ``Static Export Frame`` setting selects which frame is exported.
+To export a static 3DG1, select the mesh and go to `Fundoshi-kun/Videoscape 3DG1 (.txt/.obj)`. When the mesh uses the new shape-key animation system, the ``Static Export Frame`` setting selects which frame is exported.
 
 Export options are in the FastFX sidebar under ``Export Options``.
 
@@ -14,7 +14,7 @@ Face sorting (drop-down):
 
 Compress point pairs: Whether the exporter should sort exact X-mirrored pairs together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block.
 
-To export to 3DAN, use `File -> Export -> 3DAN/3DGI/Animated Fundoshi-Kun (.anm)`. In shape-key mode, select the animated mesh; with ``Use Legacy Animation Objects`` enabled, select all frame meshes.  
+To export to 3DAN, use `Animated Fundoshi-kun/3DAN (.anm)`. In shape-key mode, select the animated mesh; with ``Use Legacy Animation Objects`` enabled, select all frame meshes.  
 
 ## B. To ASM
 

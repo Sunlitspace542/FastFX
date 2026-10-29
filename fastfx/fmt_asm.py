@@ -223,7 +223,7 @@ def _parse_asm_points(lines):
 class ImportBSPOperator(bpy.types.Operator, ImportHelper):
     """Import Star Fox ASM BSP/GZS File"""
     bl_idname = "import_mesh.bsp"
-    bl_label = "Import Star Fox ASM BSP/GZS File"
+    bl_label = "Import ASM BSP/GZS"
     bl_options = {'PRESET', 'UNDO'}
 
     # Filter to show only asm/bsp files in the file browser
