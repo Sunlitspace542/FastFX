@@ -64,7 +64,7 @@ class TOPBAR_MT_fastfx_slopes(bpy.types.Menu):
 # =========================
 def menu_func_import(self, context):
     self.layout.operator(Import3DGI.bl_idname, text="Fundoshi-kun/Videoscape 3DG1 (.txt/.obj/.anm)")
-    self.layout.operator(ImportCADOperator.bl_idname, text="Iwamoto CAD/NCA (.cad/.nca)")
+    self.layout.operator(ImportCADOperator.bl_idname, text="Iwamoto 3D-CAD/3ddraw (.cad/.nca)")
     self.layout.operator(ImportBSPOperator.bl_idname, text="Star Fox ASM BSP/GZS (.asm/.bsp/.gzs)")
 
 def menu_func_export(self, context):

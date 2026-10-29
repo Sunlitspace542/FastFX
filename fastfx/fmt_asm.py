@@ -600,7 +600,7 @@ class ExportToGZS(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 class ExportAnimatedToASM(bpy.types.Operator):
-    """Export animated mesh objects to Star Fox ASM through SHAPED."""
+    """Export animated mesh objects to Star Fox ASM"""
     bl_idname = "export_mesh.animated_asm"
     bl_label = "Export Animated ASM"
     bl_options = {'PRESET'}

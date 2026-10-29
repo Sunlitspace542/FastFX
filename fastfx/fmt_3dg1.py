@@ -20,7 +20,7 @@ EDGE_COLOR_ATTRIBUTE = "fastfx_edge_color_index"
 # 3DG1 Import Operator
 # =========================
 class Import3DGI(bpy.types.Operator):
-    """Import static and animated 3DG1/3DGI files."""
+    """Import static and animated 3DG1/3DGI/3DAN files"""
     bl_idname = "import_mesh.3dgi"
     bl_label = "Import 3DG1/3DGI/3DAN"
     bl_options = {'PRESET', 'UNDO'}

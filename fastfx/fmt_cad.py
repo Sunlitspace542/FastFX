@@ -1,6 +1,6 @@
 # FastFX
 # File: fmt_cad.py
-# Functions dealing with Iwamoto-CAD CAD/NCA file import.
+# Functions dealing with Iwamoto 3D-CAD CAD/NCA file import.
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
 
@@ -211,7 +211,7 @@ def import_cad(filepath, context):
 
 
 class ImportCADOperator(bpy.types.Operator):
-    """Import an Iwamoto CAD or NCA file."""
+    """Import an Iwamoto CAD or NCA file"""
     bl_idname = "import_mesh.cad"
     bl_label = "Import CAD/NCA"
     bl_options = {'UNDO'}
