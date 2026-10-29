@@ -496,6 +496,16 @@ class ExportToBSP(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        import os
+        if not self.filepath:
+            blend_filepath = context.blend_data.filepath
+            if not blend_filepath:
+                blend_filepath = context.object.name
+            else:
+                blend_filepath = os.path.splitext(blend_filepath)[0]
+
+            self.filepath = blend_filepath + ".asm"
+
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
@@ -530,6 +540,16 @@ class ExportToBSPTreeless(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        import os
+        if not self.filepath:
+            blend_filepath = context.blend_data.filepath
+            if not blend_filepath:
+                blend_filepath = context.object.name
+            else:
+                blend_filepath = os.path.splitext(blend_filepath)[0]
+
+            self.filepath = blend_filepath + ".asm"
+
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
@@ -566,6 +586,16 @@ class ExportToGZS(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        import os
+        if not self.filepath:
+            blend_filepath = context.blend_data.filepath
+            if not blend_filepath:
+                blend_filepath = context.object.name
+            else:
+                blend_filepath = os.path.splitext(blend_filepath)[0]
+
+            self.filepath = blend_filepath + ".asm"
+
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
@@ -616,5 +646,15 @@ class ExportAnimatedToASM(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        import os
+        if not self.filepath:
+            blend_filepath = context.blend_data.filepath
+            if not blend_filepath:
+                blend_filepath = context.object.name
+            else:
+                blend_filepath = os.path.splitext(blend_filepath)[0]
+
+            self.filepath = blend_filepath + ".asm"
+
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}

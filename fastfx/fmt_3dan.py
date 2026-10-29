@@ -256,5 +256,15 @@ class Export3DAN(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        import os
+        if not self.filepath:
+            blend_filepath = context.blend_data.filepath
+            if not blend_filepath:
+                blend_filepath = context.object.name
+            else:
+                blend_filepath = os.path.splitext(blend_filepath)[0]
+
+            self.filepath = blend_filepath + ".anm"
+
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}

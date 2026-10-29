@@ -40,7 +40,7 @@ Categories are named by their source files.
 - [x] nondestructively merge selected points by distance (allows to merge double sided faces without one side being removed)
 - [ ] (ASM) specify that model's points be divided by 2 (use pbd2 macro instead of pb), also make sure asm importer knows how to handle pbd2
 - [x] sidebar options which only work in edit mode should all be grayed in other modes
-- [ ] default filenames for export dialogs (e.g. [object name].[extension])
+- [x] default filenames for export dialogs (e.g. [object name].[extension])
 
 ## OTHER
 - [ ] Figure out some way to determine how textures will be mapped on a face beforehand (some way to show which way is "up")?
