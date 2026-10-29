@@ -647,14 +647,15 @@ class ExportAnimatedToASM(bpy.types.Operator):
 
     def invoke(self, context, event):
         import os
-        if not self.filepath:
-            blend_filepath = context.blend_data.filepath
-            if not blend_filepath:
-                blend_filepath = context.object.name
-            else:
-                blend_filepath = os.path.splitext(blend_filepath)[0]
+        if not context.scene.fastfx_use_legacy_animation_objects:
+            if not self.filepath:
+                blend_filepath = context.blend_data.filepath
+                if not blend_filepath:
+                    blend_filepath = context.object.name
+                else:
+                    blend_filepath = os.path.splitext(blend_filepath)[0]
 
-            self.filepath = blend_filepath + ".asm"
+                self.filepath = blend_filepath + ".asm"
 
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
