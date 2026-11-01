@@ -30,7 +30,7 @@ Generated edges are deduplicated based on if two edges are at the same position 
 You can also create 2-gons directly using the ``Add Real 2-Gon (OLD)`` option in the FastFX sidebar, though this is a legacy feature, and working with real 2-gons in Blender has its quirks and issues. 2-gons are only used when importing a shape or on older projects from before edge tagging was added.
 
 # 2a. Creating Slope Data (Star Fox 2)
-Before creating slope data, export your completed model as 3DG1 and reimport beforehand so the model is correctly face sorted and preprocessed, similar to the procedure for animation.  
+Before creating slope data, export your completed model as 3DG1 and reimport beforehand so the model is correctly face sorted and preprocessed as desired, similar to the procedure for animation.  
 Slope records can be assigned to mesh faces and exported as assembler source for SFCAD slope data. In Edit Mode, select the faces, choose ``GROUND``, ``WATER``, ``ICE``, or ``GRASS`` in the FastFX sidebar, then click ``Assign Slope Data``. Choose ``Custom`` to enter another assembler slope type name. Custom names must be valid assembler identifiers.
 
 Enable ``Export Slope Polygon`` when the face also needs a ``SLOPEPOLY`` outline. For animated slopes, apply slope settings to the corresponding face on every frame mesh. Faces must have at least three vertices and define a non-degenerate slope plane; vertical planes cannot produce the center height required by the reference slope format. Assigned slope types are shown over the faces in the viewport and can be cleared from selected faces with ``Clear Slope Data``.
