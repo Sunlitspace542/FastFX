@@ -62,6 +62,7 @@ from .ui import (
     RemoveAdditionalShapeHeaderOperator,
     OBJECT_OT_add_2_point_face,
     OBJECT_OT_assign_edge_material,
+    OBJECT_OT_convert_two_point_faces,
     OBJECT_OT_apply_material_colors,
     OBJECT_OT_apply_material_colors_simple,
     OBJECT_OT_calculate_super_fx_settings,
@@ -78,10 +79,12 @@ from .ui import (
     register_edge_material_overlay,
     register_edge_material_overlay_settings,
     register_export_options_settings,
+    register_import_options_settings,
     register_shape_header_settings,
     unregister_edge_material_overlay,
     unregister_edge_material_overlay_settings,
     unregister_export_options_settings,
+    unregister_import_options_settings,
     unregister_shape_header_settings,
 )
 
@@ -103,6 +106,7 @@ classes = (
     OBJECT_OT_toggle_backface_culling,
     OBJECT_OT_add_2_point_face,
     OBJECT_OT_assign_edge_material,
+    OBJECT_OT_convert_two_point_faces,
     OBJECT_OT_assign_slope_data,
     OBJECT_OT_clear_slope_data,
     OBJECT_OT_apply_material_colors,
@@ -147,6 +151,7 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     register_edge_material_overlay_settings()
     register_export_options_settings()
+    register_import_options_settings()
     register_animation_settings()
     register_colbox_export_settings()
     register_slope_settings()
@@ -160,6 +165,7 @@ def unregister():
     unregister_animation_settings()
     unregister_colbox_export_settings()
     unregister_export_options_settings()
+    unregister_import_options_settings()
     unregister_shape_header_settings()
     unregister_edge_material_overlay_settings()
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)

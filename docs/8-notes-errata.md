@@ -6,5 +6,5 @@
 
 ## Errata
 - When using `Generate Colbox for Mesh` or ``Import Colboxes From Clipboard``, there is a very slight chance that Blender will crash. Save often.
-- Using 2-pointed faces/2-gons is very janky and it is recommended you use plain edges instead. 2-gons are only used when importing a shape.
+- Using real 2-gons/2-pointed faces is very janky and it is recommended you use plain edges instead. 2-gons are only used when importing a shape.
 - You may sometimes get an error when attempting to use ``Assign FX Material to Edges`` or ``Assign Slope Data``. Just try again and it should eventually go through.

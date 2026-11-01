@@ -15,7 +15,12 @@ import tempfile
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
 
-from .common import VertexOperation, hex_to_rgb
+from .common import (
+    VertexOperation,
+    convert_two_point_faces_to_edges,
+    hex_to_rgb,
+    is_mesh_animated,
+)
 from .animation import animation_frame_count, is_vertex_animation
 from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
@@ -146,6 +151,18 @@ def unregister_export_options_settings():
     del bpy.types.Scene.fastfx_export_sort_mode
     del bpy.types.Scene.fastfx_export_compress_point_pairs
     del bpy.types.Scene.fastfx_export_simplified_shapehdr
+
+
+def register_import_options_settings():
+    bpy.types.Scene.fastfx_import_convert_two_point_faces = bpy.props.BoolProperty(
+        name="Convert 2-Gons to Edges",
+        description="Import 2-point faces as tagged loose edges when the object is static",
+        default=False,
+    )
+
+
+def unregister_import_options_settings():
+    del bpy.types.Scene.fastfx_import_convert_two_point_faces
 
 
 def _edge_material_label(material):
@@ -1090,13 +1107,56 @@ class OBJECT_OT_assign_edge_material(bpy.types.Operator):
         self.report({'INFO'}, message)
         return {'FINISHED'}
 
+
+class OBJECT_OT_convert_two_point_faces(bpy.types.Operator):
+    """Convert 2-point faces on selected static mesh objects to tagged loose edges"""
+    bl_idname = "object.convert_two_point_faces"
+    bl_label = "Convert 2-Gons to Edges"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.mode == 'OBJECT'
+            and any(obj.type == 'MESH' for obj in context.selected_objects)
+        )
+
+    def execute(self, context):
+        processed_meshes = set()
+        converted_faces = 0
+        skipped_animated = 0
+        for obj in context.selected_objects:
+            if obj.type != 'MESH':
+                continue
+            if is_mesh_animated(obj) or any(
+                other.data is obj.data and is_mesh_animated(other)
+                for other in bpy.data.objects
+            ):
+                skipped_animated += 1
+                continue
+            mesh_key = obj.data.as_pointer()
+            if mesh_key in processed_meshes:
+                continue
+            processed_meshes.add(mesh_key)
+            converted_faces += convert_two_point_faces_to_edges(obj)
+
+        if converted_faces == 0 and skipped_animated == 0:
+            self.report({'INFO'}, "No 2-point faces found on the selected mesh objects")
+        else:
+            message = f"Converted {converted_faces} 2-point face(s) to tagged edge(s)"
+            if skipped_animated:
+                message += f"; skipped {skipped_animated} animated object(s)"
+            self.report({'INFO'}, message)
+        return {'FINISHED'}
+
+
 # =========================
 # FastFX Menu Panel - 2-point face primitive
 # =========================
 class OBJECT_OT_add_2_point_face(bpy.types.Operator):
     """Create a 2-point face primitive"""
     bl_idname = "object.add_2_point_face"
-    bl_label = "Add 2-Point Face (OLD)"
+    bl_label = "Add Real 2-Gon (OLD)"
     bl_options = {'REGISTER', 'UNDO'}
 
     template_name = "two-point-face"
@@ -1237,6 +1297,9 @@ class VIEW3D_PT_fastfx_tools(bpy.types.Panel):
         simplified_row = export_box.row()
         simplified_row.enabled = scene.fastfx_game_preset not in {"STARFOX2", "STARFOXEX"}
         simplified_row.prop(scene, "fastfx_export_simplified_shapehdr")
+        import_box = layout.box()
+        import_box.label(text="Import Options")
+        import_box.prop(scene, "fastfx_import_convert_two_point_faces")
 
 
 class VIEW3D_PT_fastfx_animation(bpy.types.Panel):
@@ -1376,10 +1439,11 @@ class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):
 
         layout.operator(VertexOperation.bl_idname, text="Round Vertex Coordinates").operation = 'ROUND'
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
-        layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add 2-Point Face (OLD)")
+        layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add Real 2-Gon (OLD)")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
         layout.operator(OBJECT_OT_merge_points_by_distance.bl_idname)
         layout.operator(OBJECT_OT_assign_edge_material.bl_idname)
+        layout.operator(OBJECT_OT_convert_two_point_faces.bl_idname)
         overlay_box = layout.box()
         overlay_box.label(text="Edge Material Overlay")
         overlay_box.prop(context.scene, "fastfx_show_edge_material_labels")

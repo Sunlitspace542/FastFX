@@ -9,12 +9,16 @@ import math
 import os
 import re
 
-from .common import hex_to_rgb, distance_from_origin, pair_points_for_compression
+from .common import (
+    EDGE_COLOR_ATTRIBUTE,
+    convert_two_point_faces_to_edges,
+    hex_to_rgb,
+    distance_from_origin,
+    pair_points_for_compression,
+)
 from .animation import animation_frame_coordinates, is_vertex_animation
 from .fmt_3dan import Import3DANOperator
 from .palette import id_0_c_rgb
-
-EDGE_COLOR_ATTRIBUTE = "fastfx_edge_color_index"
 
 # =========================
 # 3DG1 Import Operator
@@ -33,7 +37,13 @@ class Import3DGI(bpy.types.Operator):
         try:
             format_kind = detect_3dgi_format(self.filepath)
             if format_kind == "static":
-                return read_3dg1(self.filepath, context)
+                return read_3dg1(
+                    self.filepath,
+                    context,
+                    convert_two_point_faces=(
+                        context.scene.fastfx_import_convert_two_point_faces
+                    ),
+                )
             Import3DANOperator.import_3dan(self, self.filepath, context)
         except Exception as exc:
             self.report({'ERROR'}, f"Failed to import model: {exc}")
@@ -133,7 +143,7 @@ class Export3DG1(bpy.types.Operator):
 # =========================
 # 3DG1 Importer
 # =========================
-def read_3dg1(filepath, context):
+def read_3dg1(filepath, context, convert_two_point_faces=False):
     try:
         # Extract the base name of the file (without extension) to use as object and mesh name
         base_name = os.path.splitext(os.path.basename(filepath))[0]
@@ -218,6 +228,9 @@ def read_3dg1(filepath, context):
             for poly, (_, color_index) in zip(mesh.polygons, polygons):
                 material_index = sorted(material_mapping.keys()).index(color_index)
                 poly.material_index = material_index
+
+            if convert_two_point_faces:
+                convert_two_point_faces_to_edges(obj)
 
         return {'FINISHED'}
 

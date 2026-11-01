@@ -22,6 +22,9 @@ This setting is affected by the selected game preset. Star Fox 2 forces it off b
 
 ``Compress point pairs``: If checked, exact X-mirrored pairs are sorted together at the start of the point list, followed by points that cannot be mirrored. This allows SHAPED to emit one longer `PointsX` block. This setting does not apply to animation exports.  
 
+## Import Options
+``Convert 2-Gons to Edges`` converts 2-gons in static imports to tagged loose edges. Animated imports are left unchanged. This option is off by default.
+
 ## Animation
 **PLEASE NOTE:** Before animating, export your shape as 3DG1 or static ASM and reimport before animating so the shape is correctly preprocessed for animation.  
 ``Use Legacy Animation Objects`` - Switches over to the old object-per-frame system used in older versions of FastFX (See chapter 3, section B). All other options in this group apply to the new vertex animation system.
@@ -72,14 +75,16 @@ The operations available are:
 
 If your model becomes greatly distorted after using these tools, try scaling it up (preferably by a number divisible by 2), and/or apply scale first, then round or truncate.  
 
-``Add 2-Point Face (OLD)`` adds a 2-point face/2-gon either as a separate object or to the object currently being edited. This is a legacy feature. You should assign materials to plain edges instead.
+``Add Real 2-Gon (OLD)`` adds a 2-gon/2-point face either as a separate object or to the object currently being edited. This is a legacy feature. You should assign materials to plain edges instead.
 
 ``Select Twisted Faces`` computes the average face twist for the mesh and selects any quads and N-gons whose vertices twist away from the plane (i.e. their points aren't coplanar). Twisted faces may render unreliably in game. This operator only works in edit mode.  
   
 ``Merge Points (Keep Faces)`` merges selected points within the specified distance, preserving faces (e.g. in the case of double sided faces). A merge is only prevented if it would result in two corners of the same face being collapsed. This operator only works in edit mode.
-
+  
 ``Assign FX Material to Edges`` assigns a selected FX# material in the material pane to a selected plain edge in edit mode.
-
+  
+``Convert 2-Gons to Edges`` converts 2-gon on selected mesh objects to tagged loose edges. Animated objects are skipped because changing their topology would invalidate their animation.
+  
 ## Edge Material Overlay
 ``Show Material Labels`` draws a text overlay over each edge showing the assigned material.
 ``Show Colored Edge Lines`` draws a colored line overlay on each edge with its assigned material color.

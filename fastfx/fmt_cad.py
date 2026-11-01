@@ -9,7 +9,11 @@ import struct
 
 import bpy
 
-from .common import hex_to_rgb
+from .common import (
+    LEGACY_ANIMATION_FRAME_MARKER,
+    convert_two_point_faces_to_edges,
+    hex_to_rgb,
+)
 from .animation import create_animation_object
 from .palette import id_0_c_rgb
 
@@ -199,6 +203,10 @@ def import_cad(filepath, context):
             context.collection.objects.link(obj)
             objects.append(obj)
 
+    if animated and context.scene.fastfx_use_legacy_animation_objects:
+        for obj in objects:
+            obj[LEGACY_ANIMATION_FRAME_MARKER] = True
+
     for obj in objects:
         mesh = obj.data
         for color_index in sorted(material_indices):
@@ -208,6 +216,10 @@ def import_cad(filepath, context):
                 mesh.materials.append(material)
         for polygon, color_index in zip(mesh.polygons, polygon_colors):
             polygon.material_index = material_indices[color_index]
+
+    if not animated and context.scene.fastfx_import_convert_two_point_faces:
+        for obj in objects:
+            convert_two_point_faces_to_edges(obj)
 
 
 class ImportCADOperator(bpy.types.Operator):

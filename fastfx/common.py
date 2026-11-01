@@ -8,6 +8,77 @@ import bpy
 import bmesh
 import math
 
+EDGE_COLOR_ATTRIBUTE = "fastfx_edge_color_index"
+LEGACY_ANIMATION_FRAME_MARKER = "fastfx_legacy_animation_frame"
+
+
+def is_mesh_animated(obj):
+    return (
+        obj is not None
+        and obj.type == "MESH"
+        and (
+            obj.data.shape_keys is not None
+            or obj.animation_data is not None
+            or obj.data.animation_data is not None
+            or bool(obj.get(LEGACY_ANIMATION_FRAME_MARKER, False))
+        )
+    )
+
+
+def convert_two_point_faces_to_edges(obj):
+    """Replace 2-point faces with loose edges tagged for 3DG1 export."""
+    if obj is None or obj.type != "MESH":
+        raise ValueError("A mesh object is required.")
+    if is_mesh_animated(obj):
+        raise ValueError(f"Cannot convert 2-point faces on animated object '{obj.name}'.")
+
+    mesh = obj.data
+    bm = bmesh.new()
+    try:
+        bm.from_mesh(mesh)
+        faces = [face for face in bm.faces if len(face.verts) == 2]
+        if not faces:
+            return 0
+
+        edge_color = bm.edges.layers.int.get(EDGE_COLOR_ATTRIBUTE)
+        if edge_color is None:
+            edge_color = bm.edges.layers.int.new(EDGE_COLOR_ATTRIBUTE)
+            for edge in bm.edges:
+                edge[edge_color] = -1
+
+        tagged_edges = []
+        for face in faces:
+            edge = bm.edges.get((face.verts[0], face.verts[1]))
+            if edge is None:
+                raise RuntimeError("Could not find the edge for a 2-point face.")
+
+            material_index = face.material_index
+            material = (
+                mesh.materials[material_index]
+                if 0 <= material_index < len(mesh.materials)
+                else None
+            )
+            color_index = material_index
+            if material is not None:
+                material_name = material.name.rsplit(".", 1)[0]
+                if (
+                    material_name.startswith(("FX", "FE"))
+                    and material_name[2:].isdigit()
+                ):
+                    color_index = int(material_name[2:])
+            if edge[edge_color] < 0:
+                edge[edge_color] = color_index
+            tagged_edges.append(face)
+
+        for face in tagged_edges:
+            bm.faces.remove(face)
+        bm.to_mesh(mesh)
+        mesh.update()
+        return len(tagged_edges)
+    finally:
+        bm.free()
+
+
 # =========================
 # Hex color to RGB color Converter
 # =========================

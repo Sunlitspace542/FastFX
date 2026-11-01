@@ -12,7 +12,11 @@ from tempfile import TemporaryDirectory
 import bpy
 from bpy_extras.io_utils import ImportHelper
 
-from .common import hex_to_rgb
+from .common import (
+    LEGACY_ANIMATION_FRAME_MARKER,
+    convert_two_point_faces_to_edges,
+    hex_to_rgb,
+)
 from .animation import (
     animation_frame_count,
     animation_frame_coordinates,
@@ -350,6 +354,13 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                     context.collection.objects.link(obj)
                     objects.append(obj)
 
+            if (
+                len(points_by_frame) > 1
+                and context.scene.fastfx_use_legacy_animation_objects
+            ):
+                for obj in objects:
+                    obj[LEGACY_ANIMATION_FRAME_MARKER] = True
+
             for obj in objects:
                 mesh = obj.data
                 for material_name in material_map:
@@ -358,6 +369,13 @@ class ImportBSPOperator(bpy.types.Operator, ImportHelper):
                         mesh.materials.append(material)
                 for i, polygon in enumerate(mesh.polygons):
                     polygon.material_index = material_indices[i]
+
+            if (
+                len(points_by_frame) == 1
+                and context.scene.fastfx_import_convert_two_point_faces
+            ):
+                for obj in objects:
+                    convert_two_point_faces_to_edges(obj)
 
             self.report(
                 {'INFO'},

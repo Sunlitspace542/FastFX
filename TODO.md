@@ -2,8 +2,7 @@
 Categories are named by their source files.  
 
 ## animation
-- [ ] allow face sorting options (but NOT point pairing) to apply to animation export? i would make it something the user has to deliberately enable
-
+- [ ] allow face sorting options (but NOT point pairing) to apply to animation export? i would make it something the user has to deliberately enable in the animation panel, by default these options should not apply to animations
 ## colboxes
 - N/A
 
@@ -35,6 +34,6 @@ Categories are named by their source files.
 - N/A
 
 ## ui
-- [ ] convert 2-gons to tagged stray edges? make it a toggle in global config import settings (default off, should not apply when importing animations!) and/or make it a tool in the sidebar (also should not be used on animated things)
+- N/A
 ## OTHER
 - [ ] Figure out some way to determine how textures will be mapped on a face beforehand (some way to show which way is "up")?

@@ -8,7 +8,7 @@ import bpy
 import os
 import re
 
-from .common import hex_to_rgb
+from .common import LEGACY_ANIMATION_FRAME_MARKER, hex_to_rgb
 from .animation import (
     animation_frame_coordinates,
     animation_frame_count,
@@ -99,6 +99,10 @@ class Import3DANOperator(bpy.types.Operator):
                 obj = bpy.data.objects.new(frame_name, mesh)
                 context.collection.objects.link(obj)
                 objects.append(obj)
+
+        if frame_count > 1 and context.scene.fastfx_use_legacy_animation_objects:
+            for obj in objects:
+                obj[LEGACY_ANIMATION_FRAME_MARKER] = True
 
         # Assign colors and materials to imported mesh objects.
         for obj in objects:

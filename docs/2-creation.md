@@ -9,15 +9,15 @@ Materials must be named in the format ``FX#``, where ``#`` is the color index of
 
 Use the FastFX sidebar to apply the proper color palette to the materials (see the chapter on the UI).
 
-## Edges and 2-pointed faces/2-gons
+## Edges and 2-gons/2-pointed faces
 Real 2-gons and stray edges for colored edges are also supported.
 
-For new 2-point faces, select loose edges in Edit Mode, choose an ``FX#`` material as the active material, and click ``Assign FX Material to Edges`` in the FastFX sidebar. Edges used by faces are skipped.
+For new 2-gons, select loose edges in Edit Mode, choose an ``FX#`` material as the active material, and click ``Assign FX Material to Edges`` in the FastFX sidebar. Edges used by faces are skipped.
 
-These colored loose edges export as 2-point faces and are deduplicated with other edges that are at the same position and have the same color.
+These colored loose edges export as 2-gons and are deduplicated with other edges that are at the same position and have the same color.
 
 ### Edge material overlay
-The active mesh's assigned loose edges and existing 2-point faces with ``FX#`` materials display a palette-colored line and material label over the edge in the 3D Viewport. This is a viewport-only visual aid, and does not add geometry or affect exports.  
+The active mesh's assigned loose edges and existing 2-gons with ``FX#`` materials display a palette-colored line and material label over the edge in the 3D Viewport. This is a viewport-only visual aid, and does not add geometry or affect exports.  
 
 The line and label overlays can be toggled independently in the FastFX sidebar under ``Edge Material Overlay``.
 
@@ -27,7 +27,7 @@ To convert faces on a model into edges, use ``FE#`` instead of ``FX#`` as the ma
 Generated edges are deduplicated based on if two edges are at the same position and have the same color.  
 
 ### Legacy 2-gon features
-You can also create 2-gons directly using the ``Add 2-Point Face`` option in the FastFX sidebar, though this is a legacy feature, and working with real 2-gons in Blender has its quirks and issues. 2-gons are only used when importing a shape or on older projects from before edge tagging was added.
+You can also create 2-gons directly using the ``Add Real 2-Gon (OLD)`` option in the FastFX sidebar, though this is a legacy feature, and working with real 2-gons in Blender has its quirks and issues. 2-gons are only used when importing a shape or on older projects from before edge tagging was added.
 
 # 2a. Creating Slope Data (Star Fox 2)
 Before creating slope data, export your completed model as 3DG1 and reimport beforehand so the model is correctly face sorted and preprocessed, similar to the procedure for animation.  
