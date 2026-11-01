@@ -18,7 +18,7 @@ It works well enough for my purposes, at least.
 - Star Fox 2 slope data tools with built-in or custom slope types and static/animated export
 - Custom Super FX material by Euclidium98 to help give a rough idea of what the final product might look like (simple face coloring is also an option, used by default)
 - Proper 2-pointed face/edge support (use actual 2-gons or tag stray edges with colors, toggle color/label overlays for edges)
-- Faces sorted on export (3DG1 export only)
+- Faces sorted on export (3DG1/static ASM export only)
 - Collision box import/export/editing support
 - No more `-nan`'s! all point coordinates will be whole integers on export. Any funny calculations should correctly be zeroes now.  
 

@@ -27,7 +27,7 @@ class Import3DGI(bpy.types.Operator):
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 
-    filter_glob: bpy.props.StringProperty(default="*.txt;*.3dg1;*.anm;*.3dan*.obj;*.3dgi", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.txt;*.3dg1;*.anm;*.3dan;*.obj;*.3dgi", options={'HIDDEN'})
 
     def execute(self, context):
         try:
