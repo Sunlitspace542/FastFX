@@ -52,6 +52,10 @@ For more information on the animation system, see chapter 3.
 ``Create Super FX node group`` creates the node group needed for the Super FX material. You only need to click this once per .blend file.  
   
 ``Apply Material Palette (Fancy)`` applies the ``id_0_c`` color palette to all materials following the proper ``FX# / FE#`` naming convention using the Super FX material. The node group must exist first.  
+
+The ``Super FX Settings`` controls adjust ``Aspect X``, ``Aspect Y``, and ``Dither`` on the active material's Super FX node. Click ``Apply Settings to All Materials`` to copy those values to every material with a Super FX node.
+
+``Calculate for Viewport (All Materials)`` calculates the settings from the current 3D viewport's dimensions, using 256x224 as the reference resolution (Aspect X = width / 32; Aspect Y = height / 32; Dither = 96.1847). If viewport dimensions would exceed the node inputs' 100 aspect limit, the calculation adjusts Dither proportionally to preserve the pattern scale per viewport pixel. The calculated values are applied to all materials with a compatible Super FX node.
   
 
 # Mesh Utilities

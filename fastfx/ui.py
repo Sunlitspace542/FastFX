@@ -29,6 +29,35 @@ from .superfx import super_fx_node_group
 _edge_material_overlay_handle = None
 _edge_material_line_overlay_handle = None
 
+_SUPER_FX_BASE_DITHER = 96.18470001220703
+_SUPER_FX_PIXELS_PER_ASPECT_UNIT = 32.0
+_SUPER_FX_INPUT_NAMES = ("Aspect X", "Aspect Y", "Dither")
+
+
+def _super_fx_nodes(material):
+    if not material or not material.use_nodes or not material.node_tree:
+        return []
+    return [
+        node for node in material.node_tree.nodes
+        if node.bl_idname == "ShaderNodeGroup"
+        and node.node_tree
+        and node.node_tree.name == "Super FX"
+    ]
+
+
+def _apply_super_fx_settings_to_all(settings):
+    updated_materials = 0
+    for material in bpy.data.materials:
+        material_updated = False
+        for node in _super_fx_nodes(material):
+            if all(input_name in node.inputs for input_name in settings):
+                for input_name, value in settings.items():
+                    node.inputs[input_name].default_value = value
+                material_updated = True
+        if material_updated:
+            updated_materials += 1
+    return updated_materials
+
 
 def _update_preset_shapehdr(scene, context):
     if scene.fastfx_game_preset == "STARFOX2":
@@ -392,6 +421,90 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
                     continue
 
         self.report({'INFO'}, "Palette applied to materials")
+        return {'FINISHED'}
+
+
+class OBJECT_OT_apply_super_fx_settings_to_all(bpy.types.Operator):
+    """Copy the active material's Super FX settings to all Super FX materials"""
+    bl_idname = "object.apply_super_fx_settings_to_all"
+    bl_label = "Apply Settings to All Materials"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        source_material = context.object.active_material if context.object else None
+        source_nodes = _super_fx_nodes(source_material)
+        if not source_nodes:
+            self.report({'WARNING'}, "Active material has no Super FX node")
+            return {'CANCELLED'}
+
+        source_node = source_nodes[0]
+        if any(input_name not in source_node.inputs for input_name in _SUPER_FX_INPUT_NAMES):
+            self.report({'ERROR'}, "Active material's Super FX node is missing settings")
+            return {'CANCELLED'}
+        values = {
+            input_name: source_node.inputs[input_name].default_value
+            for input_name in _SUPER_FX_INPUT_NAMES
+        }
+        updated_materials = _apply_super_fx_settings_to_all(values)
+        if not updated_materials:
+            self.report({'WARNING'}, "No compatible Super FX materials found")
+            return {'CANCELLED'}
+
+        self.report(
+            {'INFO'},
+            f"Applied Super FX settings to {updated_materials} materials",
+        )
+        return {'FINISHED'}
+
+
+class OBJECT_OT_calculate_super_fx_settings(bpy.types.Operator):
+    """Calculate Super FX settings from the current 3D viewport dimensions"""
+    bl_idname = "object.calculate_super_fx_settings"
+    bl_label = "Calculate for Viewport (All Materials)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        area = context.area
+        if area is None or area.type != 'VIEW_3D':
+            self.report({'WARNING'}, "Run this from a 3D View")
+            return {'CANCELLED'}
+
+        viewport_region = next(
+            (region for region in area.regions if region.type == 'WINDOW'),
+            None,
+        )
+        if viewport_region is None or viewport_region.width <= 0 or viewport_region.height <= 0:
+            self.report({'WARNING'}, "The 3D viewport has no usable dimensions")
+            return {'CANCELLED'}
+
+        aspect_scale = max(
+            _SUPER_FX_PIXELS_PER_ASPECT_UNIT,
+            viewport_region.width / 100.0,
+            viewport_region.height / 100.0,
+        )
+        settings = {
+            "Aspect X": max(
+                1.0,
+                min(viewport_region.width / aspect_scale, 100.0),
+            ),
+            "Aspect Y": max(
+                1.0,
+                min(viewport_region.height / aspect_scale, 100.0),
+            ),
+            "Dither": _SUPER_FX_BASE_DITHER
+            * aspect_scale
+            / _SUPER_FX_PIXELS_PER_ASPECT_UNIT,
+        }
+        updated_materials = _apply_super_fx_settings_to_all(settings)
+        if not updated_materials:
+            self.report({'WARNING'}, "No compatible Super FX materials found")
+            return {'CANCELLED'}
+
+        self.report(
+            {'INFO'},
+            f"Calculated settings for {viewport_region.width}x{viewport_region.height} "
+            f"viewport and applied them to {updated_materials} materials",
+        )
         return {'FINISHED'}
 
 
@@ -1126,6 +1239,24 @@ class VIEW3D_PT_fastfx_material_configuration(bpy.types.Panel):
         layout.label(text="Color Palette (Fancy)")
         layout.operator("object.create_super_fx")
         layout.operator("object.apply_material_colors")
+
+        obj = context.object
+        material = obj.active_material if obj else None
+        super_fx_nodes = _super_fx_nodes(material)
+
+        settings_box = layout.box()
+        settings_box.label(text="Super FX Settings")
+        if super_fx_nodes:
+            for input_name in _SUPER_FX_INPUT_NAMES:
+                settings_box.prop(
+                    super_fx_nodes[0].inputs[input_name],
+                    "default_value",
+                    text=input_name,
+                )
+            settings_box.operator(OBJECT_OT_apply_super_fx_settings_to_all.bl_idname)
+        else:
+            settings_box.label(text="Active material has no Super FX node")
+        settings_box.operator(OBJECT_OT_calculate_super_fx_settings.bl_idname)
 
 
 class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):
