@@ -74,20 +74,24 @@ class _BspNode:
 class ShapeHeader:
     """Assembler ``ShapeHdr`` fields controlled by an embedding application.
 
-    Values may be assembler labels or ``0``. ``simplified`` omits the three
-    optional LOD pointers, matching the short form used by the original tools.
+    Values may be assembler labels or ``0``. ``label`` controls the assembler
+    label on the header itself; ``name`` remains the shape name referenced by
+    its pointers. For additional headers, blank field values inherit from the
+    main header. ``simplified`` omits the three optional LOD pointers.
     """
 
     name: str | None = None
-    scale: str | int = 0
-    colbox: str | int = 0
-    colour_table: str | int = "id_0_c"
-    shadow: str | int = 0
-    simple1: str | int = 0
-    simple2: str | int = 0
-    simple3: str | int = 0
+    scale: str | int | None = 0
+    colbox: str | int | None = 0
+    colour_table: str | int | None = "id_0_c"
+    shadow: str | int | None = 0
+    simple1: str | int | None = 0
+    simple2: str | int | None = 0
+    simple3: str | int | None = 0
     simplified: bool = False
-    zsort_priority: str | int = 0
+    zsort_priority: str | int | None = 0
+    label: str | None = None
+    null_geometry_pointers: bool = False
 
 
 @dataclass
@@ -99,6 +103,7 @@ class Shape:
     current_frame: int = 0
     smooth_shade: bool = False
     header: ShapeHeader = field(default_factory=ShapeHeader)
+    additional_headers: list[ShapeHeader] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if len(self.dots) > MAX_DOTS or len(self.polygons) > MAX_POLYS:
@@ -252,12 +257,85 @@ class Shape:
         source = str(self.source) if self.source else "SHAPED"
         header = self.header
         simplified = header.simplified if simplified_header is None else simplified_header
-        fields = [f"{name}_P", "0", f"{name}_F", "0", str(header.zsort_priority), "0", "0", str(header.scale), str(header.colbox),
-                  f"{xs:.0f}", f"{ys:.0f}", f"{zs:.0f}", f"{radius:.0f}", str(header.colour_table), str(header.shadow)]
-        if not simplified:
-            fields += [str(header.simple1), str(header.simple2), str(header.simple3)]
-        fields.append(f"<{name}>")
-        return [f";--Shape file ----- {name} ---- Generated with FastFX", "\tifne\tDO_HDR", "", name, f"\tShapeHdr\t{','.join(fields)}", "\telseif"]
+        dimension_fields = [f"{xs:.0f}", f"{ys:.0f}", f"{zs:.0f}", f"{radius:.0f}"]
+        header_fields = (
+            "zsort_priority",
+            "scale",
+            "colbox",
+            "colour_table",
+            "shadow",
+            "simple1",
+            "simple2",
+            "simple3",
+        )
+        main_label = header.label.strip() if header.label and header.label.strip() else name
+        used_labels = {main_label}
+        explicit_labels = [
+            item.label.strip() for item in self.additional_headers
+            if item.label is not None and item.label.strip()
+        ]
+        if len(set(explicit_labels)) != len(explicit_labels):
+            raise ValueError("additional ShapeHdr assembler labels must be unique")
+        if used_labels.intersection(explicit_labels):
+            raise ValueError("an additional ShapeHdr assembler label duplicates the main header")
+        used_labels.update(explicit_labels)
+        additional_labels: list[str] = []
+        next_suffix = 1
+        for item in self.additional_headers:
+            if item.label is not None and item.label.strip():
+                additional_labels.append(item.label.strip())
+                continue
+            while f"{name}_{next_suffix}" in used_labels:
+                next_suffix += 1
+            label = f"{name}_{next_suffix}"
+            additional_labels.append(label)
+            used_labels.add(label)
+            next_suffix += 1
+
+        def shape_header_fields(settings: ShapeHeader) -> list[str]:
+            values = {
+                field_name: getattr(settings, field_name)
+                for field_name in header_fields
+            }
+            if settings is not header:
+                for field_name in header_fields:
+                    value = values[field_name]
+                    if value is None or value == "":
+                        values[field_name] = getattr(header, field_name)
+            fields = [
+                "0" if settings.null_geometry_pointers else f"{name}_P",
+                "0",
+                "0" if settings.null_geometry_pointers else f"{name}_F",
+                "0",
+                str(values["zsort_priority"]),
+                "0",
+                "0",
+                str(values["scale"]),
+                str(values["colbox"]),
+                *dimension_fields,
+                str(values["colour_table"]),
+                str(values["shadow"]),
+            ]
+            if not simplified:
+                fields += [
+                    str(values["simple1"]),
+                    str(values["simple2"]),
+                    str(values["simple3"]),
+                ]
+            fields.append(f"<{name}>")
+            return fields
+
+        lines = [
+            f";--Shape file ----- {name} ---- Generated with FastFX",
+            "\tifne\tDO_HDR",
+            "",
+            main_label,
+            f"\tShapeHdr\t{','.join(shape_header_fields(header))}",
+        ]
+        for item, label in zip(self.additional_headers, additional_labels):
+            lines += [label, f"\tShapeHdr\t{','.join(shape_header_fields(item))}"]
+        lines.append("\telseif")
+        return lines
 
     def _asm_dot(self, index: int, frame: int, extra: list[Dot], overrides: dict[int, Dot]) -> Dot:
         if index in overrides:

@@ -35,7 +35,6 @@ Categories are named by their source files.
 - N/A
 
 ## ui
-- [ ] ability to assign multiple shape headers to an object for ASM export, any fields left blank are inherited from the main one
 - [ ] convert 2-gons to tagged stray edges? make it a toggle in global config import settings (default off, should not apply when importing animations!) and/or make it a tool in the sidebar (also should not be used on animated things)
 ## OTHER
 - [ ] Figure out some way to determine how textures will be mapped on a face beforehand (some way to show which way is "up")?

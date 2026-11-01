@@ -57,6 +57,9 @@ from .menus import (
 from .superfx import OBJECT_OT_create_super_fx
 from .ui import (
     AddShapeHeaderPropertiesOperator,
+    AdditionalShapeHeaderProperties,
+    AddAdditionalShapeHeaderOperator,
+    RemoveAdditionalShapeHeaderOperator,
     OBJECT_OT_add_2_point_face,
     OBJECT_OT_assign_edge_material,
     OBJECT_OT_apply_material_colors,
@@ -75,9 +78,11 @@ from .ui import (
     register_edge_material_overlay,
     register_edge_material_overlay_settings,
     register_export_options_settings,
+    register_shape_header_settings,
     unregister_edge_material_overlay,
     unregister_edge_material_overlay_settings,
     unregister_export_options_settings,
+    unregister_shape_header_settings,
 )
 
 
@@ -128,6 +133,9 @@ classes = (
     TOPBAR_MT_fastfx_asm,
     TOPBAR_MT_fastfx_asm_animated,
     TOPBAR_MT_fastfx_slopes,
+    AdditionalShapeHeaderProperties,
+    AddAdditionalShapeHeaderOperator,
+    RemoveAdditionalShapeHeaderOperator,
     AddShapeHeaderPropertiesOperator,
 )
 
@@ -142,6 +150,7 @@ def register():
     register_animation_settings()
     register_colbox_export_settings()
     register_slope_settings()
+    register_shape_header_settings()
     register_edge_material_overlay()
 
 
@@ -151,6 +160,7 @@ def unregister():
     unregister_animation_settings()
     unregister_colbox_export_settings()
     unregister_export_options_settings()
+    unregister_shape_header_settings()
     unregister_edge_material_overlay_settings()
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)

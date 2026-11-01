@@ -24,6 +24,8 @@ FastFX exports meshes as ASM by writing a temporary 3DG1/3DAN file and compiling
 Make a model. Select it in Object Mode and go to the FastFX panel and click ``Add ShapeHdr Properties``. This adds editable shape header properties to the selected object. For animated object-per-frame export, the first frame in natural object-name order supplies the header properties.
 You can edit these properties in the ``ShapeHdr Properties`` section of the FastFX tab in the 3D View sidebar, or in the object's Custom Properties.
 
+Use ``Add Additional ShapeHdr`` in the object's ShapeHdr Properties to emit more headers for the same shape. Blank fields in an additional header inherit the corresponding main header value. Its ``Assembler Label`` must be unique; when left blank, FastFX uses the main assembly name with a numerical suffix (for example, ``SHIP_1``). The ``Null Point/Face Pointers`` option writes ``0`` for both geometry pointers, allowing an invisible header to retain the remaining values. The additional headers otherwise point to the same shape data as the main header.
+
 Go to ``File -> Export -> Star Fox ASM`` to export.  
 Explanation of the 3 supported assembly formats:  
 - Star Fox ASM BSP - The most common format. A BSP tree is computed and used to help in Z-sorting.  

@@ -46,6 +46,34 @@ def _simplified_shapehdr_for_scene(scene):
     return scene.fastfx_export_simplified_shapehdr
 
 
+def _apply_additional_shape_headers(shape, obj):
+    property_headers = getattr(obj, "fastfx_additional_shape_headers", ())
+    header_fields = {
+        "zsort_priority": "zsort_priority",
+        "scale": "scale",
+        "colbox": "colbox_label",
+        "colour_table": "color_palette",
+        "shadow": "shadow_shape",
+        "simple1": "close_lod_shape",
+        "simple2": "mid_lod_shape",
+        "simple3": "far_lod_shape",
+    }
+    shape.additional_headers = []
+    for property_header in property_headers:
+        label = property_header.assembly_label.strip()
+        overrides = {
+            field_name: (getattr(property_header, property_name).strip() or None)
+            for field_name, property_name in header_fields.items()
+        }
+        shape.additional_headers.append(
+            ShapeHeader(
+                label=_asm_symbol_name(label) if label else None,
+                null_geometry_pointers=property_header.null_geometry_pointers,
+                **overrides,
+            )
+        )
+
+
 def _parse_point_macro(lines, line_index, next_point_index):
     """Read one Points/PointsX block and return decoded points and next line."""
     directive_line = lines[line_index].split(";", 1)[0]
@@ -388,6 +416,7 @@ def export_to_format(
             simple3=obj.get("far_lod_shape", "0"),
             simplified=no_simple123,
         )
+        _apply_additional_shape_headers(shape, obj)
 
         if output_format == "bsp":
             write_shape(shape, output_path, "bsp", tree=tree)
@@ -447,6 +476,7 @@ def export_animated_to_format(
             simple3=base_object.get("far_lod_shape", "0"),
             simplified=no_simple123,
         )
+        _apply_additional_shape_headers(shape, base_object)
 
         if output_format == "bsp":
             write_shape(

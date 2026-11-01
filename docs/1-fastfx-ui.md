@@ -109,6 +109,8 @@ In Star Fox 2 mode, use ``File -> Export -> Star Fox 2 Slope Data -> Static Slop
 ## ASM Tools
 ``Add ShapeHdr Properties`` assigns all the editable BSP/GZS shape header properties as properties to a selected object. These are used to populate certain fields in the shape header when exporting to assembly.  
 
+After adding the main ShapeHdr properties, use ``Add Additional ShapeHdr`` to create additional headers for the same object. Blank fields inherit the corresponding value from the main header. Each assembler label must be unique; a blank label is generated from the main assembly name with a numerical suffix.
+
 ### ShapeHdr/Colbox Properties
 Click on an object which has ShapeHdr properties added, or a colbox, and its properties will appear in this area.  
 

@@ -641,6 +641,68 @@ class AddShapeHeaderPropertiesOperator(bpy.types.Operator):
         self.report({'INFO'}, f"ShapeHdr properties assigned to {obj.name}")
         return {'FINISHED'}
 
+
+class AdditionalShapeHeaderProperties(bpy.types.PropertyGroup):
+    assembly_label: bpy.props.StringProperty(name="Assembler Label", default="")
+    null_geometry_pointers: bpy.props.BoolProperty(
+        name="Null Point/Face Pointers",
+        description="Write 0 for the point and face pointers in this header",
+        default=False,
+    )
+    zsort_priority: bpy.props.StringProperty(name="Z-Sort Priority", default="")
+    scale: bpy.props.StringProperty(name="Scale", default="")
+    colbox_label: bpy.props.StringProperty(name="Colbox Label", default="")
+    color_palette: bpy.props.StringProperty(name="Color Palette", default="")
+    shadow_shape: bpy.props.StringProperty(name="Shadow Shape", default="")
+    close_lod_shape: bpy.props.StringProperty(name="Close LOD Shape", default="")
+    mid_lod_shape: bpy.props.StringProperty(name="Mid LOD Shape", default="")
+    far_lod_shape: bpy.props.StringProperty(name="Far LOD Shape", default="")
+
+
+class AddAdditionalShapeHeaderOperator(bpy.types.Operator):
+    """Add an additional ShapeHdr that inherits blank fields from the main header"""
+    bl_idname = "object.add_additional_shape_header"
+    bl_label = "Add Additional ShapeHdr"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj is not None and obj.type == 'MESH' and "zsort_priority" in obj
+
+    def execute(self, context):
+        context.active_object.fastfx_additional_shape_headers.add()
+        self.report({'INFO'}, "Additional ShapeHdr added")
+        return {'FINISHED'}
+
+
+class RemoveAdditionalShapeHeaderOperator(bpy.types.Operator):
+    """Remove an additional ShapeHdr"""
+    bl_idname = "object.remove_additional_shape_header"
+    bl_label = "Remove Additional ShapeHdr"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    index: bpy.props.IntProperty()
+
+    def execute(self, context):
+        headers = context.active_object.fastfx_additional_shape_headers
+        if self.index < 0 or self.index >= len(headers):
+            self.report({'ERROR'}, "Additional ShapeHdr no longer exists")
+            return {'CANCELLED'}
+        headers.remove(self.index)
+        return {'FINISHED'}
+
+
+def register_shape_header_settings():
+    bpy.types.Object.fastfx_additional_shape_headers = bpy.props.CollectionProperty(
+        type=AdditionalShapeHeaderProperties,
+    )
+
+
+def unregister_shape_header_settings():
+    del bpy.types.Object.fastfx_additional_shape_headers
+
+
 # =========================
 # FastFX Menu Panel - Select twisted faces in Edit Mode
 # =========================
@@ -1427,6 +1489,46 @@ class VIEW3D_PT_fastfx_object_tools(bpy.types.Panel):
                         if key == "close_lod_shape" and is_starfox2:
                             label = "Slope Label"
                         box.prop(obj, f'["{key}"]', text=label)
+
+                additional_box = box.box()
+                additional_box.label(text="Additional ShapeHdrs")
+                additional_box.operator("object.add_additional_shape_header", icon='ADD')
+                additional_fields = (
+                    ("assembly_label", "Assembler Label"),
+                    ("zsort_priority", "Z-Sort Priority"),
+                    ("scale", "Scale"),
+                    ("colbox_label", "Colbox Label"),
+                    ("color_palette", "Color Palette"),
+                    ("shadow_shape", "Shadow Shape"),
+                    ("close_lod_shape", "Close LOD Shape"),
+                    ("mid_lod_shape", "Mid LOD Shape"),
+                    ("far_lod_shape", "Far LOD Shape"),
+                )
+                for index, header in enumerate(obj.fastfx_additional_shape_headers):
+                    header_box = additional_box.box()
+                    header_row = header_box.row()
+                    header_row.label(text=f"Header {index + 1}")
+                    remove = header_row.operator(
+                        "object.remove_additional_shape_header",
+                        text="",
+                        icon='REMOVE',
+                    )
+                    remove.index = index
+                    header_box.prop(
+                        header,
+                        "null_geometry_pointers",
+                        text="Null Point/Face Pointers",
+                    )
+                    for key, label in additional_fields:
+                        if scene.fastfx_game_preset == "STARFOXEX" and key in {
+                            "close_lod_shape",
+                            "mid_lod_shape",
+                            "far_lod_shape",
+                        }:
+                            continue
+                        if key == "close_lod_shape" and is_starfox2:
+                            label = "Slope Label"
+                        header_box.prop(header, key, text=label)
             else:
                 box.label(text="Add ShapeHdr Properties to edit these values")
         elif obj.type == 'EMPTY' and "colbox_label" in obj:

@@ -173,6 +173,29 @@ For a single call without mutating the header object, use:
 write(model, "ship.asm", "bsp", name="OVERRIDE_NAME", simplified_header=True)
 ```
 
+Append `ShapeHeader` overrides to `model.additional_headers` to write alternate
+headers that share the model's point and face data. In an additional header,
+`None` or an empty string inherits the corresponding value from `model.header`.
+Set `label` to choose its assembler entry label; an omitted label is generated
+from the main shape name with a unique numerical suffix.
+
+```python
+model.additional_headers.append(
+    ShapeHeader(
+        label="BLENDER_SHIP_ALT",
+        zsort_priority=None,
+        scale=None,
+        colbox="ALT_COLBOX",
+        colour_table=None,
+        shadow=None,
+        simple1=None,
+        simple2=None,
+        simple3=None,
+    )
+)
+write(model, "ship.asm", "bsp")
+```
+
 ## Flat BSP face lists
 
 By default, `"bsp"` computes a BSP order and emits a tree when the model needs
