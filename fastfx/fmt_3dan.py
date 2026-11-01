@@ -29,7 +29,7 @@ class Import3DANOperator(bpy.types.Operator):
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 
     # Filter to show only supported files in the file browser
-    filter_glob: bpy.props.StringProperty(default="*.anm", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.anm;*.3dan", options={'HIDDEN'})
 
     def execute(self, context):
         self.import_3dan(self.filepath, context)
@@ -226,7 +226,7 @@ class Export3DAN(bpy.types.Operator):
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 
-    filter_glob: bpy.props.StringProperty(default="*.anm", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.anm;*.3dan", options={'HIDDEN'})
 
     def execute(self, context):
         filepath = self.filepath

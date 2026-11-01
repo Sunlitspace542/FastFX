@@ -86,6 +86,9 @@ class Export3DG1(bpy.types.Operator):
     bl_options = {'PRESET'}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+
+    filter_glob: bpy.props.StringProperty(default="*.txt;*.obj;*.3dg1", options={'HIDDEN'})
+
     def execute(self, context):
         obj = context.object
         if obj is None or obj.type != 'MESH':
