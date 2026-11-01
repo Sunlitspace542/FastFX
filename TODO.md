@@ -2,7 +2,7 @@
 Categories are named by their source files.  
 
 ## animation
-- [ ] allow face sorting options (but NOT point pairing) to apply to animation export? i would make it something the user has to deliberately enable in the animation panel, by default these options should not apply to animations
+- N/A
 ## colboxes
 - N/A
 
