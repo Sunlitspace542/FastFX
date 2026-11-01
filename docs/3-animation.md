@@ -3,7 +3,8 @@
 
 Star Fox animations record vertex positions per frame.  
 Preprocess the model before animating. Export it as 3DG1 or static ASM and reimport it so vertex order and face sorting are consistent.  
-Once animation frames have been created, Only vertex positions can be changed. Any further edits to the mesh will render the animation invalid.
+Once animation frames have been created, Only vertex positions can be changed. Any further edits to the mesh will render the animation invalid.  
+Please ensure your model is pre-sorted and configured how you want it to be as a static model before reimporting and animating it, as the face sorting and point pairing export options do NOT apply to animation exports.  
 
 ## A. Shape-Key Animation (Default)
 
