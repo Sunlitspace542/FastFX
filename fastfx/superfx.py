@@ -1104,6 +1104,38 @@ def super_fx_node_group():
     superfx.links.new(group.outputs[0], material_output.inputs[0])
     return superfx
 
+
+def super_fx_static_dither_node_group():
+    """Return a Super FX group variant with angle-based shading fixed."""
+    super_fx = bpy.data.node_groups.get("Super FX")
+    if super_fx is None:
+        raise RuntimeError("No Super FX node group")
+
+    static_group = next(
+        (
+            node_group for node_group in bpy.data.node_groups
+            if node_group.get("fastfx_static_dither")
+        ),
+        None,
+    )
+    if static_group is not None:
+        return static_group
+
+    geometry = super_fx.nodes.get("Geometry")
+    vector_rotate = super_fx.nodes.get("Vector Rotate")
+    if geometry is None or vector_rotate is None:
+        raise RuntimeError("Super FX node group is missing its normal shading nodes")
+
+    static_group = super_fx.copy()
+    static_group.name = "Super FX Static Dither"
+    vector_input = static_group.nodes.get("Vector Rotate").inputs[0]
+    for link in list(vector_input.links):
+        static_group.links.remove(link)
+    vector_input.default_value = (0.0, 0.0, 1.0)
+    static_group["fastfx_static_dither"] = True
+    return static_group
+
+
 class OBJECT_OT_create_super_fx(bpy.types.Operator):
     """Create the Super FX node group and base material, and set color management to Standard"""
     bl_idname = "object.create_super_fx"
@@ -1123,5 +1155,4 @@ class OBJECT_OT_create_super_fx(bpy.types.Operator):
 
         self.report({'INFO'}, "Super FX node group created")
         return {'FINISHED'}
-
 

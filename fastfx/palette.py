@@ -386,7 +386,7 @@ id_0_c_components_rgb = {
         "Colour 4": "#847173",
         "Carry Over": "1.0",
     },
-    46: {
+    46: { #flashes
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#FFB631",

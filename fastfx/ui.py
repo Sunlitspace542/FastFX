@@ -20,7 +20,7 @@ from .animation import animation_frame_count, is_vertex_animation
 from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
 from .slopes import selected_slope_settings, slope_face_labels
-from .superfx import super_fx_node_group
+from .superfx import super_fx_node_group, super_fx_static_dither_node_group
 
 # =========================
 # FastFX Menu Panel/UI - Edge Material Overlay
@@ -41,8 +41,31 @@ def _super_fx_nodes(material):
         node for node in material.node_tree.nodes
         if node.bl_idname == "ShaderNodeGroup"
         and node.node_tree
-        and node.node_tree.name == "Super FX"
+        and (
+            node.node_tree.name == "Super FX"
+            or node.node_tree.get("fastfx_static_dither")
+        )
     ]
+
+
+def _is_solid_dither_palette(settings):
+    colors = tuple(settings.get(f"Colour {index}") for index in range(1, 5))
+    return (
+        all(color is not None for color in colors)
+        and colors[0] == colors[1]
+        and colors[2] == colors[3]
+        and colors[0] != colors[2]
+    )
+
+
+def _material_uses_solid_dither_palette(material):
+    if not material or not (material.name.startswith("FX") or material.name.startswith("FE")):
+        return False
+    color_index_text = material.name[2:]
+    if not color_index_text.isdigit():
+        return False
+    settings = id_0_c_components_rgb.get(int(color_index_text), {})
+    return _is_solid_dither_palette(settings)
 
 
 def _apply_super_fx_settings_to_all(settings):
@@ -365,6 +388,17 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
             self.report({'WARNING'}, "No Super FX node group")
             return {'CANCELLED'}
 
+        static_dither_group = None
+        if any(
+            _material_uses_solid_dither_palette(material_slot.material)
+            for material_slot in obj.material_slots
+        ):
+            try:
+                static_dither_group = super_fx_static_dither_node_group()
+            except RuntimeError as error:
+                self.report({'ERROR'}, str(error))
+                return {'CANCELLED'}
+
         for material_slot in obj.material_slots:
             material = material_slot.material
             if material and (material.name.startswith("FX") or material.name.startswith("FE")):
@@ -391,7 +425,11 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
                     output_node.location = (300, 0)
 
                     super_fx = nodes.new(type="ShaderNodeGroup")
-                    super_fx.node_tree = bpy.data.node_groups["Super FX"]
+                    super_fx.node_tree = (
+                        static_dither_group
+                        if _is_solid_dither_palette(settings)
+                        else bpy.data.node_groups["Super FX"]
+                    )
                     super_fx.location = (0, 0)
 
                     # Link Super FX to material output
