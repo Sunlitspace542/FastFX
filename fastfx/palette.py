@@ -134,7 +134,7 @@ id_0_c_components_rgb = {
         "Colour 4": "#391010",
         "Carry Over": "1.0",
     },
-    10: { #Mostly COLNORM colors begin
+    10: { #Mostly COLDEPTH colors begin
         "Colour 1": "#391010",
         "Colour 2": "#391010",
         "Colour 3": "#391010",
@@ -358,73 +358,73 @@ id_0_c_components_rgb = {
         "Colour 4": "#C6CFD6",
         "Carry Over": "1.0",
     },
-    42: {
+    42: { #COLANIM
         "Colour 1": "#00C700",
         "Colour 2": "#00C700",
         "Colour 3": "#00C700",
         "Colour 4": "#00C700",
         "Carry Over": "1.0",
     },
-    43: { #flashes
+    43: { #COLANIM
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#AD2800",
         "Colour 4": "#AD2800",
         "Carry Over": "1.0",
     },
-    44: { #flashes
+    44: { #COLANIM
         "Colour 1": "#2928BD",
         "Colour 2": "#2928BD",
         "Colour 3": "#2928BD",
         "Colour 4": "#2928BD",
         "Carry Over": "1.0",
     },
-    45: { #flashes
+    45: { #COLANIM
         "Colour 1": "#847173",
         "Colour 2": "#847173",
         "Colour 3": "#847173",
         "Colour 4": "#847173",
         "Carry Over": "1.0",
     },
-    46: { #flashes
+    46: { #COLANIM
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#FFB631",
         "Colour 4": "#FFB631",
         "Carry Over": "1.0",
     },
-    47: {
+    47: { #COLANIM
         "Colour 1": "#000000",
         "Colour 2": "#000000",
         "Colour 3": "#000000",
         "Colour 4": "#000000",
         "Carry Over": "1.0",
     },
-    48: { # texture
+    48: { #COLTEXT
         "Colour 1": "#FFFFFF",
         "Colour 2": "#FFFFFF",
         "Colour 3": "#FFFFFF",
         "Colour 4": "#FFFFFF",
     },
-    49: { # texture
+    49: { #COLTEXT
         "Colour 1": "#FFFFFF",
         "Colour 2": "#FFFFFF",
         "Colour 3": "#FFFFFF",
         "Colour 4": "#FFFFFF",
     },
-    50: { # texture
+    50: { #COLTEXT
         "Colour 1": "#FFFFFF",
         "Colour 2": "#FFFFFF",
         "Colour 3": "#FFFFFF",
         "Colour 4": "#FFFFFF",
     },
-    51: { # texture
+    51: { #COLTEXT
         "Colour 1": "#FFFFFF",
         "Colour 2": "#FFFFFF",
         "Colour 3": "#FFFFFF",
         "Colour 4": "#FFFFFF",
     },
-    52: {
+    52: { #COLANIM
         "Colour 1": "#AD2800",
         "Colour 2": "#AD2800",
         "Colour 3": "#AD2800",
