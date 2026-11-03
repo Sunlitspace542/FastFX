@@ -4,12 +4,21 @@
 # Copyright (c) 2026 Sunlit
 # Released under the MIT License.
 
+import os
 import bpy
 import bmesh
 import math
 
 EDGE_COLOR_ATTRIBUTE = "fastfx_edge_color_index"
 LEGACY_ANIMATION_FRAME_MARKER = "fastfx_legacy_animation_frame"
+
+
+def default_export_filepath(context, obj, extension):
+    """Build an export path from the selected object's name."""
+    blend_filepath = context.blend_data.filepath
+    directory = os.path.dirname(blend_filepath) if blend_filepath else ""
+    filename = f"{bpy.path.clean_name(obj.name)}{extension}"
+    return os.path.join(directory, filename) if directory else filename
 
 
 def is_mesh_animated(obj):

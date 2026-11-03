@@ -8,7 +8,11 @@ import bpy
 import os
 import re
 
-from .common import LEGACY_ANIMATION_FRAME_MARKER, hex_to_rgb
+from .common import (
+    LEGACY_ANIMATION_FRAME_MARKER,
+    default_export_filepath,
+    hex_to_rgb,
+)
 from .animation import (
     animation_frame_coordinates,
     animation_frame_count,
@@ -260,16 +264,13 @@ class Export3DAN(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        import os
-        if not context.scene.fastfx_use_legacy_animation_objects:
-            if not self.filepath:
-                blend_filepath = context.blend_data.filepath
-                if not blend_filepath:
-                    blend_filepath = context.object.name
-                else:
-                    blend_filepath = os.path.splitext(blend_filepath)[0]
-
-                self.filepath = blend_filepath + ".asm"
+        obj = context.active_object
+        if (
+            not context.scene.fastfx_use_legacy_animation_objects
+            and not self.filepath
+            and obj is not None
+        ):
+            self.filepath = default_export_filepath(context, obj, ".anm")
 
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}

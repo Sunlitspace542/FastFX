@@ -12,6 +12,7 @@ import re
 from .common import (
     EDGE_COLOR_ATTRIBUTE,
     convert_two_point_faces_to_edges,
+    default_export_filepath,
     hex_to_rgb,
     distance_from_origin,
     pair_points_for_compression,
@@ -127,15 +128,9 @@ class Export3DG1(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        import os
-        if not self.filepath:
-            blend_filepath = context.blend_data.filepath
-            if not blend_filepath:
-                blend_filepath = context.object.name
-            else:
-                blend_filepath = os.path.splitext(blend_filepath)[0]
-
-            self.filepath = blend_filepath + ".txt"
+        obj = context.object
+        if not self.filepath and obj is not None:
+            self.filepath = default_export_filepath(context, obj, ".txt")
 
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}

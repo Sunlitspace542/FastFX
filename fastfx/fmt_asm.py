@@ -15,6 +15,7 @@ from bpy_extras.io_utils import ImportHelper
 from .common import (
     LEGACY_ANIMATION_FRAME_MARKER,
     convert_two_point_faces_to_edges,
+    default_export_filepath,
     hex_to_rgb,
 )
 from .animation import (
@@ -544,15 +545,9 @@ class ExportToBSP(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        import os
-        if not self.filepath:
-            blend_filepath = context.blend_data.filepath
-            if not blend_filepath:
-                blend_filepath = context.object.name
-            else:
-                blend_filepath = os.path.splitext(blend_filepath)[0]
-
-            self.filepath = blend_filepath + ".asm"
+        obj = context.object
+        if not self.filepath and obj is not None:
+            self.filepath = default_export_filepath(context, obj, ".asm")
 
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
@@ -588,15 +583,9 @@ class ExportToBSPTreeless(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        import os
-        if not self.filepath:
-            blend_filepath = context.blend_data.filepath
-            if not blend_filepath:
-                blend_filepath = context.object.name
-            else:
-                blend_filepath = os.path.splitext(blend_filepath)[0]
-
-            self.filepath = blend_filepath + ".asm"
+        obj = context.object
+        if not self.filepath and obj is not None:
+            self.filepath = default_export_filepath(context, obj, ".asm")
 
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
@@ -634,15 +623,9 @@ class ExportToGZS(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        import os
-        if not self.filepath:
-            blend_filepath = context.blend_data.filepath
-            if not blend_filepath:
-                blend_filepath = context.object.name
-            else:
-                blend_filepath = os.path.splitext(blend_filepath)[0]
-
-            self.filepath = blend_filepath + ".asm"
+        obj = context.object
+        if not self.filepath and obj is not None:
+            self.filepath = default_export_filepath(context, obj, ".asm")
 
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
@@ -694,16 +677,13 @@ class ExportAnimatedToASM(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        import os
-        if not context.scene.fastfx_use_legacy_animation_objects:
-            if not self.filepath:
-                blend_filepath = context.blend_data.filepath
-                if not blend_filepath:
-                    blend_filepath = context.object.name
-                else:
-                    blend_filepath = os.path.splitext(blend_filepath)[0]
-
-                self.filepath = blend_filepath + ".asm"
+        obj = context.active_object
+        if (
+            not context.scene.fastfx_use_legacy_animation_objects
+            and not self.filepath
+            and obj is not None
+        ):
+            self.filepath = default_export_filepath(context, obj, ".asm")
 
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
