@@ -26,6 +26,12 @@ from .fmt_3dg1 import EDGE_COLOR_ATTRIBUTE, read_3dg1
 from .palette import id_0_c_components_rgb, id_0_c_rgb
 from .slopes import selected_slope_settings, slope_face_labels
 from .superfx import super_fx_node_group, super_fx_static_dither_node_group
+from .textures import (
+    OBJECT_OT_apply_texture_material,
+    OBJECT_OT_create_texture_material,
+    OBJECT_OT_load_texture_image,
+    is_texture_material,
+)
 
 # =========================
 # FastFX Menu Panel/UI - Edge Material Overlay
@@ -1420,6 +1426,26 @@ class VIEW3D_PT_fastfx_material_configuration(bpy.types.Panel):
         else:
             settings_box.label(text="Active material has no Super FX node")
         settings_box.operator(OBJECT_OT_calculate_super_fx_settings.bl_idname)
+
+        texture_box = layout.box()
+        texture_box.label(text="Texture Preview (TX#)")
+        texture_box.operator(OBJECT_OT_create_texture_material.bl_idname)
+        if material is not None and is_texture_material(material):
+            texture_box.prop(material, "fastfx_texture_source")
+            texture_box.prop(material, "fastfx_texture_image")
+            texture_box.operator(OBJECT_OT_load_texture_image.bl_idname, text="Load Image...")
+            if material.fastfx_texture_source == "SHEET":
+                texture_box.prop(material, "fastfx_texture_sheet_layout")
+                row = texture_box.row(align=True)
+                row.prop(material, "fastfx_texture_tile_x")
+                row.prop(material, "fastfx_texture_tile_y")
+                row = texture_box.row(align=True)
+                row.prop(material, "fastfx_texture_tile_width")
+                row.prop(material, "fastfx_texture_tile_height")
+            texture_box.prop(material, "fastfx_texture_mirror")
+            texture_box.operator(OBJECT_OT_apply_texture_material.bl_idname)
+        else:
+            texture_box.label(text="Create or select a TX# material to configure it")
 
 
 class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):

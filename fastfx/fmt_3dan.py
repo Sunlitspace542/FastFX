@@ -212,11 +212,13 @@ def write_3dan(filepath, objects, frame_number, validate_signed_16bit=False):
             mat_index = poly.material_index
             material = base_mesh.materials[mat_index] if mat_index < len(base_mesh.materials) else None
             color_index = 0  # Default color index if no material is found or improperly named
-            if material and material.name.startswith("FX"):
-                try:
-                    color_index = int(material.name[2:])  # Extract number after 'FX'
-                except ValueError:
-                    pass  # Leave color_index as 0 if extraction fails
+            if material:
+                material_name = re.sub(r"\.\d{3}$", "", material.name)
+                if (
+                    material_name.startswith(("FX", "TX"))
+                    and material_name[2:].isdigit()
+                ):
+                    color_index = int(material_name[2:])
 
             f.write(f" {color_index}\n")
 

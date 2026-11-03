@@ -61,6 +61,17 @@ When applying the fancy palette, colors with inputs arranged as A, A, B, B use a
 The ``Super FX Settings`` controls adjust ``Aspect X``, ``Aspect Y``, and ``Dither`` on the active material's Super FX node. Click ``Apply Settings to All Materials`` to copy those values to every material with a Super FX node.
 
 ``Calculate for Viewport (All Materials)`` calculates the settings from the current 3D viewport's dimensions, using 256x224 as the reference resolution (Aspect X = width / 32; Aspect Y = height / 32; Dither = 96.1847). If viewport dimensions would exceed the node inputs' 100 aspect limit, the calculation adjusts Dither proportionally to preserve the pattern scale per viewport pixel. The calculated values are applied to all materials with a compatible Super FX node.
+
+## Texture Preview (TX#)
+Click ``Create TX Material`` to add a material named ``TX#`` to the active mesh, where the number is the texture index. ``TX#`` materials are not affected by either color-palette operation.
+
+Individual images must have power-of-two width and height. Use ``Load Image...`` to select an image from disk; the image picker also lets you reuse images already loaded in the blend file. Sheets must be exactly 256x128 pixels (wide) or 128x256 pixels (tall). For a sheet, set the start position and dimensions in 8x8 tiles; tile dimensions can be any positive count that fits within the sheet. Tile coordinates address a logical 256x128 sheet. In tall layout, each logical 256x32 row is formed by two 128x32 strips stacked vertically: the first strip supplies the left half, and the second supplies the right half.
+
+Assign the ``TX#`` material to the desired faces, leave ``Mirror Horizontally`` off for the normal orientation, and click ``Apply Texture Preview``. Vertices are mapped in reverse face order around the texture perimeter (quads map to its four corners). View textured surfaces in Material Preview. Source image alpha is respected as transparency, and the preview image is packed into the blend file when applied.
+
+The active ``TX#`` material stores the last-applied preview recipe as custom metadata, including source image, source mode, output dimensions, UV order, and mirror setting; sheet previews also store layout and tile coordinates/dimensions. For cropped sheet textures, the same recipe metadata is also attached to the generated preview image. The metadata is available in Blender's Material Properties > Custom Properties. Changing controls does not change this record until ``Apply Texture Preview`` is clicked.
+
+3DG1/3DAN/ASM exports write the numeric index from either ``FX#`` or ``TX#``. There is no way to determine material prefix on import, so imported faces are named ``FX#``.
   
 
 # Mesh Utilities

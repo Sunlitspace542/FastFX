@@ -360,7 +360,7 @@ def write_3dg1(
                             material_index,
                         ))
 
-                elif material_name.startswith("FX"):  # Handle polygons
+                elif material_name.startswith(("FX", "TX")):  # Handle indexed polygons
                     try:
                         color_index = int(material_name[2:])  # Extract color index for polygons
                     except ValueError:

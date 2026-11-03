@@ -55,6 +55,13 @@ from .menus import (
     menu_func_import,
 )
 from .superfx import OBJECT_OT_create_super_fx
+from .textures import (
+    OBJECT_OT_apply_texture_material,
+    OBJECT_OT_create_texture_material,
+    OBJECT_OT_load_texture_image,
+    register_texture_material_settings,
+    unregister_texture_material_settings,
+)
 from .ui import (
     AddShapeHeaderPropertiesOperator,
     AdditionalShapeHeaderProperties,
@@ -122,6 +129,9 @@ classes = (
     VIEW3D_PT_fastfx_collision_box_tools,
     VIEW3D_PT_fastfx_object_tools,
     OBJECT_OT_create_super_fx,
+    OBJECT_OT_create_texture_material,
+    OBJECT_OT_load_texture_image,
+    OBJECT_OT_apply_texture_material,
     OBJECT_OT_import_colboxes_clipboard,
     OBJECT_OT_export_colboxes,
     OBJECT_OT_update_colboxes,
@@ -150,6 +160,7 @@ def register():
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
     register_edge_material_overlay_settings()
+    register_texture_material_settings()
     register_export_options_settings()
     register_import_options_settings()
     register_animation_settings()
@@ -168,6 +179,7 @@ def unregister():
     unregister_import_options_settings()
     unregister_shape_header_settings()
     unregister_edge_material_overlay_settings()
+    unregister_texture_material_settings()
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
     for cls in reversed(classes):
