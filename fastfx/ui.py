@@ -70,10 +70,17 @@ def _is_solid_dither_palette(settings):
     )
 
 
+def _palette_material_name(material):
+    return re.sub(r"\.\d{3}$", "", material.name)
+
+
 def _material_uses_solid_dither_palette(material):
-    if not material or not (material.name.startswith("FX") or material.name.startswith("FE")):
+    if not material:
         return False
-    color_index_text = material.name[2:]
+    material_name = _palette_material_name(material)
+    if not (material_name.startswith("FX") or material_name.startswith("FE")):
+        return False
+    color_index_text = material_name[2:]
     if not color_index_text.isdigit():
         return False
     settings = id_0_c_components_rgb.get(int(color_index_text), {})
@@ -497,10 +504,13 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
 
         for material_slot in obj.material_slots:
             material = material_slot.material
-            if material and (material.name.startswith("FX") or material.name.startswith("FE")):
+            if material:
+                material_name = _palette_material_name(material)
+                if not (material_name.startswith("FX") or material_name.startswith("FE")):
+                    continue
                 try:
                     # Extract color index from the material name
-                    color_index = int(material.name[2:])
+                    color_index = int(material_name[2:])
                     settings = id_0_c_components_rgb.get(color_index)
 
                     if not settings:
@@ -662,10 +672,13 @@ class OBJECT_OT_apply_material_colors_simple(bpy.types.Operator):
 
         for material_slot in obj.material_slots:
             material = material_slot.material
-            if material and (material.name.startswith("FX") or material.name.startswith("FE")):
+            if material:
+                material_name = _palette_material_name(material)
+                if not (material_name.startswith("FX") or material_name.startswith("FE")):
+                    continue
                 try:
                     # Extract color index and retrieve the color
-                    color_index = int(material.name[2:])
+                    color_index = int(material_name[2:])
                     hex_color = id_0_c_rgb.get(color_index, "#FFFFFF")  # Default to white
 
                     # Convert HEX to linear RGB for Blender
