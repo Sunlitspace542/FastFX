@@ -274,6 +274,105 @@ class OBJECT_OT_animation_insert_frame(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class OBJECT_OT_animation_interpolate_frames(bpy.types.Operator):
+    """Insert evenly spaced frames between two animation frames"""
+    bl_idname = "object.fastfx_animation_interpolate_frames"
+    bl_label = "Interpolate Frames"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    start_frame: bpy.props.IntProperty(
+        name="From Frame",
+        description="First frame to interpolate from",
+        min=0,
+    )
+    end_frame: bpy.props.IntProperty(
+        name="To Frame",
+        description="Frame to interpolate toward",
+        min=0,
+    )
+    steps: bpy.props.IntProperty(
+        name="Steps",
+        description="Number of interpolated frames to insert between the selected frames",
+        default=1,
+        min=1,
+    )
+
+    def invoke(self, context, event):
+        try:
+            obj = _active_animation(context)
+            count = animation_frame_count(obj)
+            if count < 2:
+                raise ValueError("Add at least two frames before interpolating.")
+            self.start_frame = min(obj.fastfx_animation_frame, count - 2)
+            self.end_frame = self.start_frame + 1
+        except ValueError as exc:
+            self.report({'ERROR'}, str(exc))
+            return {'CANCELLED'}
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(self, "start_frame")
+        self.layout.prop(self, "end_frame")
+        self.layout.prop(self, "steps")
+
+    def execute(self, context):
+        try:
+            obj = _active_animation(context)
+            if obj.mode != "OBJECT":
+                raise ValueError("Switch to Object Mode before interpolating animation frames.")
+            if context.scene.fastfx_animation_playing:
+                raise ValueError("Pause animation playback before changing its frames.")
+
+            count = animation_frame_count(obj)
+            if not 0 <= self.start_frame < self.end_frame < count:
+                raise ValueError(
+                    "Choose two existing frames in order, with the From Frame before the To Frame."
+                )
+            if self.steps < 1:
+                raise ValueError("Steps must be at least 1.")
+
+            start_coordinates = animation_frame_coordinates(obj, self.start_frame)
+            end_coordinates = animation_frame_coordinates(obj, self.end_frame)
+            if len(start_coordinates) != len(end_coordinates):
+                raise ValueError("The selected frames have different vertex counts.")
+
+            set_animation_frame(obj, self.start_frame)
+            basis = obj.data.shape_keys.key_blocks["Basis"]
+            for step in range(1, self.steps + 1):
+                factor = step / (self.steps + 1)
+                coordinates = [
+                    tuple(
+                        start[axis] + (end[axis] - start[axis]) * factor
+                        for axis in range(3)
+                    )
+                    for start, end in zip(start_coordinates, end_coordinates)
+                ]
+                key = obj.shape_key_add(
+                    name=f"{ANIMATION_FRAME_PREFIX}{animation_frame_count(obj):04d}",
+                    from_mix=False,
+                )
+                key.relative_key = basis
+                for vertex, coordinate in zip(key.data, coordinates):
+                    vertex.co = coordinate
+
+                inserted_frame = self.start_frame + step
+                _insert_slope_animation_frame(obj, inserted_frame - 1)
+                new_key_index = len(obj.data.shape_keys.key_blocks) - 1
+                target_key_index = inserted_frame + 1
+                for key_index in range(new_key_index, target_key_index, -1):
+                    obj.active_shape_key_index = key_index
+                    result = bpy.ops.object.shape_key_move(type='UP')
+                    if 'FINISHED' not in result:
+                        raise RuntimeError("Blender could not move an interpolated shape key.")
+
+            _renumber_animation_frames(obj)
+            set_animation_frame(obj, self.start_frame + 1)
+        except (RuntimeError, ValueError, KeyError) as exc:
+            self.report({'ERROR'}, f"Could not interpolate animation frames: {exc}")
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
 class OBJECT_OT_animation_remove_frame(bpy.types.Operator):
     """Remove the currently displayed animation frame"""
     bl_idname = "object.fastfx_animation_remove_frame"

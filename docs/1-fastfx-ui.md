@@ -36,6 +36,7 @@ The main playback controls are: jump to start, previous frame, play/pause, next 
 `Add Frame` Creates a new frame at the end of the animation based on the currently displayed frame.
 `Insert After` Inserts a new frame after the currently displayed frame.
 `Remove Frame` Removes the displayed frame.
+`Interpolate Frames` Inserts a chosen number of evenly spaced vertex-animation frames between two selected existing frames.
 `Loop Playback` Loops animation playback.
 `Mirror Animation` Affects both animation playback and ASM export. Animations are played such that the animation is mirrored without repeating any start or end points, e.g. 5 frames of animation would be mirrored as 0,1,2,3,4,3,2,1.
 For more information on the animation system, see chapter 3.

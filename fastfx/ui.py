@@ -1546,6 +1546,17 @@ class VIEW3D_PT_fastfx_animation(bpy.types.Panel):
                 icon='ADD',
             )
             frame_actions.operator("object.fastfx_animation_remove_frame", icon='REMOVE')
+            interpolation = animation_box.row()
+            interpolation.enabled = (
+                obj.mode == "OBJECT"
+                and not scene.fastfx_animation_playing
+                and animation_frame_count(obj) >= 2
+            )
+            interpolation.operator(
+                "object.fastfx_animation_interpolate_frames",
+                text="Interpolate Frames",
+                icon='IPO_LINEAR',
+            )
             animation_box.prop(scene, "fastfx_animation_loop")
             mirror_row = animation_box.row()
             mirror_row.enabled = scene.fastfx_animation_loop
