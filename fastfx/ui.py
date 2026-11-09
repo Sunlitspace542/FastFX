@@ -14,6 +14,7 @@ import re
 import tempfile
 from bpy_extras import view3d_utils
 from gpu_extras.batch import batch_for_shader
+from mathutils.kdtree import KDTree
 
 from .common import (
     VertexOperation,
@@ -391,6 +392,78 @@ def unregister_edge_material_overlay():
 # =========================
 # FastFX Menu Panel -  Palette assignment (fancy)
 # =========================
+class OBJECT_OT_create_material_range(bpy.types.Operator):
+    """Create and assign a range of FX# materials"""
+    bl_idname = "object.create_material_range"
+    bl_label = "Create FX Material Range"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    start_index: bpy.props.IntProperty(
+        name="From FX",
+        description="First material index to create",
+        min=0,
+        max=255,
+        default=0,
+    )
+    end_index: bpy.props.IntProperty(
+        name="To FX",
+        description="Last material index to create",
+        min=0,
+        max=255,
+        default=max(id_0_c_rgb),
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.object is not None
+            and context.object.type == "MESH"
+            and context.object.mode == "OBJECT"
+        )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        if self.start_index > self.end_index:
+            self.report({'ERROR'}, "The first FX# index must not exceed the last FX# index.")
+            return {'CANCELLED'}
+
+        obj = context.object
+        first_material_index = None
+        created_count = 0
+        for color_index in range(self.start_index, self.end_index + 1):
+            material_name = f"FX{color_index}"
+            material = bpy.data.materials.get(material_name)
+            if material is None:
+                material = bpy.data.materials.new(name=material_name)
+                created_count += 1
+
+            material_index = next(
+                (
+                    index for index, slot_material in enumerate(obj.data.materials)
+                    if slot_material == material
+                ),
+                None,
+            )
+            if material_index is None:
+                obj.data.materials.append(material)
+                material_index = len(obj.data.materials) - 1
+            if first_material_index is None:
+                first_material_index = material_index
+
+        if first_material_index is None:
+            self.report({'ERROR'}, "No FX# materials were prepared.")
+            return {'CANCELLED'}
+        obj.active_material_index = first_material_index
+        self.report(
+            {'INFO'},
+            f"Prepared FX{self.start_index}-FX{self.end_index} "
+            f"({created_count} new materials)",
+        )
+        return {'FINISHED'}
+
+
 class OBJECT_OT_apply_material_colors(bpy.types.Operator):
     """Apply colors and additional settings based on material names (FX#)"""
     bl_idname = "object.apply_material_colors"
@@ -806,6 +879,97 @@ class OBJECT_OT_select_twisted_faces(bpy.types.Operator):
 
         average_twist = (total_twist * 100.0 / polygon_count) if polygon_count else 0.0
         self.report({'INFO'}, f"Avg twist {average_twist:.6f}% | Selected {selected_count} twisted faces")
+        return {'FINISHED'}
+
+
+class OBJECT_OT_select_unmirrored_vertices(bpy.types.Operator):
+    """Select vertices without a matching point reflected across local X"""
+    bl_idname = "object.select_unmirrored_vertices"
+    bl_label = "Select Points Not X-Mirrored"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    tolerance: bpy.props.FloatProperty(
+        name="Match Tolerance",
+        description="Maximum distance from the reflected point to count as a match",
+        default=0.0,
+        min=0.0,
+        subtype='DISTANCE',
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.object is not None
+            and context.object.type == 'MESH'
+            and context.mode == 'EDIT_MESH'
+        )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    @staticmethod
+    def _unmirrored_indices(vertices, tolerance):
+        if not vertices:
+            return []
+
+        if tolerance == 0.0:
+            coordinate_indices = {}
+            for index, vertex in enumerate(vertices):
+                coordinate_indices.setdefault(tuple(vertex.co), []).append(index)
+
+            unmirrored_indices = []
+            for index, vertex in enumerate(vertices):
+                if vertex.co.x == 0.0:
+                    continue
+                reflected = (-vertex.co.x, vertex.co.y, vertex.co.z)
+                if not any(
+                    other_index != index
+                    for other_index in coordinate_indices.get(reflected, ())
+                ):
+                    unmirrored_indices.append(index)
+            return unmirrored_indices
+
+        tree = KDTree(len(vertices))
+        for index, vertex in enumerate(vertices):
+            tree.insert(vertex.co, index)
+        tree.balance()
+
+        unmirrored_indices = []
+        for index, vertex in enumerate(vertices):
+            if vertex.co.x == 0.0:
+                continue
+            reflected = vertex.co.copy()
+            reflected.x = -reflected.x
+            has_match = any(
+                other_index != index
+                for _, other_index, _ in tree.find_range(
+                    reflected,
+                    math.nextafter(tolerance, math.inf),
+                )
+            )
+            if not has_match:
+                unmirrored_indices.append(index)
+        return unmirrored_indices
+
+    def execute(self, context):
+        obj = context.object
+        context.tool_settings.mesh_select_mode = (True, False, False)
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.select_mode = {'VERT'}
+        vertices = list(bm.verts)
+        unmirrored_indices = self._unmirrored_indices(vertices, self.tolerance)
+
+        for element in (*bm.verts, *bm.edges, *bm.faces):
+            element.select = False
+        for index in unmirrored_indices:
+            vertices[index].select = True
+        bm.select_flush_mode()
+        bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
+
+        self.report(
+            {'INFO'},
+            f"Selected {len(unmirrored_indices)} points without X-mirrored matches",
+        )
         return {'FINISHED'}
 
 
@@ -1402,6 +1566,7 @@ class VIEW3D_PT_fastfx_material_configuration(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.operator(OBJECT_OT_create_material_range.bl_idname)
         layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
         layout.label(text="Color Palette (Simple)")
         layout.operator("object.apply_material_colors_simple")
@@ -1467,6 +1632,7 @@ class VIEW3D_PT_fastfx_mesh_utilities(bpy.types.Panel):
         layout.operator(VertexOperation.bl_idname, text="Truncate Vertex Coordinates").operation = 'TRUNCATE'
         layout.operator(OBJECT_OT_add_2_point_face.bl_idname, text="Add Real 2-Gon (OLD)")
         layout.operator(OBJECT_OT_select_twisted_faces.bl_idname, text="Select Twisted Faces")
+        layout.operator(OBJECT_OT_select_unmirrored_vertices.bl_idname)
         layout.operator(OBJECT_OT_merge_points_by_distance.bl_idname)
         layout.operator(OBJECT_OT_assign_edge_material.bl_idname)
         layout.operator(OBJECT_OT_convert_two_point_faces.bl_idname)

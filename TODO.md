@@ -25,7 +25,7 @@ Categories are named by their source files.
 - N/A
 ## palette
 - [ ] support loading coltabs from source? this would probably need like a ton of work, everything assumes my premade color tables
-- [ ] textures??? probably not
+- [x] textures (added TX# material to allow for previewing texture mapping)
 
 ## slopes
 - N/A
@@ -34,6 +34,8 @@ Categories are named by their source files.
 - N/A
 
 ## ui
-- N/A
+- [x] material configuration: create material range (e.g. create FX materials from x# to y#)
+- [x] mesh utilities: select points that cannot be X-mirrored
+
 ## OTHER
-- [ ] Figure out some way to determine how textures will be mapped on a face beforehand (some way to show which way is "up")?
+- N/A

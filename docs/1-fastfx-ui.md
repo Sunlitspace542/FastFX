@@ -41,6 +41,8 @@ The main playback controls are: jump to start, previous frame, play/pause, next 
 For more information on the animation system, see chapter 3.
 
 # Material Configuration
+``Create FX Material Range`` creates or reuses each ``FX#`` material in the selected inclusive index range and adds it to the active mesh. The maximum range is ``FX0`` through ``FX255``. The first material in the range becomes active; use either palette operation below to configure its preview colors.
+  
 ``Toggle Backface Culling`` toggles backface culling on all materials. This allows for a more accurate representation of the shape in Blender, as Star Fox doesn't draw polygons as double-sided.  
 
 
@@ -83,11 +85,12 @@ The operations available are:
   
 ``Truncate Vertex Coordinates`` will truncate (remove) the fractional portion of all vertex coordinates, e.g. a number such as ``12.34567890`` becomes ``12``.  
   
-
+``Select Points Not X-Mirrored`` Selects points that have no matching point reflected across the X-axis. Set ``Match Tolerance`` to a nonzero value to allow small coordinate differences. Points on the X=0 plane count as their own mirror. This operator works in Edit Mode.
+  
 If your model becomes greatly distorted after using these tools, try scaling it up (preferably by a number divisible by 2), and/or apply scale first, then round or truncate.  
-
+  
 ``Add Real 2-Gon (OLD)`` adds a 2-gon/2-point face either as a separate object or to the object currently being edited. This is a legacy feature. You should assign materials to plain edges instead.
-
+  
 ``Select Twisted Faces`` computes the average face twist for the mesh and selects any quads and N-gons whose vertices twist away from the plane (i.e. their points aren't coplanar). Twisted faces may render unreliably in game. This operator only works in edit mode.  
   
 ``Merge Points (Keep Faces)`` merges selected points within the specified distance, preserving faces (e.g. in the case of double sided faces). A merge is only prevented if it would result in two corners of the same face being collapsed. This operator only works in edit mode.
