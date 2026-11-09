@@ -58,7 +58,7 @@ id_0_c_rgb = {
     43: "#D54A29",  # FX43 - CA_1 - Jet Fire (Bright Orange/Orange/Bright Red/Red)
     44: "#20089C",  # FX44 - CA_2 - Blaster  (Bright Turquoise/Turquoise/Bright Blue/Blue)
     45: "#7B8B83",  # FX45 - CA_3 - Flashing (White/Light Grey/Grey/Dark Grey)
-    46: "#7B8B83",  # FX46 - CA_4 - Flashing (Orange/Yellow/Turquoise/White)
+    46: "#D13E21",  # FX46 - CA_4 - Flashing (Orange/Yellow/Turquoise/White) (dithered; RGB value was averaged manually)
     47: "#000000",  # FX47 - CA_5 - Invisible
     48: "#FF00DC",  # FX48 - asteroid1_spr
     49: "#FF00DC",  # FX49 - panel3_spr
@@ -454,8 +454,8 @@ id_0_c_components_rgb = {
         "Carry Over": "1.0",
     },
     46: { #COLANIM
-        "Colour 1": "#7B0800",
-        "Colour 2": "#7B0800",
+        "Colour 1": "#EFAD42",
+        "Colour 2": "#EFAD42",
         "Colour 3": "#7B0800",
         "Colour 4": "#7B0800",
         "Carry Over": "1.0",
