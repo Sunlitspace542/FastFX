@@ -64,7 +64,7 @@ id_0_c_rgb = {
     49: "#FF00DC",  # FX49 - panel3_spr
     50: "#FF00DC",  # FX50 - panel3_spr
     51: "#FF00DC",  # FX51 - panel3_spr
-    52: "#FF00DC",  # FX52 - gateflash_a1 (Solid Red/Orange/Turquoise/Blue)
+    52: "#FF00DC",  # FX52 - gateflash_a1 - Flashing (Solid Red/Orange/Turquoise/Blue)
     53: "#FF00DC",  # FX53 - bosshitcol1_a1
     54: "#FF00DC",  # FX54 - bosshitcol2_a1
     55: "#FF00DC",  # FX55 - pwireframe_a1
