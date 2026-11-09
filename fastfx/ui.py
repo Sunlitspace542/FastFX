@@ -547,6 +547,10 @@ class OBJECT_OT_apply_material_colors(bpy.types.Operator):
                             # Process color inputs
                             if input_name in super_fx.inputs:
                                 super_fx.inputs[input_name].default_value = hex_to_rgb(value)
+                        if input_name.startswith("Dither"):
+                            # Process dither inputs
+                            if input_name in super_fx.inputs:
+                                super_fx.inputs[input_name].default_value = float(value)
                         else:
                             # Handle other material settings
                             if input_name == "Carry Over":
