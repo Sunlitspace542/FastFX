@@ -433,10 +433,10 @@ id_0_c_components_rgb = {
         "Carry Over": "1.0",
     },
     43: { #COLANIM
-        "Colour 1": "#7B0800",
-        "Colour 2": "#7B0800",
-        "Colour 3": "#7B0800",
-        "Colour 4": "#7B0800",
+        "Colour 1": "#D64A29",
+        "Colour 2": "#D64A29",
+        "Colour 3": "#D64A29",
+        "Colour 4": "#D64A29",
         "Carry Over": "1.0",
     },
     44: { #COLANIM
