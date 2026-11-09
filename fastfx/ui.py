@@ -1594,8 +1594,8 @@ class VIEW3D_PT_fastfx_material_configuration(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator(OBJECT_OT_create_material_range.bl_idname)
         layout.operator(OBJECT_OT_toggle_backface_culling.bl_idname, text="Toggle Backface Culling")
+        layout.operator(OBJECT_OT_create_material_range.bl_idname)
         layout.label(text="Color Palette (Simple)")
         layout.operator("object.apply_material_colors_simple")
         layout.label(text="Color Palette (Fancy)")
